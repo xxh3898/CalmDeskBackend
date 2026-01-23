@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Member {
+public class MemberId {
     @Id
     @Column(name = "MEMBER_ID")
     private Long id;

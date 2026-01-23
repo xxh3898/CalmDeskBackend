@@ -1,6 +1,6 @@
-package com.code808.calmdesk.domain.member.admin.gifticonManage.dto;
+package com.code808.calmdesk.domain.gifticon.dto;
 
-import com.code808.calmdesk.domain.member.admin.gifticonManage.entity.Gifticon;
+import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ItemResponse {
     private Long id;
-    private String name;      // 리액트에서 item.name으로 쓸 수 있게 매핑
-    private String img;       // 리액트에서 item.img로 쓸 수 있게 매핑
+    private String name; // 리액트에서 item.name으로 쓸 수 있게 매핑
+    private String img; // 리액트에서 item.img로 쓸 수 있게 매핑
     private int price;
     private int quantity;
     private boolean isActive;

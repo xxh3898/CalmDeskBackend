@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "POINT_HISTORY")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Point_History {
+public class PointHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +42,7 @@ public class Point_History {
     private Long missionId; // 미션 아이디 (FK 역할)
 
     // 생성자
-    public Point_History(String pointType, Long amount, Long balanceAfter,
+    public PointHistory(String pointType, Long amount, Long balanceAfter,
             String sourceType, Long memberId, Long gifticonId, Long missionId) {
         this.pointType = pointType;
         this.amount = amount;

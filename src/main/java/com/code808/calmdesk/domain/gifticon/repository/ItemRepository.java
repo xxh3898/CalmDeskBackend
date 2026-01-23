@@ -1,6 +1,6 @@
-package com.code808.calmdesk.domain.member.admin.gifticonManage.repository;
+package com.code808.calmdesk.domain.gifticon.repository;
 
-import com.code808.calmdesk.domain.member.admin.gifticonManage.entity.Gifticon;
+import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
