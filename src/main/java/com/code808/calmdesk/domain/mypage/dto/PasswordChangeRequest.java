@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.member.employee.myPage.dto;
+package com.code808.calmdesk.domain.mypage.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

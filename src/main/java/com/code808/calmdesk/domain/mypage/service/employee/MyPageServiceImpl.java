@@ -1,6 +1,6 @@
-package com.code808.calmdesk.domain.member.employee.myPage.service;
+package com.code808.calmdesk.domain.mypage.service.employee;
 
-import com.code808.calmdesk.domain.member.employee.myPage.dto.*;
+import com.code808.calmdesk.domain.mypage.dto.*;
 import com.example.demo.entity.Member;
 import com.example.demo.entity.Notification;
 import com.example.demo.entity.Order;
