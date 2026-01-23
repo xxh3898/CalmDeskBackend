@@ -1,4 +1,4 @@
-package com.example.demo.dto.common;
+package com.code808.calmdesk.global.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.example.demo.dto.mypage;
+package com.code808.calmdesk.domain.member.employee.myPage.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

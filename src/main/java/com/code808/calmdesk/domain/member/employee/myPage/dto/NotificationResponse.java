@@ -1,4 +1,4 @@
-package com.example.demo.dto.mypage;
+package com.code808.calmdesk.domain.member.employee.myPage.dto;
 
 import com.example.demo.entity.Notification;
 import com.example.demo.enums.CommonEnums;

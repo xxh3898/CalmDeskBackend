@@ -1,8 +1,8 @@
-package com.example.demo.controller;
+package com.code808.calmdesk.domain.member.employee.myPage.controller;
 
-import com.example.demo.dto.common.ApiResponse;
-import com.example.demo.dto.mypage.*;
-import com.example.demo.service.MyPageService;
+import com.code808.calmdesk.global.dto.ApiResponse;
+import com.code808.calmdesk.domain.member.employee.myPage.dto.*;
+import com.code808.calmdesk.domain.member.employee.myPage.service.MyPageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

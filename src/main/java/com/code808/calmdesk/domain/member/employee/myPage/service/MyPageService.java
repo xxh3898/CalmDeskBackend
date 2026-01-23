@@ -1,6 +1,6 @@
-package com.example.demo.service;
+package com.code808.calmdesk.domain.member.employee.myPage.service;
 
-import com.example.demo.dto.mypage.*;
+import com.code808.calmdesk.domain.member.employee.myPage.dto.*;
 
 import java.util.List;
 

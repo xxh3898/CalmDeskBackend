@@ -1,12 +1,11 @@
-package com.example.demo.service.impl;
+package com.code808.calmdesk.domain.member.employee.myPage.service;
 
-import com.example.demo.dto.mypage.*;
+import com.code808.calmdesk.domain.member.employee.myPage.dto.*;
 import com.example.demo.entity.Member;
 import com.example.demo.entity.Notification;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.PointHistory;
 import com.example.demo.repository.*;
-import com.example.demo.service.MyPageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
