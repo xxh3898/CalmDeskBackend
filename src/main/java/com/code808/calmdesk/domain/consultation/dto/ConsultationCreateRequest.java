@@ -14,10 +14,11 @@ public class ConsultationCreateRequest {
     @NotBlank(message = "내용은 필수 입력값입니다")
     private String description;
 
-    public Consultation toEntity() {
+    public Consultation toEntity(com.code808.calmdesk.domain.member.entity.Member member) {
         return Consultation.builder()
                 .title(title)
                 .description(description)
+                .member(member)
                 .build();
     }
 }
