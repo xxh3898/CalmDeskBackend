@@ -39,6 +39,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/signup/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/signup/join").permitAll()
                         .requestMatchers(HttpMethod.GET, "/companies/by-code/{company_code}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
