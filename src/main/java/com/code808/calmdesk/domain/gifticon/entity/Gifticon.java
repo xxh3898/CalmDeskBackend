@@ -1,49 +1,50 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
-
+import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.member.entity.Company;
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
-@Table(name = "GIFTICON")
+@Entity(name = "GIFTICON")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Gifticon {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "GIFTICON_ID")
-    private Long id; // 기프티콘 아이디 (NUMBER)
+    private Long gifticonId;
 
-    @Column(name = "PRODUCT_NAME", nullable = false, length = 100)
-    private String name; // 상품 이름 (VARCHAR2(100))
+    @Column(nullable = false, length = 100)
+    private String gifticonName;
 
-    @Column(name = "IMAGE", nullable = false, length = 100)
+    @Column(nullable = false, length = 255)
     private String img;
 
-    @Column(name = "PRICE", nullable = false)
-    private Long price; // 가격 (NUMBER)
+    @Column(nullable = false)
+    private Integer price;
 
-    @Column(name = "QUANTITY", nullable = false)
-    private Integer quantity; // 재고 (NUMBER)
+    @Column(nullable = false)
+    private Integer quantity;
 
-    @CreationTimestamp
-    @Column(name = "ORDER_DATE", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP") // DB
-                                                                                                                                // 레벨
-                                                                                                                                // 기본값
-                                                                                                                                // 설정
-    private LocalDateTime orderDate = LocalDateTime.now();
+    @Column(nullable = false)
+    private Integer period = 30;
 
-    @Column(name = "IS_ACTIVE", nullable = false)
-    private boolean isActive = true;
+    @Column(length = 1, nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private CommonEnums.Status status = CommonEnums.Status.N;
+
+    @OneToMany(mappedBy = "gifticon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
 }

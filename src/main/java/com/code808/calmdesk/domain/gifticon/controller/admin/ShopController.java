@@ -21,13 +21,10 @@ public class ShopController {
 
     // 1. 아이템 목록 조회
     @GetMapping("/items")
-    public ResponseEntity<List<ItemResponse>> getAllItems() {
-        List<ItemResponse> items = shopService.findAllGifiticon()
-                .stream()
-                .map(ItemResponse::new) // Gifticon 엔티티를 ItemResponse DTO로 변환
-                .toList();
-
-        return ResponseEntity.ok(items);
+    public ResponseEntity<List<ItemResponse>> getItemsByCompany(@RequestParam("companyId") Long companyId) {
+        // Service에서 회사 ID로 필터링된 목록을 가져옴
+        List<ItemResponse> responses = shopService.findAllByCompany(companyId);
+        return ResponseEntity.ok(responses);
     }
 
     // 2. 구매 처리 (핵심)
@@ -45,7 +42,7 @@ public class ShopController {
     // 3. 아이템 활성 상태 토글
     @PatchMapping("/items/{id}/toggle")
     public ResponseEntity<?> toggleStatus(@PathVariable Long id) {
-        shopService.toggleActive(id);
+        shopService.toggleStatus(id);
         return ResponseEntity.ok().build();
     }
 

@@ -1,67 +1,69 @@
 package com.code808.calmdesk.domain.member.entity;
 
-import com.code808.calmdesk.domain.gifticon.entity.GiftOrder;
-import com.code808.calmdesk.domain.gifticon.entity.Mission_List;
+import com.code808.calmdesk.domain.common.BaseTimeEntity;
+
+import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.gifticon.entity.MissionList;
+import com.code808.calmdesk.domain.gifticon.entity.Order;
+
+import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "MEMBER")
+@Builder
+@AllArgsConstructor
 @Getter
-@Setter
-@NoArgsConstructor
-public class Member {
+@Entity(name = "MEMBER")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member extends BaseTimeEntity {
 
     @Id
-    @Column(name = "MEMBER_ID")
-    private Long id; // 멤버 아이디 (NUMBER)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long memberId;
 
-    @Column(name = "NAME", length = 20)
-    private String name; // 이름 (VARCHAR2(20))
+    @Column(nullable = false, length = 30)
+    private String name;
 
-    @Column(name = "EMAIL", unique = true, length = 30)
-    private String email; // 이메일 (VARCHAR2(30), UNIQUE)
+    @Column(nullable = false, unique = true, length = 50)
+    private String email;
 
-    @Column(name = "PHONE", unique = true, length = 30)
-    private String phone; // 연락처 (VARCHAR2(30), UNIQUE)
+    @Column(nullable = false, unique = true, length = 50)
+    private String password;
 
-    @Column(name = "ROLE")
-    private Character role; // 권한 (CHAR)
+    @Column(nullable = false, unique = true, length = 30)
+    private String phone;
 
-    @Column(name = "HIRE_DATE")
-    private LocalDate hireDate; // 입사일 (DATE)
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
-    @Column(name = "PASSWORD", length = 50)
-    private String password; // 비밀번호 (VARCHAR2(50))
+    @Column(length = 1, nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private CommonEnums.Status status = CommonEnums.Status.N;
 
-    @Column(name = "ACTIVE")
-    private Character active; // 가입 활성화 (CHAR)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    private Company company;
 
-    @Column(name = "ACCOUNT_ID")
-    private Long accountId; // 잔여 포인트 (NUMBER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DEPARTMENT_ID", nullable = false)
+    private Department department;
 
-    @Column(name = "TOTAL_EARNED")
-    private Long totalEarned; // 누적 획득 포인트 (NUMBER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RANK_ID", nullable = false)
+    private Rank rank;
 
-    @Column(name = "TOTAL_SPENT")
-    private Long totalSpent; // 누적 사용 포인트 (NUMBER)
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Account account;
 
-    // 외래키들 (필요 시 연관관계 매핑 가능)
-    @Column(name = "COMPANY_ID")
-    private Long companyId;
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
 
-    @Column(name = "department_id")
-    private Integer departmentId;
-
-    @Column(name = "RANK_ID")
-    private Long rankId;
-
-    @OneToMany(mappedBy = "member")
-    private List<GiftOrder> giftOrders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member") // 'o'를 대문자 'O'로 수정
-    private List<Mission_List> missionLists = new ArrayList<>();
+    public enum Role {
+        EMPLOYEE, ADMIN
+    }
 }
