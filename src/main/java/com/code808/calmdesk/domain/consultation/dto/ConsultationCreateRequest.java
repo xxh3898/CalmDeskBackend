@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class ConsultationCreateRequest {
-    @NotBlank(message = "Title cannot be blank")
+    @NotBlank(message = "제목은 필수 입력관입니다")
     private String title;
 
-    @NotBlank(message = "Description cannot be blank")
+    @NotBlank(message = "내용은 필수 입력값입니다")
     private String description;
 
     public Consultation toEntity() {
