@@ -1,66 +1,78 @@
 package com.code808.calmdesk.domain.member.entity;
 
-import com.code808.calmdesk.domain.member.admin.gifticonManage.entity.Gift_Order;
-import com.code808.calmdesk.domain.member.admin.gifticonManage.entity.Mission_List;
+import com.code808.calmdesk.domain.common.BaseTimeEntity;
+import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.gifticon.entity.Order;
+import com.code808.calmdesk.domain.notification.entity.Notification;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "MEMBER")
-@Getter @Setter
-@NoArgsConstructor
-public class Member {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member extends BaseTimeEntity {
 
     @Id
-    @Column(name = "MEMBER_ID")
-    private Long id; // 멤버 아이디 (NUMBER)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long memberId;
 
-    @Column(name = "NAME", length = 20)
-    private String name; // 이름 (VARCHAR2(20))
+    @Column(nullable = false, length = 30)
+    private String name;
 
-    @Column(name = "EMAIL", unique = true, length = 30)
-    private String email; // 이메일 (VARCHAR2(30), UNIQUE)
+    @Column(nullable = false, unique = true, length = 50)
+    private String email;
 
-    @Column(name = "PHONE", unique = true, length = 30)
-    private String phone; // 연락처 (VARCHAR2(30), UNIQUE)
+    @Column(nullable = false, length = 50)
+    private String password;
 
-    @Column(name = "ROLE")
-    private Character role; // 권한 (CHAR)
+    @Column(nullable = false, unique = true, length = 30)
+    private String phone;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Column(length = 1, nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private CommonEnums.Status status = CommonEnums.Status.N;
 
     @Column(name = "HIRE_DATE")
-    private LocalDate hireDate; // 입사일 (DATE)
-
-    @Column(name = "PASSWORD", length = 50)
-    private String password; // 비밀번호 (VARCHAR2(50))
-
-    @Column(name = "ACTIVE")
-    private Character active; // 가입 활성화 (CHAR)
-
-    @Column(name = "ACCOUNT_ID")
-    private Long accountId; // 잔여 포인트 (NUMBER)
+    private LocalDate hireDate;
 
     @Column(name = "TOTAL_EARNED")
-    private Long totalEarned; // 누적 획득 포인트 (NUMBER)
+    private Long totalEarned;
 
     @Column(name = "TOTAL_SPENT")
-    private Long totalSpent; // 누적 사용 포인트 (NUMBER)
+    private Long totalSpent;
 
-    // 외래키들 (필요 시 연관관계 매핑 가능)
-    @Column(name = "COMPANY_ID")
-    private Long companyId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    private Company company;
 
-    @Column(name = "department_id")
-    private Integer departmentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DEPARTMENT_ID", nullable = false)
+    private Department department;
 
-    @Column(name = "RANK_ID")
-    private Long rankId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RANK_ID", nullable = false)
+    private Rank rank;
 
-    @OneToMany(mappedBy = "member")
-    private List<Gift_Order> giftOrders = new ArrayList<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member") // 'o'를 대문자 'O'로 수정
-    private List<Mission_List> missionLists = new ArrayList<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    public Long getId() { return memberId; }
+
+    public enum Role { EMPLOYEE, ADMIN }
 }

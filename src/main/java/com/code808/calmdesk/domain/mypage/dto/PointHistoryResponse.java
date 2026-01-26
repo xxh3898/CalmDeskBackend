@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
-import com.example.demo.entity.PointHistory;
+import com.code808.calmdesk.domain.gifticon.entity.Point_History;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,26 +20,21 @@ public class PointHistoryResponse {
     private Integer balanceAfter;
     private String date;
 
-    public static PointHistoryResponse from(PointHistory pointHistory) {
-        String title = "";
-        if (pointHistory.getType() == PointHistory.Type.EARN) {
-            if (pointHistory.getMissionList() != null) {
-                title = pointHistory.getMissionList().getRewardName();
-            }
-        } else {
-            if (pointHistory.getOrder() != null && pointHistory.getOrder().getGifticon() != null) {
-                title = pointHistory.getOrder().getGifticon().getGifticonName() + " 교환";
-            }
+    public static PointHistoryResponse from(Point_History pointHistory) {
+        String pointType = pointHistory.getPointType() != null ? pointHistory.getPointType() : "";
+        String title = "EARN".equalsIgnoreCase(pointType) ? "포인트 적립" : "포인트 사용";
+        if (pointHistory.getSourceType() != null && !pointHistory.getSourceType().isEmpty()) {
+            title = pointHistory.getSourceType();
         }
 
         return PointHistoryResponse.builder()
-                .historyId(pointHistory.getHistoryId())
-                .type(pointHistory.getType().name())
+                .historyId(pointHistory.getId())
+                .type(pointType)
                 .title(title)
-                .amount(pointHistory.getAmount())
-                .balanceAfter(pointHistory.getBalanceAfter())
-                .date(pointHistory.getCreatedDate() != null
-                        ? pointHistory.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
+                .amount(pointHistory.getAmount() != null ? pointHistory.getAmount().intValue() : 0)
+                .balanceAfter(pointHistory.getBalanceAfter() != null ? pointHistory.getBalanceAfter().intValue() : 0)
+                .date(pointHistory.getCreateDate() != null
+                        ? pointHistory.getCreateDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))
                         : "")
                 .build();
     }

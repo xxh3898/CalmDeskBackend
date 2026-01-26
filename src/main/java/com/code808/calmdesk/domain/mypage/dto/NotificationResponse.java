@@ -1,7 +1,6 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
-import com.example.demo.entity.Notification;
-import com.example.demo.enums.CommonEnums;
+import com.code808.calmdesk.domain.notification.entity.Notification;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,18 +21,20 @@ public class NotificationResponse {
     private Boolean read;
 
     public static NotificationResponse from(Notification notification) {
-        // Notification 엔티티에 BaseTimeEntity가 없으므로 임시 처리
-        // 추후 Notification 엔티티에 createdDate 필드 추가 필요
         String date = "";
         String time = "";
+        if (notification.getCreatedDate() != null) {
+            date = notification.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            time = notification.getCreatedDate().format(DateTimeFormatter.ofPattern("HH:mm"));
+        }
 
         return NotificationResponse.builder()
-                .notificationId(notification.getNotificationId())
+                .notificationId(notification.getId())
                 .title(notification.getTitle())
                 .message(notification.getContent())
                 .date(date)
                 .time(time)
-                .read(notification.getStatus() == CommonEnums.Status.Y)
+                .read(notification.getStatus() != null && "Y".equals(notification.getStatus().getCode()))
                 .build();
     }
 }

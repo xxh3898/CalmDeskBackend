@@ -1,7 +1,7 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
-import com.example.demo.entity.Order;
-import com.example.demo.entity.Gifticon;
+import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
+import com.code808.calmdesk.domain.gifticon.entity.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,24 +23,23 @@ public class CouponResponse {
     private String expiryDate;
     private String status; // AVAILABLE, USED
 
-    public static CouponResponse from(Order order) {
-        Gifticon gifticon = order.getGifticon();
-        LocalDate expiryDate = order.getOrderDate().plusDays(order.getPeriod());
+    public static CouponResponse from(Order order, Gifticon gifticon) {
+        int period = order.getPeriod() != null ? order.getPeriod() : 0;
+        LocalDate expiryDate = order.getOrderDate() != null
+                ? order.getOrderDate().plusDays(period)
+                : LocalDate.now();
         String status = expiryDate.isAfter(LocalDate.now()) ? "AVAILABLE" : "USED";
 
-        // shop 정보는 gifticonName에서 추출하거나 별도 필드가 필요할 수 있음
-        String shop = gifticon.getGifticonName(); // 임시로 이름 사용
-
-        // Order는 복합키(OrderId)를 사용하므로, orderId는 gifticonId를 사용하거나 null로 설정
-        // 실제로는 복합키를 문자열로 변환하거나 별도의 순차 ID가 필요할 수 있음
-        Long orderIdValue = order.getId() != null ? order.getId().getGifticonId() : null;
+        String gifticonName = gifticon != null ? gifticon.getGifticonName() : "";
+        String shop = gifticon != null ? gifticon.getGifticonName() : "";
+        Integer price = order.getApprovalAmount() != null ? order.getApprovalAmount() : 0;
 
         return CouponResponse.builder()
-                .orderId(orderIdValue)
-                .gifticonId(gifticon.getGifticonId())
-                .gifticonName(gifticon.getGifticonName())
+                .orderId(order.getId())
+                .gifticonId(gifticon != null ? gifticon.getGifticonId() : null)
+                .gifticonName(gifticonName)
                 .shop(shop)
-                .price(order.getApprovalAmount())
+                .price(price)
                 .expiryDate(expiryDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                 .status(status)
                 .build();

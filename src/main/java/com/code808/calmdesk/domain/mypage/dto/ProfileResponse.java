@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
-import com.example.demo.entity.Member;
+import com.code808.calmdesk.domain.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,23 +17,34 @@ public class ProfileResponse {
     private String name;
     private String email;
     private String phone;
+    private String companyName;
     private String department;
     private String position;
     private String joinDate;
     private Integer currentPoint;
 
     public static ProfileResponse from(Member member) {
-        int currentPoint = member.getTotalEarnedPoint() - member.getTotalSpentPoint();
-        
+        long totalEarned = member.getTotalEarned() != null ? member.getTotalEarned() : 0L;
+        long totalSpent = member.getTotalSpent() != null ? member.getTotalSpent() : 0L;
+        int currentPoint = (int) (totalEarned - totalSpent);
+
+        String companyName = member.getCompany() != null && member.getCompany().getCompanyName() != null
+                ? member.getCompany().getCompanyName() : "";
+        String department = member.getDepartment() != null && member.getDepartment().getDepartmentName() != null
+                ? member.getDepartment().getDepartmentName() : "";
+        String position = member.getRank() != null && member.getRank().getRankName() != null
+                ? member.getRank().getRankName() : "";
+
         return ProfileResponse.builder()
-                .memberId(member.getMemberId())
+                .memberId(member.getId())
                 .name(member.getName())
                 .email(member.getEmail())
                 .phone(member.getPhone())
-                .department(member.getDepartment().getDepartmentName())
-                .position(member.getRank().getRankName())
-                .joinDate(member.getCreatedDate() != null 
-                        ? member.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                .companyName(companyName)
+                .department(department)
+                .position(position)
+                .joinDate(member.getHireDate() != null
+                        ? member.getHireDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                         : "")
                 .currentPoint(currentPoint)
                 .build();

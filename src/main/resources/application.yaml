@@ -1,17 +1,26 @@
+server:
+  port: 8008
+
 spring:
   application:
     name: calmdesk
 
+  # data.sql 실행 (MySQL 등 외부 DB는 기본이 never라 always로 설정)
+  sql:
+    init:
+      mode: always
+      continue-on-error: true   # 테이블/데이터 이슈 있어도 앱 기동은 계속
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/calmdesk_db?serverTimezone=UTC&characterEncoding=UTF-8
-    username: paiktmddnjs
-    password: paiktmddnjs # 본인의 MySQL 비밀번호 입력
+    url: jdbc:mysql://localhost:3306/calmdesk?serverTimezone=UTC&characterEncoding=UTF-8
+    username: user02
+    password: pass02  # Access denied 발생 시: MySQL에 맞는 계정/비밀번호로 수정
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true # 실행되는 SQL을 콘솔에 출력
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
