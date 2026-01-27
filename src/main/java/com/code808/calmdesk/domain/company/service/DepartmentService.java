@@ -2,12 +2,11 @@ package com.code808.calmdesk.domain.company.service;
 
 import java.util.List;
 
-import com.code808.calmdesk.domain.company.dto.DepartmentMemberDto;
-import com.code808.calmdesk.domain.company.dto.DepartmentResponseDto;
+import com.code808.calmdesk.domain.company.dto.DepartmentDto;
 
 public interface DepartmentService {
 
-    DepartmentResponseDto getDepartmentDetails(Long departmentId);
+    DepartmentDto.DetailResponse getDepartmentDetails(Long departmentId);
 
-    List<DepartmentMemberDto> getDepartmentMembers(Long departmentId);
+    List<DepartmentDto.MemberResponse> getDepartmentMembers(Long departmentId);
 }

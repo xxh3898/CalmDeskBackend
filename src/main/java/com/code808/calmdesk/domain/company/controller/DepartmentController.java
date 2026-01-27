@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.code808.calmdesk.domain.company.dto.DepartmentMemberDto;
-import com.code808.calmdesk.domain.company.dto.DepartmentResponseDto;
+import com.code808.calmdesk.domain.company.dto.DepartmentDto;
 import com.code808.calmdesk.domain.company.service.DepartmentService;
 
 import lombok.RequiredArgsConstructor;
@@ -22,14 +21,14 @@ public class DepartmentController {
     private final DepartmentService departmentService;
 
     @GetMapping("/{departmentId}")
-    public ResponseEntity<DepartmentResponseDto> getDepartmentDetails(@PathVariable Long departmentId) {
-        DepartmentResponseDto departmentInfo = departmentService.getDepartmentDetails(departmentId);
+    public ResponseEntity<DepartmentDto.DetailResponse> getDepartmentDetails(@PathVariable Long departmentId) {
+        DepartmentDto.DetailResponse departmentInfo = departmentService.getDepartmentDetails(departmentId);
         return ResponseEntity.ok(departmentInfo);
     }
 
     @GetMapping("/{departmentId}/members")
-    public ResponseEntity<List<DepartmentMemberDto>> getDepartmentMembers(@PathVariable Long departmentId) {
-        List<DepartmentMemberDto> members = departmentService.getDepartmentMembers(departmentId);
+    public ResponseEntity<List<DepartmentDto.MemberResponse>> getDepartmentMembers(@PathVariable Long departmentId) {
+        List<DepartmentDto.MemberResponse> members = departmentService.getDepartmentMembers(departmentId);
         return ResponseEntity.ok(members);
     }
 }

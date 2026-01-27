@@ -6,8 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.code808.calmdesk.domain.company.dto.DepartmentMemberDto;
-import com.code808.calmdesk.domain.company.dto.DepartmentResponseDto;
+import com.code808.calmdesk.domain.company.dto.DepartmentDto;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.member.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -24,14 +23,14 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final MemberRepository memberRepository;
 
     @Override
-    public DepartmentResponseDto getDepartmentDetails(Long departmentId) {
+    public DepartmentDto.DetailResponse getDepartmentDetails(Long departmentId) {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없습니다. (부서 ID: " + departmentId + ")"));
-        return DepartmentResponseDto.from(department);
+        return DepartmentDto.DetailResponse.from(department);
     }
 
     @Override
-    public List<DepartmentMemberDto> getDepartmentMembers(Long departmentId) {
+    public List<DepartmentDto.MemberResponse> getDepartmentMembers(Long departmentId) {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없습니다. (부서 ID: " + departmentId + ")"));
 
@@ -39,7 +38,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         List<Member> members = memberRepository.findByDepartment(department);
 
         return members.stream()
-                .map(DepartmentMemberDto::from)
+                .map(DepartmentDto.MemberResponse::from)
                 .collect(Collectors.toList());
     }
 }
