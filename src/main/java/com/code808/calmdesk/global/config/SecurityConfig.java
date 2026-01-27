@@ -35,13 +35,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/signup/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/signup/join").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/companies/by-code/{company_code}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/signup/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/signup/join").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
-
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

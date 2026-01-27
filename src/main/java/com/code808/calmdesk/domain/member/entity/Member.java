@@ -53,6 +53,18 @@ public class Member extends BaseTimeEntity {
     @JoinColumn(name = "RANK_ID")
     private Rank rank;
 
+    public void updateCompnayInfo(
+            Company company,
+            Department department,
+            Role role,
+            CommonEnums.Status status
+    ){
+        this.company = company;
+        this.department = department;
+        this.role = role;
+        this.status = status;
+    }
+
     public enum Role{
         EMPLOYEE, ADMIN
     }

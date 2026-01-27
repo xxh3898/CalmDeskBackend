@@ -36,6 +36,10 @@ public class AuthServiceImpl implements AuthService {
 
         Member savedMember = memberRepository.save(member);
 
-        return SignupDto.SignupResponse.of(savedMember);
+        String token = jwtTokenProvider.generateToken(
+                savedMember.getEmail(),
+                "TEMP"
+        );
+        return SignupDto.SignupResponse.of(savedMember, token);
     }
 }
