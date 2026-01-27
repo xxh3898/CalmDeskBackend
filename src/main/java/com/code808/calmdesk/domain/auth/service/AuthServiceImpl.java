@@ -42,4 +42,27 @@ public class AuthServiceImpl implements AuthService {
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
+
+    @Override
+    @Transactional
+    public LoginDto.LoginResponse login(LoginDto.LoginRequest request){
+        Member member = memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new RuntimeException("존재하지 않는 사용자입니다."));
+
+        if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        }
+
+        String role = (member.getRole() != null)
+            ? member.getRole().name()
+            : "TEMP";
+
+        String token = jwtTokenProvider.generateToken(
+                member.getEmail(),
+                role
+        );
+
+        return LoginDto.LoginResponse.of(member, token);
+    }
+
 }

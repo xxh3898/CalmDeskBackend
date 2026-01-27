@@ -27,4 +27,19 @@ public class CompanyController {
         String email = authentication.getName();
         return ResponseEntity.ok(companyService.register(request, email));
     }
+
+    @GetMapping("/by-code/{companyCode}")
+    public ResponseEntity<CompanyDto.CheckResponse> generateByCode(
+            @Valid @PathVariable("companyCode") String companyCode){
+        return ResponseEntity.ok(companyService.getByCode(companyCode));
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<CompanyDto.JoinResponse> join(
+            @Valid @RequestBody CompanyDto.JoinRequest request,
+            Authentication authentication){
+        String email = authentication.getName();
+        return ResponseEntity.ok(companyService.join(request, email));
+    }
+
 }

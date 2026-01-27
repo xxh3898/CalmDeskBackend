@@ -22,4 +22,10 @@ public class AuthController {
             @Valid @RequestBody SignupDto.SignupRequest request) {
         return ResponseEntity.ok(authService.signup(request));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginDto.LoginResponse> login(
+            @Valid @RequestBody LoginDto.LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
 }

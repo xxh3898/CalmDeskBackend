@@ -1,7 +1,7 @@
 package com.code808.calmdesk.domain.company.repository;
 
-import com.code808.calmdesk.domain.member.entity.Department;
-import com.code808.calmdesk.domain.member.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.company.entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
