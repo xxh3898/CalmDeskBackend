@@ -1,5 +1,6 @@
-package com.code808.calmdesk.domain.member.entity;
+package com.code808.calmdesk.domain.company.entity;
 
+import com.code808.calmdesk.domain.member.entity.Member;
 import lombok.*;
 import jakarta.persistence.*;
 

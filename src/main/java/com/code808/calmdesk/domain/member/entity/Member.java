@@ -2,12 +2,11 @@ package com.code808.calmdesk.domain.member.entity;
 
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
 import jakarta.persistence.Entity;;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Builder
 @AllArgsConstructor
@@ -53,14 +52,16 @@ public class Member extends BaseTimeEntity {
     @JoinColumn(name = "RANK_ID")
     private Rank rank;
 
-    public void updateCompnayInfo(
+    public void updateCompanyInfo(
             Company company,
             Department department,
+            Rank rank,
             Role role,
             CommonEnums.Status status
     ){
         this.company = company;
         this.department = department;
+        this.rank = rank;
         this.role = role;
         this.status = status;
     }

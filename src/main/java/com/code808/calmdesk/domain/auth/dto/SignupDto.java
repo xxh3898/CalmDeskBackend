@@ -2,8 +2,8 @@ package com.code808.calmdesk.domain.auth.dto;
 
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.member.entity.Company;
-import com.code808.calmdesk.domain.member.entity.Department;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Rank;
 
 import jakarta.validation.constraints.Email;

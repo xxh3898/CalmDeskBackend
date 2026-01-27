@@ -1,12 +1,14 @@
 package com.code808.calmdesk.domain.company.dto;
 
 import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.member.entity.Company;
-import com.code808.calmdesk.domain.member.entity.Department;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.member.entity.Rank;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.util.List;
 
 
 public class CompanyDto {
@@ -68,6 +70,104 @@ public class CompanyDto {
                         .category(company.getCategory())
                         .minValue(company.getMinValue())
                         .maxValue(company.getMaxValue())
+                        .build();
+            }
+        }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DepartmentInfo {
+        private Long departmentId;
+        private String departmentName;
+
+        public static DepartmentInfo of(Department department) {
+            return DepartmentInfo.builder()
+                    .departmentId(department.getDepartmentId())
+                    .departmentName(department.getDepartmentName())
+                    .build();
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class RankInfo {
+        private Long rankId;
+        private String rankName;
+
+        public static RankInfo of(Rank rank) {
+            return RankInfo.builder()
+                    .rankId(rank.getRankId())
+                    .rankName(rank.getRankName())
+                    .build();
+        }
+    }
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class CheckResponse {
+            private Long companyId;
+            private String companyCode;
+            private String companyName;
+            private String category;
+            private List<DepartmentInfo> departments;
+            private List<RankInfo> ranks;
+
+            public static CheckResponse of(Company company, List<Department> departments, List<Rank> ranks) {
+                return CheckResponse.builder()
+                        .companyId(company.getCompanyId())
+                        .companyCode(company.getCompanyCode())
+                        .companyName(company.getCompanyName())
+                        .category(company.getCategory())
+                        .departments(departments.stream()
+                                .map(DepartmentInfo::of)
+                                .toList())
+                        .ranks(ranks.stream()
+                                .map(RankInfo::of)
+                                .toList())
+                        .build();
+            }
+        }
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class JoinRequest {
+            @NotBlank(message = "회사 코드는 필수입니다.")
+            private String companyCode;
+
+            @NotNull(message = "부서는 필수입니다.")
+            private Long departmentId;
+
+            @NotNull(message = "직급은 필수입니다.")
+            private Long rankId;
+        }
+
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class JoinResponse {
+            private Long companyId;
+            private String companyCode;
+            private String companyName;
+            private String category;
+            private String message;
+
+            public static JoinResponse of(Company company, CommonEnums.Status joinStatus) {
+                String message = (joinStatus == CommonEnums.Status.N)
+                        ? "관리자 승인 대기 중입니다."
+                        : "회사 참여가 완료되었습니다.";
+                return JoinResponse.builder()
+                        .companyId(company.getCompanyId())
+                        .companyCode(company.getCompanyCode())
+                        .companyName(company.getCompanyName())
+                        .category(company.getCategory())
+                        .message(message)
                         .build();
             }
         }

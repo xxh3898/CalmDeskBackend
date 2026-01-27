@@ -5,5 +5,5 @@ import com.code808.calmdesk.domain.auth.dto.SignupDto;
 
 public interface AuthService {
     SignupDto.SignupResponse signup(SignupDto.SignupRequest request);
-//    LoginDto.LoginResponse login(LoginDto.LoginRequest response);
+    LoginDto.LoginResponse login(LoginDto.LoginRequest response);
 }
