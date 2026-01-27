@@ -3,7 +3,6 @@ package com.code808.calmdesk.domain.member.entity;
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
-import com.code808.calmdesk.domain.notification.entity.Notification;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -68,9 +67,6 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
 
     public Long getId() { return memberId; }
 

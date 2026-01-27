@@ -82,29 +82,4 @@ public class MyPageController {
         }
     }
 
-    // 알림 목록 조회
-    @GetMapping("/notifications")
-    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getNotifications(@RequestParam Long memberId) {
-        try {
-            List<NotificationResponse> response = myPageService.getNotifications(memberId);
-            return ResponseEntity.ok(ApiResponse.success("알림 목록 조회 성공", response));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    // 알림 읽음 처리
-    @PutMapping("/notifications/{notificationId}/read")
-    public ResponseEntity<ApiResponse<Void>> markNotificationAsRead(
-            @RequestParam Long memberId,
-            @PathVariable Long notificationId) {
-        try {
-            myPageService.markNotificationAsRead(memberId, notificationId);
-            return ResponseEntity.ok(ApiResponse.success("알림 읽음 처리 성공", null));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
 }

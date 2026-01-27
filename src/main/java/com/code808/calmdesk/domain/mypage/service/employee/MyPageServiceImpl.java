@@ -7,9 +7,6 @@ import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.mypage.dto.*;
-import com.code808.calmdesk.domain.notification.entity.Notification;
-import com.code808.calmdesk.domain.notification.repository.NotificationRepository;
-import com.code808.calmdesk.domain.enums.CommonEnums;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +22,6 @@ public class MyPageServiceImpl implements MyPageService {
     private final MemberRepository memberRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final OrderRepository orderRepository;
-    private final NotificationRepository notificationRepository;
 
     @Override
     public ProfileResponse getProfile(Long memberId) {
@@ -92,33 +88,5 @@ public class MyPageServiceImpl implements MyPageService {
         return orders.stream()
                 .map(order -> CouponResponse.from(order, order.getGifticon()))
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<NotificationResponse> getNotifications(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
-
-        List<Notification> notifications = notificationRepository.findByMemberOrderByNotificationIdDesc(member);
-        return notifications.stream()
-                .map(NotificationResponse::from)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public void markNotificationAsRead(Long memberId, Long notificationId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
-
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다."));
-
-        if (!notification.getMember().getId().equals(memberId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
-        }
-
-        notification.setStatus(CommonEnums.Status.Y);
-        notificationRepository.save(notification);
     }
 }

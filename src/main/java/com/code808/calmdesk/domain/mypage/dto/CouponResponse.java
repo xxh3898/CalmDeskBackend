@@ -19,6 +19,7 @@ public class CouponResponse {
     private Long gifticonId;
     private String gifticonName;
     private String shop;
+    private String image;
     private Integer price;
     private String expiryDate;
     private String status; // AVAILABLE, USED
@@ -32,6 +33,7 @@ public class CouponResponse {
 
         String gifticonName = gifticon != null ? gifticon.getGifticonName() : "";
         String shop = gifticon != null ? gifticon.getGifticonName() : "";
+        String image = gifticon != null ? gifticon.getImage() : null;
         Integer price = order.getApprovalAmount() != null ? order.getApprovalAmount() : 0;
 
         return CouponResponse.builder()
@@ -39,6 +41,7 @@ public class CouponResponse {
                 .gifticonId(gifticon != null ? gifticon.getGifticonId() : null)
                 .gifticonName(gifticonName)
                 .shop(shop)
+                .image(image)
                 .price(price)
                 .expiryDate(expiryDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                 .status(status)

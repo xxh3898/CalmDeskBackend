@@ -19,10 +19,4 @@ public interface MyPageService {
 
     // 기프티콘 목록 조회
     List<CouponResponse> getCoupons(Long memberId);
-
-    // 알림 목록 조회
-    List<NotificationResponse> getNotifications(Long memberId);
-
-    // 알림 읽음 처리
-    void markNotificationAsRead(Long memberId, Long notificationId);
 }
