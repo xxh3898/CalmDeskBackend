@@ -1,9 +1,7 @@
 package com.code808.calmdesk.domain.member.entity;
 
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
-
 import com.code808.calmdesk.domain.enums.CommonEnums;
-import com.code808.calmdesk.domain.gifticon.entity.MissionList;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
 
 import jakarta.persistence.Entity;

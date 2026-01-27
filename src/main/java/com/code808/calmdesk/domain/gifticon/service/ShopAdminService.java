@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ShopService {
+public class ShopAdminService {
 
     private final OrderRepository orderRepository;
     private final PointHistoryRepository pointHistoryRepository;
-    private final GifticonRepository gifticonRepository; // Replaced ItemRepository
+    private final GifticonRepository gifticonRepository;
     private final MemberRepository memberRepository;
 
     @Transactional

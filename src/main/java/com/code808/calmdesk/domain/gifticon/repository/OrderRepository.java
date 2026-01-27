@@ -7,6 +7,7 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
     // 특정 회원의 주문 내역만 최신순으로 조회하고 싶을 때
-    List<Order> findByMemberMemberIdOrderByOrderDateDesc(Long memberId);
+    List<Order> findByMember_MemberIdOrderByCreatedDateDesc(Long memberId);
 }

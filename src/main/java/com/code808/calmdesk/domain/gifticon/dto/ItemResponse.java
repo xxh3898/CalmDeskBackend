@@ -26,4 +26,8 @@ public class ItemResponse {
         // boolean 필드의 getter는 보통 is...() 형식입니다.
         this.isActive = (item.getStatus() == CommonEnums.Status.Y);
     }
+
+    public static ItemResponse fromEntity(Gifticon item) {
+        return new ItemResponse(item);
+    }
 }
