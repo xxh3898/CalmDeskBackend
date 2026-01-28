@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.company.dto;
 
-import com.code808.calmdesk.domain.member.entity.Department;
+import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
 
 import lombok.AllArgsConstructor;
