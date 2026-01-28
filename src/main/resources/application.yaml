@@ -19,7 +19,7 @@ spring:
       max-request-size: 100MB
 
 server:
-  port: 8008
+  port: 8080
 
 jwt:
   expiration: 86400000
