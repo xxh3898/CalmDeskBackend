@@ -24,9 +24,16 @@ public class EmployeeDashboardController {
 
     @GetMapping
     public ResponseEntity<EmployeeDashboardResponseDto> getDashboard(Principal principal) {
-        String email = principal.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        Member member;
+        // TODO: 배포 시 제거 - 테스트용 하드코딩
+        if (principal == null) {
+            member = memberRepository.findById(1L)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        } else {
+            String email = principal.getName();
+            member = memberRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        }
 
         EmployeeDashboardResponseDto data = dashboardService.getDashboardData(member.getMemberId());
         return ResponseEntity.ok(data);
