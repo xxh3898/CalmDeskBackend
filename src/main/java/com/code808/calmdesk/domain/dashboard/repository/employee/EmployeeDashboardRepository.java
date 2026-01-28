@@ -70,7 +70,7 @@ public class EmployeeDashboardRepository {
 
     public Optional<Long> findCurrentPoint(Long memberId) {
         List<Long> result = em.createQuery(
-                "SELECT p.balanceAfter FROM Point_History p WHERE p.memberId = :memberId ORDER BY p.createDate DESC", Long.class)
+                "SELECT a.remainingPoint FROM Account a WHERE a.member.memberId = :memberId", Long.class)
                 .setParameter("memberId", memberId)
                 .setMaxResults(1)
                 .getResultList();
