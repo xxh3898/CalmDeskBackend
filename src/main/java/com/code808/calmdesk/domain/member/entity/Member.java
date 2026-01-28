@@ -46,8 +46,8 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
 
-    @Column(name = "REGISTER_DATE")
-    private LocalDate registerDate;
+    @Column(name = "JOIN_DATE")
+    private LocalDate joinDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "COMPANY_ID")

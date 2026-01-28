@@ -5,6 +5,7 @@ import com.code808.calmdesk.domain.gifticon.entity.Point_History;
 import com.code808.calmdesk.domain.gifticon.repository.OrderRepository;
 import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.mypage.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,20 @@ import java.util.stream.Collectors;
 public class MyPageServiceImpl implements MyPageService {
 
     private final MemberRepository memberRepository;
+    private final AccountRepository accountRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final OrderRepository orderRepository;
 
     /**
-     * gifticon 도메인 Point_History 기준 현재 포인트.
-     * 최근 내역의 balanceAfter 사용, 없으면 0.
+     * 현재 포인트: 멤버 도메인 계좌(ACCOUNT) 테이블 잔여포인트 우선, 없으면 Point_History 최근 balanceAfter 사용.
      */
     private int getCurrentPoint(Long memberId) {
+        return accountRepository.findByMemberMemberId(memberId)
+                .map(a -> a.getRemainingPoint() != null ? a.getRemainingPoint().intValue() : 0)
+                .orElseGet(() -> getCurrentPointFromHistory(memberId));
+    }
+
+    private int getCurrentPointFromHistory(Long memberId) {
         List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
         if (histories.isEmpty()) return 0;
         Long balance = histories.get(0).getBalanceAfter();
