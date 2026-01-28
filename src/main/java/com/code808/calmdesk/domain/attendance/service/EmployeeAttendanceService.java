@@ -3,7 +3,7 @@ package com.code808.calmdesk.domain.attendance.service;
 import com.code808.calmdesk.domain.attendance.dto.*;
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.vacation.dto.VacationRequestReq;
