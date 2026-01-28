@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup/join").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
+                        .requestMatchers("/api/mypage/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated()

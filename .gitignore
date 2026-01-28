@@ -244,7 +244,7 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-!.gitkeep
+.gitkeep
 
 bin/
 

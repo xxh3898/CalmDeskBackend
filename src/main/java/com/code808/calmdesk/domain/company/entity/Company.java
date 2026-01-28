@@ -40,4 +40,3 @@ public class Company {
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL,  orphanRemoval = true)
     private List<Member> members = new ArrayList<>();
 }
-
