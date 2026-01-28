@@ -27,6 +27,18 @@ public class Account {
     @JoinColumn(name = "MEMBER_ID", nullable = false)
     private Member member;
 
+
+    // [수정/추가] 포인트 적립 비즈니스 로직
+    public void deposit(int amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("적립할 포인트는 0보다 커야 합니다.");
+        }
+        this.accountLeave += amount;        // 잔액 증가
+        this.totalEarnedPoint += amount;   // 누적 획득량 증가
+    }
+
+
+
     // [추가] 포인트 차감 비즈니스 로직
     public void withdraw(int amount) {
         if (this.accountLeave < amount) {

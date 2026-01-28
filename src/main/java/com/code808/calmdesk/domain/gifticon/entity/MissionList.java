@@ -27,6 +27,14 @@ public class MissionList {
     @Column(nullable = false, length = 500)
     private String rewardDescription;
 
+    // 추가: 미션 종류 식별용 (예: ATTENDANCE_DAILY, STRESS_LOW 등)
+    @Column(nullable = false, unique = true)
+    private String missionCode;
+
+    // 추가: 목표 수치 (출근 미션은 1, 80% 출석은 16 등)
+    @Column(nullable = false)
+    private Integer goalCount;
+
     @Column(length = 1, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -34,4 +42,7 @@ public class MissionList {
 
     @OneToMany(mappedBy = "missionList", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "missionList", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberMission> memberMissions = new ArrayList<>();
 }

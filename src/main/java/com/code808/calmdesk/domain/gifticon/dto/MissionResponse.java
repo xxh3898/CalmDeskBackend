@@ -8,10 +8,13 @@ import lombok.Getter;
 @Builder
 public class MissionResponse {
     private Long id;
-    private String title; // rewardName 매핑
-    private String description; // rewardDescription 매핑
-    private Integer reward; // pointAccount 매핑
-    private String status; // status 매핑
+    private String title;
+    private String description;
+    private int reward;
+    private String status; // 사용자의 완료 여부 (Y/N)
+    private int progressCount; // 현재 진행도
+    private int goalCount;     // 목표치
+    private String missionCode; // status 매핑
 
     public static MissionResponse fromEntity(MissionList mission) {
         return MissionResponse.builder()
