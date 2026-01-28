@@ -2,6 +2,8 @@ package com.code808.calmdesk.domain.attendance.controller.employee;
 
 import com.code808.calmdesk.domain.attendance.dto.*;
 import com.code808.calmdesk.domain.attendance.service.EmployeeAttendanceService;
+import com.code808.calmdesk.domain.vacation.dto.VacationRequestReq;
+import com.code808.calmdesk.domain.vacation.dto.VacationRequestRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

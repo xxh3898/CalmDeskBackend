@@ -1,7 +1,7 @@
 package com.code808.calmdesk.domain.vacation.entity;
 
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
