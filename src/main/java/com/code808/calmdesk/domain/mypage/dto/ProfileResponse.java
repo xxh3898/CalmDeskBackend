@@ -42,8 +42,8 @@ public class ProfileResponse {
                 .companyName(companyName)
                 .department(department)
                 .position(position)
-                .joinDate(member.getHireDate() != null
-                        ? member.getHireDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                .joinDate(member.getRegisterDate() != null
+                        ? member.getRegisterDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                         : "")
                 .currentPoint(currentPoint)
                 .build();
