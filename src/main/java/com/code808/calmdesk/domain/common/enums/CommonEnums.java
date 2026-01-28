@@ -1,7 +1,10 @@
 package com.code808.calmdesk.domain.common.enums;
 
-public class CommonEnums {
-    public enum Status{
-        Y,N
+public final class CommonEnums {
+    public enum Status {
+        Y("Y"), N("N");
+        private final String code;
+        Status(String code) { this.code = code; }
+        public String getCode() { return code; }
     }
 }
