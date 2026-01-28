@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import jakarta.persistence.*;
 import lombok.*;
 
