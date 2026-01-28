@@ -82,60 +82,94 @@ public class ShopEmployeeService {
 
 
 
-    // 미션을 불러오는 로직
     @Transactional(readOnly = true)
     public List<MissionResponse> getAllMissions(Long userId) {
         List<MissionList> allMissions = missionRepository.findByStatus(CommonEnums.Status.Y);
-
-        // [수정] 메서드명 변경: findByUser_UserId -> findByMember_MemberId
         List<MemberMission> userMissions = memberMissionRepository.findByMember_MemberId(userId);
 
-        // 사용자의 미션에 대해 완료한건지 아닌지를 판단하여 사용자에게 보여줄 미션의 상태를 변환하는 로직이다!!
         return allMissions.stream().map(mission -> {
-            String status = userMissions.stream()
+            // 해당 미션에 대한 유저의 기록 찾기
+            MemberMission userRecord = userMissions.stream()
                     .filter(um -> um.getMissionList().getMissionListId().equals(mission.getMissionListId()))
-                    .map(um -> um.getStatus().name())
                     .findFirst()
-                    .orElse("N");
+                    .orElse(null);
 
             return MissionResponse.builder()
                     .id(mission.getMissionListId())
                     .title(mission.getRewardName())
                     .description(mission.getRewardDescription())
                     .reward(mission.getPointAccount())
-                    .status(status)
+                    // ⭐ 추가: 진행률 정보 전달 (리액트 ProgressBar용)
+                    .progressCount(userRecord != null ? userRecord.getProgressCount() : 0)
+                    .goalCount(mission.getGoalCount())
+                    .status(userRecord != null ? userRecord.getStatus().name() : "N")
                     .build();
         }).collect(Collectors.toList());
     }
 
+    // 2. 보상 수령 로직 (목표 달성 체크 추가)
     @Transactional
     public void completeMission(Long memberId, Long missionId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
-
-        MissionList mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new EntityNotFoundException("미션 정보가 없습니다."));
-
-        // [수정] 위에서 만든 명시적인 쿼리 메서드 호출
+        // [수정] findByMember_MemberIdAndMissionList_MissionListId 메서드로 통일 권장
         MemberMission memberMission = memberMissionRepository
-                .findMemberMission(memberId, missionId)
-                .orElseGet(() -> MemberMission.builder()
-                        .member(member)
-                        .missionList(mission)
-                        .status(CommonEnums.Status.N)
-                        .build());
-
+                .findByMember_MemberIdAndMissionList_MissionListId(memberId, missionId)
+                .orElseGet(() -> {
+                    Member member = memberRepository.findById(memberId).orElseThrow();
+                    MissionList mission = missionRepository.findById(missionId).orElseThrow();
+                    return MemberMission.builder()
+                            .member(member)
+                            .missionList(mission)
+                            .progressCount(0)
+                            .status(CommonEnums.Status.N)
+                            .build();
+                });
         if (memberMission.getStatus() == CommonEnums.Status.Y) {
             throw new IllegalStateException("이미 보상을 획득한 미션입니다.");
         }
 
-        Account account = member.getAccount();
-        if (account == null) {
-            throw new IllegalStateException("계좌 정보가 없습니다.");
+        // ⭐ 추가: 목표 수치에 도달했는지 검증
+        if (memberMission.getProgressCount() < memberMission.getMissionList().getGoalCount()) {
+            throw new IllegalStateException("미션 목표를 아직 달성하지 못했습니다.");
         }
 
-        account.deposit(mission.getPointAccount());
-        memberMission.complete();
+        Member member = memberMission.getMember();
+        Account account = accountRepository.findByMember_MemberId(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("계좌 정보가 없습니다."));
+
+        account.deposit(memberMission.getMissionList().getPointAccount());
+        memberMission.complete(); // status = Y 처리
+
+        memberMissionRepository.save(memberMission);
+    }
+
+    // 3. 진행률 업데이트 (isAccumulative 파라미터 활용 최적화)
+    @Transactional
+    public void updateMissionProgress(Long memberId, String missionCode, int value, boolean isAccumulative) {
+        MissionList mission = missionRepository.findByMissionCode(missionCode)
+                .orElseThrow(() -> new RuntimeException("미션 코드 오류: " + missionCode));
+
+        MemberMission memberMission = memberMissionRepository
+                .findByMember_MemberIdAndMissionList_MissionListId(memberId, mission.getMissionListId())
+                .orElseGet(() -> {
+                    Member member = memberRepository.findById(memberId)
+                            .orElseThrow(() -> new RuntimeException("사용자 없음"));
+                    return MemberMission.builder()
+                            .member(member)
+                            .missionList(mission)
+                            .progressCount(0)
+                            .status(CommonEnums.Status.N)
+                            .build();
+                });
+
+        if (memberMission.getStatus() == CommonEnums.Status.Y) return;
+
+        // ⭐ 엔티티의 updateProgress 활용
+        memberMission.updateProgress(value, isAccumulative);
+
+        // 목표치 초과 방지
+        if (memberMission.getProgressCount() > mission.getGoalCount()) {
+            memberMission.updateProgress(mission.getGoalCount(), false);
+        }
 
         memberMissionRepository.save(memberMission);
     }

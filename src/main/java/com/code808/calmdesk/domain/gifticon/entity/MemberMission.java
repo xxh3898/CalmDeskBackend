@@ -35,6 +35,10 @@ public class MemberMission {
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N; // 완료 여부 (Y/N)
 
+    @Column(nullable = false)
+    @Builder.Default
+    private int progressCount = 0;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime completedAt; // 미션 완료 시점 기록
@@ -42,5 +46,23 @@ public class MemberMission {
     // 상태 변경 메서드
     public void complete() {
         this.status = CommonEnums.Status.Y;
+    }
+
+
+    // 1. 진행도 업데이트 (setter 대신 사용)
+    public void updateProgress(int value, boolean isAccumulative) {
+        if (isAccumulative) {
+            this.progressCount += value;
+        } else {
+            this.progressCount = value;
+        }
+    }
+
+
+    // MemberMission 엔티티 내부에 추가
+    public void resetMission() {
+        this.progressCount = 0;
+        this.status = CommonEnums.Status.N;
+        this.completedAt = null; // 완료 시간도 초기화
     }
 }

@@ -42,20 +42,24 @@ public class ShopEmployeeController {
     }
 
 
-        // 미션 목록 조회
-    @GetMapping("/mission/{userId}")
-    public ResponseEntity<List<MissionResponse>> getMissions(@PathVariable Long userId) {
-
-
-        // 서비스에서 getAllMissions(userId)로 수정되었으므로 인자 전달 필요
-        return ResponseEntity.ok(shopEmployeeService.getAllMissions(userId));
-    }
+//        // 미션 목록 조회
+//    @GetMapping("/mission/{userId}")
+//    public ResponseEntity<List<MissionResponse>> getMissions(@PathVariable Long userId) {
+//
+//        // 서비스에서 getAllMissions(userId)로 수정되었으므로 인자 전달 필요
+//        return ResponseEntity.ok(shopEmployeeService.getAllMissions(userId));
+//    }
 
         // 미션 완료 및 보상 지급
         @PostMapping("/mission/complete")
         public ResponseEntity<?> completeMission(@RequestBody MissionCompleteRequest request) {
             try {
                 // request에서 memberId와 missionId를 꺼내서 전달
+                // 1. 진행도를 먼저 업데이트해서 목표치(1/1)를 채웁니다.
+                shopEmployeeService.updateMissionProgress(request.getUserId(), "ATT_DAILY", 1, false);
+                shopEmployeeService.updateMissionProgress(request.getUserId(), "ATT_RATE_80", 1, true);
+
+                // 2. 그 다음에 보상을 지급합니다. (이제 1/1이므로 통과됨)
                 shopEmployeeService.completeMission(request.getUserId(), request.getMissionId());
 
 

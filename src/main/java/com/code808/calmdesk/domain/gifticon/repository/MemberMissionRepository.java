@@ -20,4 +20,11 @@ public interface MemberMissionRepository extends JpaRepository<MemberMission, Lo
             "AND mm.missionList.missionListId = :missionId")
     Optional<MemberMission> findMemberMission(@Param("memberId") Long memberId,
                                               @Param("missionId") Long missionId);
+
+
+    Optional<MemberMission> findByMember_MemberIdAndMissionList_MissionListId(Long memberId, Long missionListId);
+
+
+    // 스케줄러에서 일일 미션 초기화 시 사용 (필요 시)
+    List<MemberMission> findByMissionList_MissionCode(String missionCode);
 }

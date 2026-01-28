@@ -15,4 +15,6 @@ public interface MissionRepository extends JpaRepository<MissionList, Long> {
     // List<MissionList> findByStatus(CommonEnums.Status status);
     List<MissionList> findByStatus(CommonEnums.Status status);
 
+
+    Optional<MissionList> findByMissionCode(String missionCode);
     }
