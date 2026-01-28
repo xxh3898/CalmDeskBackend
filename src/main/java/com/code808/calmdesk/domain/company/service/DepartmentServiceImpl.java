@@ -3,12 +3,12 @@ package com.code808.calmdesk.domain.company.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.company.entity.Department;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.code808.calmdesk.domain.company.dto.DepartmentDto;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
-import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
