@@ -1,7 +1,9 @@
 package com.code808.calmdesk.domain.member.entity;
 
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
+@Entity(name = "MEMBER")
 @Table(name = "MEMBER")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseTimeEntity {
@@ -29,7 +31,7 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, unique = true, length = 50)
     private String email;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String password;
 
     @Column(nullable = false, unique = true, length = 30)
@@ -44,29 +46,37 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
 
-    @Column(name = "HIRE_DATE")
-    private LocalDate hireDate;
-
-    @Column(name = "TOTAL_EARNED")
-    private Long totalEarned;
-
-    @Column(name = "TOTAL_SPENT")
-    private Long totalSpent;
+    @Column(name = "REGISTER_DATE")
+    private LocalDate registerDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    @JoinColumn(name = "COMPANY_ID")
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DEPARTMENT_ID", nullable = false)
+    @JoinColumn(name = "DEPARTMENT_ID")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RANK_ID", nullable = false)
+    @JoinColumn(name = "RANK_ID")
     private Rank rank;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
+
+    public void updateCompanyInfo(
+            Company company,
+            Department department,
+            Rank rank,
+            Role role,
+            CommonEnums.Status status
+    ) {
+        this.company = company;
+        this.department = department;
+        this.rank = rank;
+        this.role = role;
+        this.status = status;
+    }
 
     public Long getId() { return memberId; }
 

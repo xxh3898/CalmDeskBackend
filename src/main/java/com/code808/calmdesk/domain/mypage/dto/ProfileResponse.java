@@ -23,11 +23,10 @@ public class ProfileResponse {
     private String joinDate;
     private Integer currentPoint;
 
-    public static ProfileResponse from(Member member) {
-        long totalEarned = member.getTotalEarned() != null ? member.getTotalEarned() : 0L;
-        long totalSpent = member.getTotalSpent() != null ? member.getTotalSpent() : 0L;
-        int currentPoint = (int) (totalEarned - totalSpent);
-
+    /**
+     * @param currentPoint gifticon 도메인 Point_History 기준 계산된 현재 포인트 (가장 최근 balanceAfter 또는 0)
+     */
+    public static ProfileResponse from(Member member, int currentPoint) {
         String companyName = member.getCompany() != null && member.getCompany().getCompanyName() != null
                 ? member.getCompany().getCompanyName() : "";
         String department = member.getDepartment() != null && member.getDepartment().getDepartmentName() != null

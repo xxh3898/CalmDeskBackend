@@ -23,11 +23,22 @@ public class MyPageServiceImpl implements MyPageService {
     private final PointHistoryRepository pointHistoryRepository;
     private final OrderRepository orderRepository;
 
+    /**
+     * gifticon 도메인 Point_History 기준 현재 포인트.
+     * 최근 내역의 balanceAfter 사용, 없으면 0.
+     */
+    private int getCurrentPoint(Long memberId) {
+        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
+        if (histories.isEmpty()) return 0;
+        Long balance = histories.get(0).getBalanceAfter();
+        return balance != null ? balance.intValue() : 0;
+    }
+
     @Override
     public ProfileResponse getProfile(Long memberId) {
         Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
-        return ProfileResponse.from(member);
+        return ProfileResponse.from(member, getCurrentPoint(memberId));
     }
 
     @Override
@@ -51,7 +62,7 @@ public class MyPageServiceImpl implements MyPageService {
         }
 
         memberRepository.save(member);
-        return ProfileResponse.from(member);
+        return ProfileResponse.from(member, getCurrentPoint(memberId));
     }
 
     @Override

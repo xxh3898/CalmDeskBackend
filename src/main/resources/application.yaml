@@ -1,21 +1,12 @@
-server:
-  port: 8008
-
 spring:
   application:
-    name: calmdesk
+    name: calmDesk
 
-  # data.sql 실행 (MySQL 등 외부 DB는 기본이 never라 always로 설정)
-  sql:
-    init:
-      mode: always
-      continue-on-error: true   # 테이블/데이터 이슈 있어도 앱 기동은 계속
+  config:
+    import: optional:classpath:application-secret.yaml
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/calmdesk?serverTimezone=UTC&characterEncoding=UTF-8
-    username: user02
-    password: pass02  # Access denied 발생 시: MySQL에 맞는 계정/비밀번호로 수정
 
   jpa:
     hibernate:
@@ -23,4 +14,20 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 100MB
+
+server:
+  port: 8080
+
+jwt:
+  expiration: 86400000
