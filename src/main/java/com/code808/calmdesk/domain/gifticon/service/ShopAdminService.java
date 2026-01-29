@@ -116,6 +116,6 @@ public class ShopAdminService {
             throw new IllegalArgumentException("수량은 0보다 작을 수 없습니다.");
         }
         // 3. 수량 변경 (Dirty Checking으로 인해 자동 저장됨)
-        item.setQuantity(quantity);
+        item.setStockQuantity(quantity);
     }
 }

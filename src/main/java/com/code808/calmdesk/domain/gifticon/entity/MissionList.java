@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Entity(name = "MISSION_LIST")
+@Table(name = "MISSION_LIST")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MissionList {
 

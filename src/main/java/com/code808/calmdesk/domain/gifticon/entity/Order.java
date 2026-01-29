@@ -8,6 +8,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity(name = "ORDERS")
+@Table(name = "GIFT_ORDER")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -17,15 +18,16 @@ public class Order extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ORDER_ID")
     private Long orderId;
 
-    @Column(nullable = false)
+    @Column(name = "PERIOD", nullable = false)
     private Integer period;
 
-    @Column(nullable = false)
+    @Column(name = "ORDER_DATE", nullable = false)
     private LocalDate orderDate;
 
-    @Column(nullable = false)
+    @Column(name = "APPROVAL_AMOUNT", nullable = false)
     private Integer approvalAmount;
 
     @Column(nullable = false)
@@ -47,9 +49,10 @@ public class Order extends BaseTimeEntity {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GIFTICON_ID")
+    @JoinColumn(name = "GIFTICON_ID", nullable = false)
     private Gifticon gifticon;
 
+    public Long getId() { return orderId; }
     public enum Type {
         EARN, SPEND
     }

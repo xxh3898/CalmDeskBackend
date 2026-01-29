@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.service;
 
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.dto.*;
 import com.code808.calmdesk.domain.gifticon.entity.*;
 import com.code808.calmdesk.domain.member.entity.Account;
@@ -34,7 +34,7 @@ public class ShopEmployeeService {
         Gifticon gifticon = gifticonRepository.findById(request.getItemId())
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
 
-        if (gifticon.getQuantity() <= 0) {
+        if (gifticon.getStockQuantity() <= 0) {
             throw new RuntimeException("상품 재고가 없습니다.");
         }
 
@@ -46,7 +46,7 @@ public class ShopEmployeeService {
 
         int price = request.getPrice().intValue();
         account.withdraw(price); // 여기서 포인트가 차감됨
-        gifticon.setQuantity(gifticon.getQuantity() - 1); // 재고 감소
+        gifticon.setStockQuantity(gifticon.getStockQuantity() - 1); // 재고 감소
 
         Order order = Order.builder()
                 .member(account.getMember())

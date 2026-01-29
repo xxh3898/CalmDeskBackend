@@ -20,11 +20,11 @@ public class ItemResponse {
         // 엔티티의 productName을 DTO의 name으로 매핑
         this.name = item.getGifticonName();
         // 엔티티의 image를 DTO의 img로 매핑
-        this.img = item.getImg();
+        this.img = item.getImage();
         this.price = Math.toIntExact(item.getPrice());
-        this.quantity = item.getQuantity();
+        this.quantity = item.getStockQuantity() != null ? item.getStockQuantity() : 0;
         // boolean 필드의 getter는 보통 is...() 형식입니다.
-        this.isActive = (item.getStatus() == CommonEnums.Status.Y);
+        this.isActive = item.getStatus() != null && "Y".equals(item.getStatus().getCode());
     }
 
     public static ItemResponse fromEntity(Gifticon item) {
