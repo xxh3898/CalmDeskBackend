@@ -28,4 +28,7 @@ public class VacationRequestReq {
 
     @JsonProperty("reason")
     private String reason;         // 신청 사유 (선택 사항)
+
+    @JsonProperty("halfDayType")
+    private String halfDayType;   // 반차일 경우 "오전" 또는 "오후" (선택 사항, 기본값: "오후")
 }
