@@ -16,6 +16,11 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
   servlet:
     multipart:
       max-file-size: 20MB
