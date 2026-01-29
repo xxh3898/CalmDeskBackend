@@ -1,7 +1,7 @@
 package com.code808.calmdesk.global.config;
 
-import com.code808.calmdesk.global.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,7 +17,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.code808.calmdesk.global.security.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -32,18 +34,25 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/companies/genderate-code").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/companies/register").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/companies/join").authenticated()
-//                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
-                        .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/companies/genderate-code").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/companies/register").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/companies/join").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/employee/attendance/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/attendance/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/employee/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/employee/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/consultations/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/mypage/**").authenticated()
+                //                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
+                //                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
