@@ -69,9 +69,17 @@ public class EmployeeAttendanceService {
             if (!req.getStartDate().equals(req.getEndDate())) {
                 throw new IllegalArgumentException("반차는 시작일과 종료일이 같아야 합니다.");
             }
-            // 반차: 오후 반차로 설정 (13:00 ~ 18:00)
-            startDateTime = req.getStartDate().atTime(13, 0);
-            endDateTime = req.getStartDate().atTime(18, 0);
+            // 반차: 오전/오후 선택에 따라 시간 설정
+            String halfDayType = req.getHalfDayType();
+            if (halfDayType != null && "오전".equals(halfDayType.trim())) {
+                // 오전 반차: 09:00 ~ 13:00
+                startDateTime = req.getStartDate().atTime(9, 0);
+                endDateTime = req.getStartDate().atTime(13, 0);
+            } else {
+                // 오후 반차: 13:00 ~ 18:00 (기본값)
+                startDateTime = req.getStartDate().atTime(13, 0);
+                endDateTime = req.getStartDate().atTime(18, 0);
+            }
             vacationDays = 1; // 반일 단위 (0.5일 = 1)
         } else if (type == Vacation.Type.WORKCATION) {
             // 워케이션: 09:00 ~ 18:00
@@ -87,8 +95,8 @@ public class EmployeeAttendanceService {
         }
 
         // reason이 null이거나 비어있으면 기본값 설정
-        String reason = (req.getReason() == null || req.getReason().isBlank()) 
-                ? "휴가 신청" 
+        String reason = (req.getReason() == null || req.getReason().isBlank())
+                ? "휴가 신청"
                 : req.getReason();
 
         // Vacation 엔티티 생성 및 저장
@@ -234,10 +242,11 @@ public class EmployeeAttendanceService {
 
     private String formatPeriod(Vacation v) {
         if (v.getType() == Vacation.Type.HALF) {
-            // startDate의 시간을 기준으로 오전/오후 판단 (12시 기준)
+            // startDate의 시간을 기준으로 오전/오후 판단
+            // 오전 반차: 09:00, 오후 반차: 13:00
             String dateStr = v.getStartDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd", Locale.KOREAN));
             int hour = v.getStartDate().getHour();
-            String timeOfDay = hour < 12 ? "오전" : "오후";
+            String timeOfDay = hour < 13 ? "오전" : "오후"; // 13시 미만이면 오전, 13시 이상이면 오후
             return dateStr + " (" + timeOfDay + ")";
         }
         String start = v.getStartDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd", Locale.KOREAN));
