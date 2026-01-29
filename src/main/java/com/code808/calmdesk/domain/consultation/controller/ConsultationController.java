@@ -18,8 +18,10 @@ public class ConsultationController {
     private final ConsultationService consultationService;
 
     @PostMapping
-    public ResponseEntity<Void> createConsultation(@RequestBody @Valid ConsultationCreateRequest request) {
-        Long consultationId = consultationService.createConsultation(request);
+    public ResponseEntity<Void> createConsultation(
+            @RequestBody @Valid ConsultationCreateRequest request,
+            java.security.Principal principal) {
+        Long consultationId = consultationService.createConsultation(request, principal.getName());
         return ResponseEntity.created(URI.create("/api/consultations/" + consultationId)).build();
     }
 

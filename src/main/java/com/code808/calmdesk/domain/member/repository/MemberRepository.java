@@ -12,10 +12,18 @@ import java.util.Optional;
 import com.code808.calmdesk.domain.company.entity.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByEmail(String email);
+
+    @Query("SELECT m FROM MEMBER m " +
+            "LEFT JOIN FETCH m.company " +
+            "LEFT JOIN FETCH m.department " +
+            "WHERE m.email = :email")
+    Optional<Member> findEmailWithDetails(@Param("email") String email);
 
     boolean existsByEmail(String email);
 
