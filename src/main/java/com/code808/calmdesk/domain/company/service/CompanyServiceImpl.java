@@ -10,6 +10,7 @@ import com.code808.calmdesk.domain.company.entity.Company;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.global.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final RankRepository rankRepository;
     private final MemberRepository memberRepository;
     private final CompanyCodeGenerator codeGenerator;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public CompanyDto.CodeResponse generateCode(){
@@ -75,7 +77,12 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.Y
         );
 
-        return CompanyDto.RegisterResponse.of(savedCompany, member);
+        String token = jwtTokenProvider.generateToken(
+                member.getEmail(),
+                "ADMIN"
+        );
+
+        return CompanyDto.RegisterResponse.of(savedCompany, member, token);
     }
 
     @Override
@@ -122,6 +129,11 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.N
         );
 
-        return CompanyDto.JoinResponse.of(company, member.getStatus());
+        String token = jwtTokenProvider.generateToken(
+                member.getEmail(),
+                "EMPLOYEE"
+        );
+
+        return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
     }
 }
