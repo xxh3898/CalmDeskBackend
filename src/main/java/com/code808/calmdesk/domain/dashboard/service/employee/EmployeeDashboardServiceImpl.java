@@ -15,7 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
+import com.code808.calmdesk.domain.dashboard.entity.DashboardWorkStatus;
+import com.code808.calmdesk.domain.dashboard.entity.WorkStatus;
+import com.code808.calmdesk.domain.dashboard.repository.employee.DashboardWorkStatusRepository;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -32,6 +36,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
     private final MemberRepository memberRepository;
     private final EmployeeDashboardRepository dashboardRepository;
     private final VacationRestRepository vacationRestRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final DashboardWorkStatusRepository workStatusRepository;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -68,17 +74,28 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             statusMessage = String.join(", ", messages);
         }
 
-        // 2-5. 현재 상태 조회
-        Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
-        String currentStatus = todayAttendance.map(a -> {
-            if (a.getCheckOut() != null) {
-                return "퇴근 완료";
+        // 2-5. 현재 상태 조회 (DashboardWorkStatus 우선 조회)
+        String currentStatus = "업무 준비 중";
+        LocalDateTime startTime = null;
+
+        Optional<DashboardWorkStatus> workStatusOpt = workStatusRepository.findByMember(member);
+
+        if (workStatusOpt.isPresent()) {
+            currentStatus = workStatusOpt.get().getStatus().getDescription();
+            startTime = workStatusOpt.get().getStartTime();
+        } else {
+            // Fallback: 오늘 Attendance 기록 확인
+            Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
+            if (todayAttendance.isPresent()) {
+                Attendance a = todayAttendance.get();
+                if (a.getCheckOut() != null) {
+                    currentStatus = WorkStatus.OFF.getDescription();
+                } else if (a.getCheckIn() != null) {
+                    currentStatus = WorkStatus.WORKING.getDescription();
+                    startTime = a.getCheckIn();
+                }
             }
-            if (a.getCheckIn() != null) {
-                return "업무 중";
-            }
-            return "업무 준비 중";
-        }).orElse("업무 준비 중");
+        }
 
         // 3. 연차 정보
         VacationRest vacationRest = vacationRestRepository.findByMemberId(member.getMemberId())
@@ -127,6 +144,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .attendanceRate(attendanceRate)
                         .statusMessage(statusMessage)
                         .currentStatus(currentStatus)
+                        .startTime(startTime)
                         .build())
                 .vacationStats(EmployeeDashboardResponseDto.VacationStats.builder()
                         .totalDays(vacationRest.getTotalCount())
@@ -145,6 +163,85 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .lastWeek(lastWeekChartData)
                         .build())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void clockIn(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Attendance 생성 (없을 경우)
+        // 이미 출근한 기록이 있는지 확인?
+        // 비즈니스 로직: 하루에 여러번 출근 버튼 누르면? -> 이미 출근 상태면 무시 or 에러?
+        // 여기서는 "오늘 기록이 없으면 생성"으로 처리
+        Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
+        if (todayAttendance.isEmpty()) {
+            Attendance attendance = Attendance.builder()
+                    .member(member)
+                    .workDate(today)
+                    .checkIn(now)
+                    .attendanceStatus(Attendance.AttendanceStatus.ATTEND) // 기본 정상 출근으로 가정
+                    .build();
+            attendanceRepository.save(attendance);
+        }
+
+        // 2. DashboardWorkStatus 업데이트 -> WORKING
+        updateDashboardWorkStatus(member, WorkStatus.WORKING);
+    }
+
+    @Override
+    @Transactional
+    public void clockOut(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Attendance 퇴근 처리
+        Attendance attendance = dashboardRepository.findTodayAttendance(member, today)
+                .orElseThrow(() -> new IllegalStateException("출근 기록이 없습니다."));
+
+        attendance.setCheckOut(now);
+        // Dirty checking으로 자동 저장되지만, 명시적으로 repository save 호출 생략 가능 (Transactional)
+
+        // 2. DashboardWorkStatus 업데이트 -> OFF
+        updateDashboardWorkStatus(member, WorkStatus.OFF);
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long memberId, String statusName) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        WorkStatus newStatus;
+        try {
+            newStatus = WorkStatus.valueOf(statusName);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 상태 값입니다: " + statusName);
+        }
+
+        updateDashboardWorkStatus(member, newStatus);
+    }
+
+    private void updateDashboardWorkStatus(Member member, WorkStatus status) {
+        DashboardWorkStatus workStatus = workStatusRepository.findByMember(member)
+                .orElse(DashboardWorkStatus.builder()
+                        .member(member)
+                        .status(status)
+                        .startTime(LocalDateTime.now())
+                        .build());
+
+        if (workStatus.getId() != null) {
+            workStatus.updateStatus(status, LocalDateTime.now());
+        } else {
+            workStatusRepository.save(workStatus);
+        }
     }
 
     private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<StressSummary> stressSummaries) {
