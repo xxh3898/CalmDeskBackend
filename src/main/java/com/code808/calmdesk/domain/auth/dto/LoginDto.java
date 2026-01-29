@@ -35,10 +35,11 @@ public class LoginDto {
         private String name;
         private String phone;
         private Member.Role role;
-        private CommonEnums.Status status;
+        private CommonEnums.Status joinStatus;
         private String companyName;
         private String departmentName;
         private String rankName;
+        private String companyCode;
         private String token;
 
         public static LoginResponse of(Member member, String token) {
@@ -48,7 +49,8 @@ public class LoginDto {
                     .name(member.getName())
                     .phone(member.getPhone())
                     .role(member.getRole())
-                    .status(member.getStatus())
+                    .joinStatus(member.getStatus())
+                    .companyCode(member.getCompany().getCompanyCode())
                     .companyName(member.getCompany().getCompanyName())
                     .departmentName(member.getDepartment().getDepartmentName())
                     .rankName(member.getRank().getRankName())

@@ -61,8 +61,9 @@ public class CompanyDto {
             private String category;
             private Integer minValue;
             private Integer maxValue;
+            private String token;
 
-            public static RegisterResponse of(Company company, Member member) {
+            public static RegisterResponse of(Company company, Member member, String token) {
                 return RegisterResponse.builder()
                         .companyId(company.getCompanyId())
                         .companyCode(company.getCompanyCode())
@@ -70,6 +71,7 @@ public class CompanyDto {
                         .category(company.getCategory())
                         .minValue(company.getMinValue())
                         .maxValue(company.getMaxValue())
+                        .token(token)
                         .build();
             }
         }
@@ -157,8 +159,10 @@ public class CompanyDto {
             private String companyName;
             private String category;
             private String message;
+            private String token;
+            private CommonEnums.Status joinStatus;
 
-            public static JoinResponse of(Company company, CommonEnums.Status joinStatus) {
+            public static JoinResponse of(Company company, CommonEnums.Status joinStatus, String token) {
                 String message = (joinStatus == CommonEnums.Status.N)
                         ? "관리자 승인 대기 중입니다."
                         : "회사 참여가 완료되었습니다.";
@@ -168,6 +172,8 @@ public class CompanyDto {
                         .companyName(company.getCompanyName())
                         .category(company.getCategory())
                         .message(message)
+                        .token(token)
+                        .joinStatus(joinStatus)
                         .build();
             }
         }

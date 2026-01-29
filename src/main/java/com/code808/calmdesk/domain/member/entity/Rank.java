@@ -18,7 +18,7 @@ public class Rank {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long rankId;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, unique = true)
     private String rankName;
 
     @OneToMany(mappedBy = "rank")

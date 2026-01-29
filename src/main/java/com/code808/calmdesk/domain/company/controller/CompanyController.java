@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class CompanyController {
     private final CompanyService companyService;
 

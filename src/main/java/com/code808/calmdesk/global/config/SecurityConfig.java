@@ -36,12 +36,13 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup/join").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
-                        .requestMatchers("/api/mypage/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/companies/genderate-code").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/companies/register").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/companies/join").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
