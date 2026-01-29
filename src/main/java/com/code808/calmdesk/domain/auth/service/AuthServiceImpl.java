@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginDto.LoginResponse login(LoginDto.LoginRequest request){
-        Member member = memberRepository.findByEmail(request.getEmail())
+        Member member = memberRepository.findEmailWithDetails(request.getEmail())
                 .orElseThrow(()-> new RuntimeException("존재하지 않는 사용자입니다."));
 
         if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){

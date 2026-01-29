@@ -35,7 +35,10 @@ public class Member extends BaseTimeEntity {
     private String password;
 
     @Column(nullable = false, unique = true, length = 30)
-    private String phone;
+    private String  phone;
+
+    @Column
+    private LocalDate registerDate;
 
     @Column
     @Enumerated(EnumType.STRING)
