@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.service;
 
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.dto.PurchaseRequest;
 import com.code808.calmdesk.domain.gifticon.dto.ItemResponse;
 import com.code808.calmdesk.domain.gifticon.entity.Order;

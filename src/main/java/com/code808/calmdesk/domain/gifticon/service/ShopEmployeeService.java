@@ -6,6 +6,7 @@ import com.code808.calmdesk.domain.gifticon.entity.*;
 import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.gifticon.repository.*;
 import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

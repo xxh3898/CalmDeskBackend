@@ -11,7 +11,6 @@ import java.util.Optional;
 
 import com.code808.calmdesk.domain.company.entity.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.code808.calmdesk.domain.member.entity.Member;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {

@@ -1,7 +1,7 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
-import com.code808.calmdesk.domain.member.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.*;
 

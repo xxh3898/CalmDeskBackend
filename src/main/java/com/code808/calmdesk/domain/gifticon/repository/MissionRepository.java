@@ -1,6 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.repository;
 
-import com.code808.calmdesk.domain.enums.CommonEnums;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.entity.MemberMission;
 import com.code808.calmdesk.domain.gifticon.entity.MissionList;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -39,7 +39,7 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, unique = true, length = 30)
     private String phone;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -52,15 +52,15 @@ public class Member extends BaseTimeEntity {
     private LocalDate joinDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    @JoinColumn(name = "COMPANY_ID")
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DEPARTMENT_ID", nullable = false)
+    @JoinColumn(name = "DEPARTMENT_ID")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RANK_ID", nullable = false)
+    @JoinColumn(name = "RANK_ID")
     private Rank rank;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)

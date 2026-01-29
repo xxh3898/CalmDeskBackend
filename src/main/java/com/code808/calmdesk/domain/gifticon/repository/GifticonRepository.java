@@ -15,11 +15,11 @@ public interface GifticonRepository extends JpaRepository<Gifticon, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE GIFTICON g SET g.status = com.code808.calmdesk.domain.enums.CommonEnums.Status.Y")
+    @Query("UPDATE GIFTICON g SET g.status = com.code808.calmdesk.domain.common.enums.CommonEnums.Status.Y")
     void activateAllItems();
 
     @Modifying
     @Transactional
-    @Query("UPDATE GIFTICON g SET g.status = com.code808.calmdesk.domain.enums.CommonEnums.Status.N")
+    @Query("UPDATE GIFTICON g SET g.status = com.code808.calmdesk.domain.common.enums.CommonEnums.Status.N")
     void deactivateAllItems();
 }

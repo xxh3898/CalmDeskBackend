@@ -1,23 +1,16 @@
 spring:
   application:
-    name: calmdesk
+    name: calmDesk
 
   config:
     import: optional:classpath:application-secret.yaml
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/calmdesk_db?serverTimezone=UTC&characterEncoding=UTF-8
-    username: paiktmddnjs
-    password: paiktmddnjs # 본인의 MySQL 비밀번호 입력
 
   jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true # 실행되는 SQL을 콘솔에 출력
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
   servlet:

@@ -4,7 +4,7 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.dto.PurchaseRequest;
 import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
-import com.code808.calmdesk.domain.gifticon.entity.Point_History;
+import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
 import com.code808.calmdesk.domain.gifticon.repository.ItemRepository;
 import com.code808.calmdesk.domain.gifticon.repository.OrderRepository;
 import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
@@ -42,7 +42,7 @@ public class ShopService {
                 .build();
         Order savedOrder = orderRepository.save(order);
 
-        Point_History history = new Point_History(
+        PointHistory history = new PointHistory(
                 "SPEND",
                 request.getPrice(),
                 95500L,

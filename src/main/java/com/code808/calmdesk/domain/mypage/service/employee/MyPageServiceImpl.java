@@ -1,7 +1,7 @@
 package com.code808.calmdesk.domain.mypage.service.employee;
 
 import com.code808.calmdesk.domain.gifticon.entity.Order;
-import com.code808.calmdesk.domain.gifticon.entity.Point_History;
+import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
 import com.code808.calmdesk.domain.gifticon.repository.OrderRepository;
 import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -35,7 +35,7 @@ public class MyPageServiceImpl implements MyPageService {
     }
 
     private int getCurrentPointFromHistory(Long memberId) {
-        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
+        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
         if (histories.isEmpty()) return 0;
         Long balance = histories.get(0).getBalanceAfter();
         return balance != null ? balance.intValue() : 0;
@@ -91,7 +91,7 @@ public class MyPageServiceImpl implements MyPageService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(member.getId());
+        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(member.getId());
         return histories.stream()
                 .map(PointHistoryResponse::from)
                 .collect(Collectors.toList());
