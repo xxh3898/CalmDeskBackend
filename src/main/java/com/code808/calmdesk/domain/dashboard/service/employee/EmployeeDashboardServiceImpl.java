@@ -75,7 +75,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         // 2-5. 현재 상태 조회 (DashboardWorkStatus 우선 조회)
-        String currentStatus = "업무 준비 중";
+        String currentStatus = "출근 전";
         LocalDateTime startTime = null;
 
         Optional<DashboardWorkStatus> workStatusOpt = workStatusRepository.findByMember(member);
