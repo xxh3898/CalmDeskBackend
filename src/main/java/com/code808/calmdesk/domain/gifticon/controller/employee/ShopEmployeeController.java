@@ -21,6 +21,7 @@ public class ShopEmployeeController {
 
     private final ShopEmployeeService shopEmployeeService;
 
+
     // 포인트 몰 메인 데이터 조회 (포인트 + 미션 + 상점아이템)
     @GetMapping("/{userId}")
     public ResponseEntity<PointMallResponse> getPointMallMain(@PathVariable Long userId) {
@@ -68,5 +69,9 @@ public class ShopEmployeeController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
             }
         }
+
+
+
+
     }
 

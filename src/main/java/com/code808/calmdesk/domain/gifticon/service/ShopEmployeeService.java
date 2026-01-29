@@ -26,6 +26,7 @@ public class ShopEmployeeService {
     private final MissionRepository missionRepository;
     private final MemberRepository memberRepository;
     private final MemberMissionRepository memberMissionRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
@@ -36,13 +37,16 @@ public class ShopEmployeeService {
         if (gifticon.getQuantity() <= 0) {
             throw new RuntimeException("상품 재고가 없습니다.");
         }
-        gifticon.setQuantity(gifticon.getQuantity() - 1);
 
         // findByMember_MemberId의 매개변수 타입을 확인하세요 (String vs Long)
         Account account = accountRepository.findByMember_MemberId(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("계좌 정보를 찾을 수 없습니다."));
 
-        account.withdraw(request.getPrice().intValue());
+//        account.withdraw(request.getPrice().intValue());
+
+        int price = request.getPrice().intValue();
+        account.withdraw(price); // 여기서 포인트가 차감됨
+        gifticon.setQuantity(gifticon.getQuantity() - 1); // 재고 감소
 
         Order order = Order.builder()
                 .member(account.getMember())
@@ -55,7 +59,20 @@ public class ShopEmployeeService {
                 .period(1)
                 .build();
 
-        return orderRepository.save(order).getOrderId();
+        orderRepository.save(order).getOrderId();
+
+        PointHistory history = new PointHistory(
+                "SPEND",                       // pointType
+                (long) price,                  // amount
+                (long) account.getAccountLeave(),     // balanceAfter (차감 후 잔액)
+                "GIFTICON",                    // sourceType
+                request.getUserId(),           // memberId
+                gifticon.getGifticonId(),      // gifticonId
+                null                           // missionId (구매이므로 미션ID는 null)
+        );
+        pointHistoryRepository.save(history);
+        return order.getOrderId();
+
     }
 
     @Transactional(readOnly = true)
