@@ -14,8 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
+import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
+import com.code808.calmdesk.domain.attendance.entity.StressFactor;
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.entity.DashboardWorkStatus;
 import com.code808.calmdesk.domain.dashboard.entity.WorkStatus;
@@ -167,35 +170,37 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     @Override
     @Transactional
-    public void clockIn(Long memberId) {
+    public void clockIn(Long memberId, EmotionCheckInRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. Attendance 생성 (없을 경우)
-        // 이미 출근한 기록이 있는지 확인?
-        // 비즈니스 로직: 하루에 여러번 출근 버튼 누르면? -> 이미 출근 상태면 무시 or 에러?
-        // 여기서는 "오늘 기록이 없으면 생성"으로 처리
-        Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
-        if (todayAttendance.isEmpty()) {
-            Attendance attendance = Attendance.builder()
+        // 1. Attendance 생성 (없을 경우) or 조회
+        Attendance attendance = dashboardRepository.findTodayAttendance(member, today).orElseGet(() -> {
+            Attendance newAttendance = Attendance.builder()
                     .member(member)
                     .workDate(today)
                     .checkIn(now)
-                    .attendanceStatus(Attendance.AttendanceStatus.ATTEND) // 기본 정상 출근으로 가정
+                    .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
                     .build();
-            attendanceRepository.save(attendance);
-        }
+            return attendanceRepository.save(newAttendance);
+        });
 
-        // 2. DashboardWorkStatus 업데이트 -> WORKING
+        // 이미 출근 상태일 수도 있지만 checkIn 시간은 최초 출근 시간으로 유지하거나 비즈니스 로직에 따름.
+        // 여기서는 이미 존재하면 checkIn 시간 업데이트 안함 (orElseGet 로직).
+        // 만약 '지각' 등의 상태 변경이 필요하다면 별도 로직 필요.
+        // 2. 감정 체크인 저장
+        saveEmotionCheckIn(attendance, request);
+
+        // 3. DashboardWorkStatus 업데이트 -> WORKING
         updateDashboardWorkStatus(member, WorkStatus.WORKING);
     }
 
     @Override
     @Transactional
-    public void clockOut(Long memberId) {
+    public void clockOut(Long memberId, EmotionCheckInRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
@@ -207,10 +212,44 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .orElseThrow(() -> new IllegalStateException("출근 기록이 없습니다."));
 
         attendance.setCheckOut(now);
-        // Dirty checking으로 자동 저장되지만, 명시적으로 repository save 호출 생략 가능 (Transactional)
 
-        // 2. DashboardWorkStatus 업데이트 -> OFF
+        // 2. 감정 체크인 저장 (퇴근 시 기분)
+        saveEmotionCheckIn(attendance, request);
+
+        // 3. DashboardWorkStatus 업데이트 -> OFF
         updateDashboardWorkStatus(member, WorkStatus.OFF);
+    }
+
+    private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {
+        if (request == null) {
+            return;
+        }
+
+        EmotionCheckin emotionCheckin = EmotionCheckin.builder()
+                .attendance(attendance)
+                .stressLevel(request.getStressLevel())
+                .memo(request.getMemo())
+                .build();
+
+        // 양방향 연관관계 메서드 혹은 직접 리스트에 추가 (CascadeType.ALL)
+        attendance.getEmotionCheckins().add(emotionCheckin);
+
+        // StressFactor 저장
+        if (request.getStressFactors() != null) {
+            for (String factorCategory : request.getStressFactors()) {
+                StressFactor factor = StressFactor.builder()
+                        .emotionCheckin(emotionCheckin)
+                        .category(factorCategory)
+                        .build();
+                emotionCheckin.getCheckinFactors().add(factor);
+            }
+        }
+
+        // Attendance가 이미 영속 상태라면 Dirty Checking으로 저장되겠지만, 
+        // emotionCheckin이 리스트에 추가된 것을 명시적으로 저장하거나 Cascade 설정에 따름.
+        // 여기서는 safe하게 emotionCheckin을 별도로 save 하지 않아도 attendance가 managed 상태면 cascade 됨.
+        // 다만 attendanceRepository.save(attendance); 를 호출해주는 것이 명확할 수 있음.
+        attendanceRepository.save(attendance);
     }
 
     @Override

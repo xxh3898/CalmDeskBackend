@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.code808.calmdesk.domain.dashboard.dto.employee.DashboardStatusUpdateReq;
+import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.service.employee.EmployeeDashboardService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -32,16 +33,16 @@ public class EmployeeDashboardController {
     }
 
     @PostMapping("/status/clock-in")
-    public ResponseEntity<Void> clockIn(Principal principal) {
+    public ResponseEntity<Void> clockIn(Principal principal, @RequestBody EmotionCheckInRequest req) {
         Long memberId = getMemberId(principal);
-        dashboardService.clockIn(memberId);
+        dashboardService.clockIn(memberId, req);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/status/clock-out")
-    public ResponseEntity<Void> clockOut(Principal principal) {
+    public ResponseEntity<Void> clockOut(Principal principal, @RequestBody EmotionCheckInRequest req) {
         Long memberId = getMemberId(principal);
-        dashboardService.clockOut(memberId);
+        dashboardService.clockOut(memberId, req);
         return ResponseEntity.ok().build();
     }
 
