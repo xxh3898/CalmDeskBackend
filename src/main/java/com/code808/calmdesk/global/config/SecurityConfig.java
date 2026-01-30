@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/consultations/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/mypage/**").authenticated()
+                                .requestMatchers("/api/admin/mypage/**").permitAll()
                 //                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
                 //                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
                 .anyRequest().authenticated()

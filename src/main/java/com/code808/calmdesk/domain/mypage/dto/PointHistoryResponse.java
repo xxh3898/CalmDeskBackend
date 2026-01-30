@@ -27,11 +27,14 @@ public class PointHistoryResponse {
             title = pointHistory.getSourceType();
         }
 
+        int rawAmount = pointHistory.getAmount() != null ? pointHistory.getAmount().intValue() : 0;
+        int amountWithSign = "EARN".equalsIgnoreCase(pointType) ? Math.abs(rawAmount) : -Math.abs(rawAmount);
+
         return PointHistoryResponse.builder()
                 .historyId(pointHistory.getId())
                 .type(pointType)
                 .title(title)
-                .amount(pointHistory.getAmount() != null ? pointHistory.getAmount().intValue() : 0)
+                .amount(amountWithSign)
                 .balanceAfter(pointHistory.getBalanceAfter() != null ? pointHistory.getBalanceAfter().intValue() : 0)
                 .date(pointHistory.getCreateDate() != null
                         ? pointHistory.getCreateDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"))

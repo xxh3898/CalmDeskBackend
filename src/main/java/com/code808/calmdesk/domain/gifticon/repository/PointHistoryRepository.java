@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface PointHistoryRepository extends JpaRepository<Point_History, Long> {
 
-    List<Point_History> findByMemberIdOrderByCreateDateDesc(Long memberId);
+    /** 최신순(같은 시각이면 id 큰 것 = 나중에 저장된 것 우선) */
+    List<Point_History> findByMemberIdOrderByCreateDateDescIdDesc(Long memberId);
 }

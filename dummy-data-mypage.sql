@@ -32,7 +32,7 @@ INSERT INTO MEMBER_RANK (rank_name) VALUES
 -- 비밀번호: BCrypt "password123" 해시 사용 시 로그인 가능 (아래 해시로 교체 가능)
 INSERT INTO MEMBER (name, email, password, phone, role, status, join_date, company_id, department_id, rank_id, created_date, modify_date) VALUES
 ('홍길동', 'user1@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '010-1111-2222', 'EMPLOYEE', 'Y', CURDATE(), 1, 1, 1, NOW(), NOW()),
-('김철수', 'user2@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '010-2222-3333', 'EMPLOYEE', 'Y', DATE_SUB(CURDATE(), INTERVAL 1 YEAR), 1, 2, 2, NOW(), NOW()),
+('김철수', 'user2@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '010-2222-3333', 'ADMIN', 'Y', DATE_SUB(CURDATE(), INTERVAL 1 YEAR), 1, 2, 2, NOW(), NOW()),
 ('이영희', 'user3@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '010-3333-4444', 'EMPLOYEE', 'Y', DATE_SUB(CURDATE(), INTERVAL 6 MONTH), 1, 3, 1, NOW(), NOW());
 
 -- 4-1. 계좌 (ACCOUNT) - MEMBER 1:1, 등록된 회원 수만큼만 삽입
