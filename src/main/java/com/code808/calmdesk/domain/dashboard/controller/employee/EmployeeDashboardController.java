@@ -54,10 +54,6 @@ public class EmployeeDashboardController {
     }
 
     private Long getMemberId(Principal principal) {
-        // TODO: 배포 시 제거 - 테스트용 하드코딩 (principal null일 경우 1L)
-        if (principal == null) {
-            return 1L;
-        }
         return memberRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))
                 .getMemberId();
