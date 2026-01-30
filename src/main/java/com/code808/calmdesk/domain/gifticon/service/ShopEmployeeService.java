@@ -32,6 +32,10 @@ public class ShopEmployeeService {
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
         // ... (기존 purchase 로직과 동일)
+
+        Member member = memberRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("해당 회원을 찾을 수 없습니다."));
+
         Gifticon gifticon = gifticonRepository.findById(request.getItemId())
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
 
@@ -62,13 +66,14 @@ public class ShopEmployeeService {
 
         orderRepository.save(order).getOrderId();
 
+
         PointHistory history = new PointHistory(
                 "SPEND",                       // pointType
                 (long) price,                  // amount
                 (long) account.getAccountLeave(),     // balanceAfter (차감 후 잔액)
                 "GIFTICON",                    // sourceType
-                request.getUserId(),           // memberId
-                gifticon.getGifticonId(),      // gifticonId
+                member,                              // 👈 memberId(Long) 대신 member(객체)
+                gifticon,     // gifticonId
                 null                           // missionId (구매이므로 미션ID는 null)
         );
         pointHistoryRepository.save(history);
@@ -190,5 +195,22 @@ public class ShopEmployeeService {
         }
 
         memberMissionRepository.save(memberMission);
+    }
+
+        @Transactional(readOnly = true)
+        public List<PurchaseHistoryResponse> getAllPurchaseHistory() {
+            // 1. DB에서 기프티콘 구매 내역('GIFTICON')만 최신순으로 조회
+            List<PointHistory> historyList = pointHistoryRepository.findBySourceTypeOrderByCreateDateDesc("GIFTICON");
+
+            // 2. Entity -> DTO 변환
+            return historyList.stream().map(history -> PurchaseHistoryResponse.builder()
+                    .id(history.getId())
+                    .userName(history.getMember().getName())      // Member 엔터티에서 이름 추출
+                    .itemName(history.getGifticon().getGifticonName())    // Gifticon 엔터티에서 상품명 추출
+                    .itemPrice(history.getAmount().intValue())    // 결제 포인트 (Long -> Integer 변환)
+                    .itemImg(history.getGifticon().getImage())   // 상품 이미지 URL
+                    .purchaseDate(history.getCreateDate())        // 구매 일시
+                    .build()
+            ).collect(Collectors.toList());
     }
 }

@@ -1,17 +1,19 @@
 package com.code808.calmdesk.domain.gifticon.controller.employee;
 
-import com.code808.calmdesk.domain.gifticon.dto.MissionCompleteRequest;
-import com.code808.calmdesk.domain.gifticon.dto.MissionResponse;
+import com.code808.calmdesk.domain.gifticon.dto.*;
+import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import com.code808.calmdesk.domain.gifticon.dto.PointMallResponse;
-import com.code808.calmdesk.domain.gifticon.dto.PurchaseRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*; // 필수: @RestController, @PostMapping 등을 위함
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.code808.calmdesk.domain.gifticon.service.ShopEmployeeService;
 
 @RestController
@@ -71,7 +73,13 @@ public class ShopEmployeeController {
         }
 
 
-
+    // 모든 사용자의 전체 구매 내역 조회
+    @GetMapping("/history/all")
+    public ResponseEntity<List<PurchaseHistoryResponse>> getAllPurchaseHistory() {
+        // 모든 직원의 기프티콘 구매 내역을 가져옵니다.
+        List<PurchaseHistoryResponse> history = shopEmployeeService.getAllPurchaseHistory();
+        return ResponseEntity.ok(history);
+    }
 
     }
 

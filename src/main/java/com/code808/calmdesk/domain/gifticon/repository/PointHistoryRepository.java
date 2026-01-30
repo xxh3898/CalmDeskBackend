@@ -10,4 +10,6 @@ import java.util.List;
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
 
     List<PointHistory> findByMemberIdOrderByCreateDateDesc(Long memberId);
+
+    List<PointHistory> findBySourceTypeOrderByCreateDateDesc(String sourceType);
 }

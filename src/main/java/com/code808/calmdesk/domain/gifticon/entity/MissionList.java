@@ -28,7 +28,7 @@ public class MissionList {
     @Column(nullable = false, length = 500)
     private String rewardDescription;
 
-    // 추가: 미션 종류 식별용 (예: ATTENDANCE_DAILY, STRESS_LOW 등)
+    // 추가: 미션 종류 식별용 (예: ATT_DAILY, ATT_RATE_80 등)
     @Column(nullable = false, unique = true)
     private String missionCode;
 

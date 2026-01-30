@@ -29,23 +29,29 @@ public class ShopAdminService {
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
-        // [비즈니스 로직]
-        // 1. 재고 확인 (생략 가능하나 권장)
-        // 2. 유저 포인트 잔액 확인 (부족 시 throw new RuntimeException("포인트 부족"))
-
+        // 1. 회원 및 아이템 조회
         Member member = memberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("해당 회원을 찾을 수 없습니다."));
 
         Gifticon gifticon = gifticonRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이템을 찾을 수 없습니다."));
 
-        // 3. Order 생성
+        // 2. 포인트 잔액 확인 및 차감 로직 (예시)
+        long price = request.getPrice();
+        // 가상의 메서드: member.getPoints()가 있다고 가정
+        // if (member.getPoints() < price) throw new RuntimeException("포인트가 부족합니다.");
+
+        // 계산된 잔액 (현재 잔액 - 상품 가격)
+        // 실제 프로젝트에서는 Member 엔터티 내부에 포인트 차감 로직을 두는 것이 좋습니다.
+        Long balanceAfter = 95500L; // TODO: member.getPoints() - price;
+
+        // 3. Order 생성 및 저장
         Order order = Order.builder()
                 .gifticon(gifticon)
                 .member(member)
                 .period(30)
-                .approvalAmount(request.getPrice().intValue())
-                .spendPoint(request.getPrice().intValue())
+                .approvalAmount((int) price)
+                .spendPoint((int) price)
                 .earnPoint(0)
                 .type(Order.Type.SPEND)
                 .orderDate(java.time.LocalDate.now())
@@ -53,20 +59,18 @@ public class ShopAdminService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // 2. POINT_HISTORY 저장 (차감 내역)
+        // 4. POINT_HISTORY 저장 (핵심 수정 부분! 🚀)
+        // 수정된 생성자: Long ID가 아니라 조회한 'member'와 'gifticon' 객체를 직접 전달합니다.
         PointHistory history = new PointHistory(
-                "SPEND", // 포인트 종류
-                request.getPrice(), // 금액
-                95500L, // 계산된 잔액 (실제로는 DB 조회 후 계산)
-                "GIFTICON", // 출처 유형
-                request.getUserId(),
-                request.getItemId(),
-                null // 미션 아이디는 없음
+                "SPEND",        // 포인트 종류
+                price,          // 금액
+                balanceAfter,   // 계산된 잔액
+                "GIFTICON",     // 출처 유형
+                member,         // 👈 객체 전달 (memberId 대신)
+                gifticon,       // 👈 객체 전달 (gifticonId 대신)
+                null            // 미션 아이디 없음
         );
         pointHistoryRepository.save(history);
-
-        // 3. 재고 차감 (선택 사항)
-        // gifticonRepository.decreaseQuantity(request.getItemId());
 
         return savedOrder.getOrderId();
     }

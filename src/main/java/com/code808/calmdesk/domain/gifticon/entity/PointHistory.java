@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
+import com.code808.calmdesk.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,24 +33,26 @@ public class PointHistory {
     @Column(name = "CREATE_DATE")
     private LocalDateTime createDate; // 거래 발생 시각
 
-    @Column(name = "GIFTICON_ID")
-    private Long gifticonId; // 기프티콘 아이디 (FK 역할)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GIFTICON_ID")
+    private Gifticon gifticon; // 기프티콘 아이디 (FK 역할)
 
-    @Column(name = "MEMBER_ID", nullable = false)
-    private Long memberId; // 멤버 아이디 (FK 역할)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MEMBER_ID", nullable = false)
+    private Member member; // 멤버 아이디 (FK 역할)
 
     @Column(name = "MISSION_ID")
     private Long missionId; // 미션 아이디 (FK 역할)
 
     // 생성자
     public PointHistory(String pointType, Long amount, Long balanceAfter,
-            String sourceType, Long memberId, Long gifticonId, Long missionId) {
+            String sourceType, Member member, Gifticon gifticon, Long missionId) {
         this.pointType = pointType;
         this.amount = amount;
         this.balanceAfter = balanceAfter;
         this.sourceType = sourceType;
-        this.memberId = memberId;
-        this.gifticonId = gifticonId;
+        this.member = member;
+        this.gifticon = gifticon;
         this.missionId = missionId;
         this.createDate = LocalDateTime.now();
     }

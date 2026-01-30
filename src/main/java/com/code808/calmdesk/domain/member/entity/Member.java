@@ -6,6 +6,7 @@ import com.code808.calmdesk.domain.company.entity.Company;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
 
+import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -71,6 +72,10 @@ public class Member extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PointHistory> pointHistorys = new ArrayList<>();
+
 
     public void updateCompanyInfo(
             Company company,
