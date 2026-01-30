@@ -35,14 +35,17 @@ public class Account {
 
     @Column(name = "REMAINING_POINT", nullable = false)
     @Builder.Default
+    @Setter
     private Long remainingPoint = 0L;
 
     @Column(name = "TOTAL_EARNED", nullable = false)
     @Builder.Default
+    @Setter
     private Long totalEarned = 0L;
 
     @Column(name = "TOTAL_SPENT", nullable = false)
     @Builder.Default
+    @Setter
     private Long totalSpent = 0L;
 
 

@@ -1,5 +1,7 @@
-package com.code808.calmdesk.domain.mypage.service.employee;
+package com.code808.calmdesk.domain.mypage.service;
 
+import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
 import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
 import com.code808.calmdesk.domain.gifticon.repository.OrderRepository;
@@ -9,10 +11,12 @@ import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.mypage.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,9 +28,11 @@ public class MyPageServiceImpl implements MyPageService {
     private final AccountRepository accountRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final OrderRepository orderRepository;
+    private final StressSummaryRepository stressSummaryRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
-     * 현재 포인트: 멤버 도메인 계좌(ACCOUNT) 테이블 잔여포인트 우선, 없으면 Point_History 최근 balanceAfter 사용.
+     * 현재 포인트: 계좌(ACCOUNT) 잔여포인트 우선, 없으면 Point_History 최신 balanceAfter, 없으면 0.
      */
     private int getCurrentPoint(Long memberId) {
         return accountRepository.findByMemberMemberId(memberId)
@@ -35,7 +41,7 @@ public class MyPageServiceImpl implements MyPageService {
     }
 
     private int getCurrentPointFromHistory(Long memberId) {
-        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
+        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(memberId);
         if (histories.isEmpty()) return 0;
         Long balance = histories.get(0).getBalanceAfter();
         return balance != null ? balance.intValue() : 0;
@@ -78,11 +84,11 @@ public class MyPageServiceImpl implements MyPageService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        if (!member.getPassword().equals(request.getCurrentPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        member.setPassword(request.getNewPassword());
+        member.setPassword(passwordEncoder.encode(request.getNewPassword()));
         memberRepository.save(member);
     }
 
@@ -91,7 +97,7 @@ public class MyPageServiceImpl implements MyPageService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(member.getId());
+        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(member.getId());
         return histories.stream()
                 .map(PointHistoryResponse::from)
                 .collect(Collectors.toList());
@@ -106,5 +112,16 @@ public class MyPageServiceImpl implements MyPageService {
         return orders.stream()
                 .map(order -> CouponResponse.from(order, order.getGifticon()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public StressResponse getStressSummary(Long memberId) {
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        // 최근 스트레스 요약 조회
+        Optional<StressSummary> summaryOpt = stressSummaryRepository.findLatestByMemberId(memberId);
+        return summaryOpt.map(StressResponse::from)
+                .orElseGet(StressResponse::createDefault);
     }
 }

@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.mypage.service.employee;
+package com.code808.calmdesk.domain.mypage.service;
 
 import com.code808.calmdesk.domain.mypage.dto.*;
 
@@ -19,4 +19,7 @@ public interface MyPageService {
 
     // 기프티콘 목록 조회
     List<CouponResponse> getCoupons(Long memberId);
+
+    // 스트레스 요약 조회
+    StressResponse getStressSummary(Long memberId);
 }
