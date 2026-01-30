@@ -8,7 +8,9 @@ import com.code808.calmdesk.domain.gifticon.entity.Point_History;
 import com.code808.calmdesk.domain.gifticon.repository.ItemRepository;
 import com.code808.calmdesk.domain.gifticon.repository.OrderRepository;
 import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
+import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class ShopService {
     private final PointHistoryRepository pointHistoryRepository;
     private final ItemRepository itemRepository;
     private final MemberRepository memberRepository;
+    private final AccountRepository accountRepository;
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
@@ -42,10 +45,14 @@ public class ShopService {
                 .build();
         Order savedOrder = orderRepository.save(order);
 
+        long currentBalance = getCurrentBalance(request.getUserId());
+        long spendAmount = request.getPrice() != null ? request.getPrice() : 0L;
+        long balanceAfter = Math.max(0, currentBalance - spendAmount);
+
         Point_History history = new Point_History(
                 "SPEND",
-                request.getPrice(),
-                95500L,
+                spendAmount,
+                balanceAfter,
                 "GIFTICON",
                 request.getUserId(),
                 request.getItemId(),
@@ -53,7 +60,23 @@ public class ShopService {
         );
         pointHistoryRepository.save(history);
 
+        accountRepository.findByMemberMemberId(request.getUserId()).ifPresent(account -> {
+            account.setRemainingPoint(balanceAfter);
+            account.setTotalSpent(account.getTotalSpent() + spendAmount);
+        });
+
         return savedOrder.getId();
+    }
+
+    /** 포인트 내역이 있으면 최신 balanceAfter, 없으면 ACCOUNT 잔액, 없으면 0 */
+    private long getCurrentBalance(Long memberId) {
+        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(memberId);
+        if (!histories.isEmpty() && histories.get(0).getBalanceAfter() != null) {
+            return histories.get(0).getBalanceAfter();
+        }
+        return accountRepository.findByMemberMemberId(memberId)
+                .map(a -> a.getRemainingPoint() != null ? a.getRemainingPoint() : 0L)
+                .orElse(0L);
     }
 
     @Transactional(readOnly = true)

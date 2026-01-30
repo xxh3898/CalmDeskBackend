@@ -32,7 +32,7 @@ public class MyPageServiceImpl implements MyPageService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 현재 포인트: 멤버 도메인 계좌(ACCOUNT) 테이블 잔여포인트 우선, 없으면 Point_History 최근 balanceAfter 사용.
+     * 현재 포인트: 계좌(ACCOUNT) 잔여포인트 우선, 없으면 Point_History 최신 balanceAfter, 없으면 0.
      */
     private int getCurrentPoint(Long memberId) {
         return accountRepository.findByMemberMemberId(memberId)
@@ -41,7 +41,7 @@ public class MyPageServiceImpl implements MyPageService {
     }
 
     private int getCurrentPointFromHistory(Long memberId) {
-        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(memberId);
+        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(memberId);
         if (histories.isEmpty()) return 0;
         Long balance = histories.get(0).getBalanceAfter();
         return balance != null ? balance.intValue() : 0;
@@ -97,7 +97,7 @@ public class MyPageServiceImpl implements MyPageService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDesc(member.getId());
+        List<Point_History> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(member.getId());
         return histories.stream()
                 .map(PointHistoryResponse::from)
                 .collect(Collectors.toList());
