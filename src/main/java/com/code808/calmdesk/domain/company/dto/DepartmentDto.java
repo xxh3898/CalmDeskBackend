@@ -47,6 +47,7 @@ public class DepartmentDto {
 
         public static MemberResponse from(Member member) {
             return from(member, "출근 전");
+        }
 
         public static MemberResponse from(Member member, String status) {
             return MemberResponse.builder()
