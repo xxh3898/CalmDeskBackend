@@ -1,13 +1,14 @@
 package com.code808.calmdesk.domain.auth.dto;
 
-import com.code808.calmdesk.domain.company.entity.Company;
-import com.code808.calmdesk.domain.company.entity.Department;
-import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.member.entity.Rank;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.member.entity.Member;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class LoginDto {
 
@@ -30,6 +31,7 @@ public class LoginDto {
     @AllArgsConstructor
     @Builder
     public static class LoginResponse {
+
         private Long memberId;
         private String email;
         private String name;
@@ -41,6 +43,7 @@ public class LoginDto {
         private String rankName;
         private String companyCode;
         private String token;
+        private Long departmentId;
 
         public static LoginResponse of(Member member, String token) {
             return LoginResponse.builder()
@@ -53,6 +56,7 @@ public class LoginDto {
                     .companyCode(member.getCompany().getCompanyCode())
                     .companyName(member.getCompany().getCompanyName())
                     .departmentName(member.getDepartment().getDepartmentName())
+                    .departmentId(member.getDepartment().getDepartmentId())
                     .rankName(member.getRank().getRankName())
                     .token(token)
                     .build();
