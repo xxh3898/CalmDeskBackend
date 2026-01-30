@@ -184,6 +184,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                     .workDate(today)
                     .checkIn(now)
                     .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
+                    .emotionCheckins(new ArrayList<>())
                     .build();
             return attendanceRepository.save(newAttendance);
         });
@@ -229,6 +230,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .attendance(attendance)
                 .stressLevel(request.getStressLevel())
                 .memo(request.getMemo())
+                .checkinFactors(new ArrayList<>())
                 .build();
 
         // 양방향 연관관계 메서드 혹은 직접 리스트에 추가 (CascadeType.ALL)
