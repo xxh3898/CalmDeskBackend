@@ -11,6 +11,7 @@ import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.mypage.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class MyPageServiceImpl implements MyPageService {
     private final PointHistoryRepository pointHistoryRepository;
     private final OrderRepository orderRepository;
     private final StressSummaryRepository stressSummaryRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 현재 포인트: 멤버 도메인 계좌(ACCOUNT) 테이블 잔여포인트 우선, 없으면 Point_History 최근 balanceAfter 사용.
@@ -82,11 +84,11 @@ public class MyPageServiceImpl implements MyPageService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        if (!member.getPassword().equals(request.getCurrentPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), member.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        member.setPassword(request.getNewPassword());
+        member.setPassword(passwordEncoder.encode(request.getNewPassword()));
         memberRepository.save(member);
     }
 
