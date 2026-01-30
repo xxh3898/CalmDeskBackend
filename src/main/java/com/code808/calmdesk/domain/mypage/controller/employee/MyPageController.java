@@ -2,7 +2,7 @@ package com.code808.calmdesk.domain.mypage.controller.employee;
 
 import com.code808.calmdesk.global.dto.ApiResponse;
 import com.code808.calmdesk.domain.mypage.dto.*;
-import com.code808.calmdesk.domain.mypage.service.employee.MyPageService;
+import com.code808.calmdesk.domain.mypage.service.MyPageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -76,6 +76,18 @@ public class MyPageController {
         try {
             List<CouponResponse> response = myPageService.getCoupons(memberId);
             return ResponseEntity.ok(ApiResponse.success("기프티콘 목록 조회 성공", response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    // 스트레스 요약 조회
+    @GetMapping("/stress")
+    public ResponseEntity<ApiResponse<StressResponse>> getStressSummary(@RequestParam Long memberId) {
+        try {
+            StressResponse response = myPageService.getStressSummary(memberId);
+            return ResponseEntity.ok(ApiResponse.success("스트레스 요약 조회 성공", response));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(e.getMessage()));

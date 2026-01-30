@@ -2,7 +2,7 @@ package com.code808.calmdesk.domain.mypage.controller.admin;
 
 import com.code808.calmdesk.global.dto.ApiResponse;
 import com.code808.calmdesk.domain.mypage.dto.*;
-import com.code808.calmdesk.domain.mypage.service.employee.MyPageService;
+import com.code808.calmdesk.domain.mypage.service.MyPageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
