@@ -9,17 +9,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    hibernate:
-      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-
-  sql:
-    init:
-      mode: always
-      continue-on-error: true
 
   servlet:
     multipart:
