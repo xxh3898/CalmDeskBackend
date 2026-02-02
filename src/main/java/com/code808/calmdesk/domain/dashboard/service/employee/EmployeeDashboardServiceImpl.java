@@ -17,10 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
+import com.code808.calmdesk.domain.attendance.entity.CoolDown;
 import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
 import com.code808.calmdesk.domain.attendance.entity.StressFactor;
 import com.code808.calmdesk.domain.attendance.entity.WorkStatusType;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
@@ -41,6 +43,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
     private final VacationRestRepository vacationRestRepository;
     private final AttendanceRepository attendanceRepository;
     private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
+    private final CoolDownRepository coolDownRepository;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -278,6 +281,10 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             workStatus.updateStatus(status, LocalDateTime.now());
         } else {
             workStatusRepository.save(workStatus);
+        }
+
+        if (status == WorkStatusType.COOLDOWN) {
+            coolDownRepository.save(new CoolDown(null, member));
         }
     }
 
