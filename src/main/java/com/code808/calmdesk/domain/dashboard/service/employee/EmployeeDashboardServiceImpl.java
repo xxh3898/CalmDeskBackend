@@ -107,8 +107,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         // 4. 포인트
         int points = dashboardRepository.findCurrentPoint(memberId).orElse(0L).intValue();
 
-        // 5. 스트레스 (최신 데이터 조회) - 데이터가 존재하는 가장 최근 날짜의 평균
-        Double currentStressAvg = dashboardRepository.findLatestDailyStress(member)
+        // 5. 스트레스 (최신 데이터 조회) - 데이터가 존재하는 가장 최근 '과거' 날짜의 평균
+        Double currentStressAvg = dashboardRepository.findLatestDailyStress(member, today)
                 .orElse(null);
 
         int stressScore = 0;

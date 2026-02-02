@@ -57,13 +57,14 @@ public class EmployeeDashboardRepository {
                 .getSingleResult();
     }
 
-    public Optional<Double> findLatestDailyStress(Member member) {
+    public Optional<Double> findLatestDailyStress(Member member, LocalDate today) {
         List<Double> result = em.createQuery(
                 "SELECT AVG(e.stressLevel) FROM EMOTION_CHECKIN e JOIN e.attendance a "
-                + "WHERE a.member = :member "
+                + "WHERE a.member = :member AND a.workDate < :today "
                 + "GROUP BY a.workDate "
                 + "ORDER BY a.workDate DESC", Double.class)
                 .setParameter("member", member)
+                .setParameter("today", today)
                 .setMaxResults(1)
                 .getResultList();
         return result.stream().findFirst();
