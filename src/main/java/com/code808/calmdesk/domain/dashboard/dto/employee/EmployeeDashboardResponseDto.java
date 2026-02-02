@@ -38,6 +38,7 @@ public class EmployeeDashboardResponseDto {
         private Integer attendanceRate;
         private String statusMessage; // "지각/결근 없음", 지각: 1회, 결근: 1회 이런식으로 출력
         private String currentStatus; // "업무 준비 중", "업무 중", "자리비움" 등
+        private java.time.LocalDateTime startTime;
     }
 
     @Getter

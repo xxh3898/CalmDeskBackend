@@ -34,7 +34,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
                                 // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -53,6 +53,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/consultations/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/admin/shop/items/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/employee/dashboard/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/employee/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.PATCH, "/api/admin/shop/**").authenticated() // 👈 PATCH 추가
                                 .requestMatchers(HttpMethod.PUT, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/employee/shop/**").authenticated()
@@ -74,7 +76,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);

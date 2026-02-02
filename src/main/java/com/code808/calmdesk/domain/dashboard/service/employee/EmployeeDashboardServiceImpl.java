@@ -14,8 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
-import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
+import com.code808.calmdesk.domain.attendance.entity.StressFactor;
+import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
+import com.code808.calmdesk.domain.dashboard.entity.DashboardWorkStatus;
+import com.code808.calmdesk.domain.dashboard.entity.WorkStatus;
+import com.code808.calmdesk.domain.dashboard.repository.employee.DashboardWorkStatusRepository;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -32,6 +38,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
     private final MemberRepository memberRepository;
     private final EmployeeDashboardRepository dashboardRepository;
     private final VacationRestRepository vacationRestRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final DashboardWorkStatusRepository workStatusRepository;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -68,17 +76,28 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             statusMessage = String.join(", ", messages);
         }
 
-        // 2-5. 현재 상태 조회
-        Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
-        String currentStatus = todayAttendance.map(a -> {
-            if (a.getCheckOut() != null) {
-                return "퇴근 완료";
+        // 2-5. 현재 상태 조회 (DashboardWorkStatus 우선 조회)
+        String currentStatus = "출근 전";
+        LocalDateTime startTime = null;
+
+        Optional<DashboardWorkStatus> workStatusOpt = workStatusRepository.findByMember(member);
+
+        if (workStatusOpt.isPresent()) {
+            currentStatus = workStatusOpt.get().getStatus().getDescription();
+            startTime = workStatusOpt.get().getStartTime();
+        } else {
+            // Fallback: 오늘 Attendance 기록 확인
+            Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
+            if (todayAttendance.isPresent()) {
+                Attendance a = todayAttendance.get();
+                if (a.getCheckOut() != null) {
+                    currentStatus = WorkStatus.OFF.getDescription();
+                } else if (a.getCheckIn() != null) {
+                    currentStatus = WorkStatus.WORKING.getDescription();
+                    startTime = a.getCheckIn();
+                }
             }
-            if (a.getCheckIn() != null) {
-                return "업무 중";
-            }
-            return "업무 준비 중";
-        }).orElse("업무 준비 중");
+        }
 
         // 3. 연차 정보
         VacationRest vacationRest = vacationRestRepository.findByMemberId(member.getMemberId())
@@ -87,15 +106,15 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         // 4. 포인트
         int points = dashboardRepository.findCurrentPoint(memberId).orElse(0L).intValue();
 
-        // 5. 스트레스 (최신 데이터 조회)
-        StressSummary stressData = dashboardRepository.findLatestStress(member)
+        // 5. 스트레스 (최신 데이터 조회) - 데이터가 존재하는 가장 최근 날짜의 평균
+        Double currentStressAvg = dashboardRepository.findLatestDailyStress(member)
                 .orElse(null);
 
         int stressScore = 0;
         String stressStatus = "진단 필요";
 
-        if (stressData != null) {
-            stressScore = stressData.getScore();
+        if (currentStressAvg != null) {
+            stressScore = (int) Math.round(currentStressAvg);
             // 점수에 따른 상태 텍스트 로직
             if (stressScore <= 30) {
                 stressStatus = "매우 양호";
@@ -109,12 +128,12 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         // 6. 주간 스트레스 데이터 (이번 주 vs 지난 주)
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneWeekAgo = now.minusDays(7);
-        LocalDateTime twoWeeksAgo = now.minusDays(14);
+        LocalDate now = LocalDate.now();
+        LocalDate oneWeekAgo = now.minusDays(7);
+        LocalDate twoWeeksAgo = now.minusDays(14);
 
-        List<StressSummary> thisWeekStress = dashboardRepository.findStressHistory(member, oneWeekAgo, now);
-        List<StressSummary> lastWeekStress = dashboardRepository.findStressHistory(member, twoWeeksAgo, oneWeekAgo);
+        List<Object[]> thisWeekStress = dashboardRepository.findDailyStressStats(member, oneWeekAgo.plusDays(1), now);
+        List<Object[]> lastWeekStress = dashboardRepository.findDailyStressStats(member, twoWeeksAgo.plusDays(1), oneWeekAgo);
 
         List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> thisWeekChartData = mapToDailyStress(thisWeekStress);
         List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> lastWeekChartData = mapToDailyStress(lastWeekStress);
@@ -127,6 +146,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .attendanceRate(attendanceRate)
                         .statusMessage(statusMessage)
                         .currentStatus(currentStatus)
+                        .startTime(startTime)
                         .build())
                 .vacationStats(EmployeeDashboardResponseDto.VacationStats.builder()
                         .totalDays(vacationRest.getTotalCount())
@@ -147,13 +167,126 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .build();
     }
 
-    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<StressSummary> stressSummaries) {
-        return stressSummaries.stream()
-                .map(s -> {
-                    String dayName = s.getStartTime().getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+    @Override
+    @Transactional
+    public void clockIn(Long memberId, EmotionCheckInRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Attendance 생성 (없을 경우) or 조회
+        Attendance attendance = dashboardRepository.findTodayAttendance(member, today).orElseGet(() -> {
+            Attendance newAttendance = Attendance.builder()
+                    .member(member)
+                    .workDate(today)
+                    .checkIn(now)
+                    .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
+                    .emotionCheckins(new ArrayList<>())
+                    .build();
+            return attendanceRepository.save(newAttendance);
+        });
+
+        // 2. 감정 체크인 저장
+        saveEmotionCheckIn(attendance, request);
+
+        // 3. DashboardWorkStatus 업데이트 -> WORKING
+        updateDashboardWorkStatus(member, WorkStatus.WORKING);
+    }
+
+    @Override
+    @Transactional
+    public void clockOut(Long memberId, EmotionCheckInRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. Attendance 퇴근 처리
+        Attendance attendance = dashboardRepository.findTodayAttendance(member, today)
+                .orElseThrow(() -> new IllegalStateException("출근 기록이 없습니다."));
+
+        attendance.setCheckOut(now);
+
+        // 2. 감정 체크인 저장 (퇴근 시 기분)
+        saveEmotionCheckIn(attendance, request);
+
+        // 3. DashboardWorkStatus 업데이트 -> OFF
+        updateDashboardWorkStatus(member, WorkStatus.OFF);
+    }
+
+    private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {
+        if (request == null) {
+            return;
+        }
+
+        EmotionCheckin emotionCheckin = EmotionCheckin.builder()
+                .attendance(attendance)
+                .stressLevel(request.getStressLevel())
+                .memo(request.getMemo())
+                .checkinFactors(new ArrayList<>())
+                .build();
+
+        // 양방향 연관관계 메서드 혹은 직접 리스트에 추가
+        attendance.getEmotionCheckins().add(emotionCheckin);
+
+        // StressFactor 저장
+        if (request.getStressFactors() != null) {
+            for (String factorCategory : request.getStressFactors()) {
+                StressFactor factor = StressFactor.builder()
+                        .emotionCheckin(emotionCheckin)
+                        .category(factorCategory)
+                        .build();
+                emotionCheckin.getCheckinFactors().add(factor);
+            }
+        }
+
+        attendanceRepository.save(attendance);
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long memberId, String statusName) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        WorkStatus newStatus;
+        try {
+            newStatus = WorkStatus.valueOf(statusName);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("잘못된 상태 값입니다: " + statusName);
+        }
+
+        updateDashboardWorkStatus(member, newStatus);
+    }
+
+    private void updateDashboardWorkStatus(Member member, WorkStatus status) {
+        DashboardWorkStatus workStatus = workStatusRepository.findByMember(member)
+                .orElse(DashboardWorkStatus.builder()
+                        .member(member)
+                        .status(status)
+                        .startTime(LocalDateTime.now())
+                        .build());
+
+        if (workStatus.getId() != null) {
+            workStatus.updateStatus(status, LocalDateTime.now());
+        } else {
+            workStatusRepository.save(workStatus);
+        }
+    }
+
+    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<Object[]> stressData) {
+        return stressData.stream()
+                .map(obj -> {
+                    LocalDate date = (LocalDate) obj[0];
+                    Double avgScore = (Double) obj[1];
+                    String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+
                     return EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
                             .day(dayName)
-                            .value(s.getScore())
+                            .value((int) Math.round(avgScore))
                             .build();
                 })
                 .collect(Collectors.toList());
