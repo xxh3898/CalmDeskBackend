@@ -19,12 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
 import com.code808.calmdesk.domain.attendance.entity.StressFactor;
+import com.code808.calmdesk.domain.attendance.entity.WorkStatusType;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
-import com.code808.calmdesk.domain.dashboard.entity.DashboardWorkStatus;
-import com.code808.calmdesk.domain.dashboard.entity.WorkStatus;
-import com.code808.calmdesk.domain.dashboard.repository.employee.DashboardWorkStatusRepository;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -42,7 +40,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
     private final EmployeeDashboardRepository dashboardRepository;
     private final VacationRestRepository vacationRestRepository;
     private final AttendanceRepository attendanceRepository;
-    private final DashboardWorkStatusRepository workStatusRepository;
+    private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -79,11 +77,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             statusMessage = String.join(", ", messages);
         }
 
-        // 2-5. 현재 상태 조회 (DashboardWorkStatus 우선 조회)
+        // 2-5. 현재 상태 조회 (WorkStatus 우선 조회)
         String currentStatus = "출근 전";
         LocalDateTime startTime = null;
 
-        Optional<DashboardWorkStatus> workStatusOpt = workStatusRepository.findByMember(member);
+        Optional<com.code808.calmdesk.domain.attendance.entity.WorkStatus> workStatusOpt = workStatusRepository.findByMember(member);
 
         if (workStatusOpt.isPresent()) {
             currentStatus = workStatusOpt.get().getStatus().getDescription();
@@ -94,9 +92,9 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             if (todayAttendance.isPresent()) {
                 Attendance a = todayAttendance.get();
                 if (a.getCheckOut() != null) {
-                    currentStatus = WorkStatus.OFF.getDescription();
+                    currentStatus = WorkStatusType.OFF.getDescription();
                 } else if (a.getCheckIn() != null) {
-                    currentStatus = WorkStatus.WORKING.getDescription();
+                    currentStatus = WorkStatusType.WORKING.getDescription();
                     startTime = a.getCheckIn();
                 }
             }
@@ -197,8 +195,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
 
-        // 3. DashboardWorkStatus 업데이트 -> WORKING
-        updateDashboardWorkStatus(member, WorkStatus.WORKING);
+        // 3. WorkStatus 업데이트 -> WORKING
+        updateWorkStatus(member, WorkStatusType.WORKING);
     }
 
     @Override
@@ -219,8 +217,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         // 2. 감정 체크인 저장 (퇴근 시 기분)
         saveEmotionCheckIn(attendance, request);
 
-        // 3. DashboardWorkStatus 업데이트 -> OFF
-        updateDashboardWorkStatus(member, WorkStatus.OFF);
+        // 3. WorkStatus 업데이트 -> OFF
+        updateWorkStatus(member, WorkStatusType.OFF);
     }
 
     private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {
@@ -258,25 +256,25 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
-        WorkStatus newStatus;
+        WorkStatusType newStatus;
         try {
-            newStatus = WorkStatus.valueOf(statusName);
+            newStatus = WorkStatusType.valueOf(statusName);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("잘못된 상태 값입니다: " + statusName);
         }
 
-        updateDashboardWorkStatus(member, newStatus);
+        updateWorkStatus(member, newStatus);
     }
 
-    private void updateDashboardWorkStatus(Member member, WorkStatus status) {
-        DashboardWorkStatus workStatus = workStatusRepository.findByMember(member)
-                .orElse(DashboardWorkStatus.builder()
+    private void updateWorkStatus(Member member, WorkStatusType status) {
+        com.code808.calmdesk.domain.attendance.entity.WorkStatus workStatus = workStatusRepository.findByMember(member)
+                .orElse(com.code808.calmdesk.domain.attendance.entity.WorkStatus.builder()
                         .member(member)
                         .status(status)
                         .startTime(LocalDateTime.now())
                         .build());
 
-        if (workStatus.getId() != null) {
+        if (workStatus.getWorkStatusId() != null) {
             workStatus.updateStatus(status, LocalDateTime.now());
         } else {
             workStatusRepository.save(workStatus);
