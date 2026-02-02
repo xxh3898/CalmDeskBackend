@@ -1,13 +1,12 @@
 package com.code808.calmdesk.domain.attendance.controller.employee;
 
-import com.code808.calmdesk.domain.attendance.dto.*;
 import com.code808.calmdesk.domain.attendance.service.EmployeeAttendanceService;
-import com.code808.calmdesk.domain.vacation.dto.VacationRequestReq;
-import com.code808.calmdesk.domain.vacation.dto.VacationRequestRes;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 /**
@@ -20,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeAttendanceController {
 
+    private final MemberRepository memberRepository;
     private final EmployeeAttendanceService employeeAttendanceService;
 
     /**
@@ -30,8 +30,10 @@ public class EmployeeAttendanceController {
     public ResponseEntity<AttendanceSummaryRes> getSummary(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam(required = false, defaultValue = "1") Long memberId) {
-        AttendanceSummaryRes res = employeeAttendanceService.getSummary(memberId, year, month);
+            Principal principal) {
+        var member = memberRepository.findEmailWithDetails(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        AttendanceSummaryRes res = employeeAttendanceService.getSummary(member.getMemberId(), year, month);
         return ResponseEntity.ok(res);
     }
 
@@ -43,8 +45,10 @@ public class EmployeeAttendanceController {
     public ResponseEntity<List<AttendanceHistoryItemRes>> getHistory(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam(required = false, defaultValue = "1") Long memberId) {
-        List<AttendanceHistoryItemRes> list = employeeAttendanceService.getHistory(memberId, year, month);
+            Principal principal) {
+        var member = memberRepository.findEmailWithDetails(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        List<AttendanceHistoryItemRes> list = employeeAttendanceService.getHistory(member.getMemberId(), year, month);
         return ResponseEntity.ok(list);
     }
 
@@ -53,9 +57,10 @@ public class EmployeeAttendanceController {
      * 휴가 현황 (id, type, period, status, days)
      */
     @GetMapping("/leaves")
-    public ResponseEntity<List<LeaveRequestItemRes>> getLeaveRequests(
-            @RequestParam(required = false, defaultValue = "1") Long memberId) {
-        List<LeaveRequestItemRes> list = employeeAttendanceService.getLeaveRequests(memberId);
+    public ResponseEntity<List<LeaveRequestItemRes>> getLeaveRequests(Principal principal) {
+        var member = memberRepository.findEmailWithDetails(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        List<LeaveRequestItemRes> list = employeeAttendanceService.getLeaveRequests(member.getMemberId());
         return ResponseEntity.ok(list);
     }
 
