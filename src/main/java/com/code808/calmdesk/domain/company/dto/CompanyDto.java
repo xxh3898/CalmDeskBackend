@@ -177,4 +177,33 @@ public class CompanyDto {
                         .build();
             }
         }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class JoinListItemRes {
+        private Long id;
+        private String name;
+        private String email;
+        private String phone;
+        private String departmentName;
+        private String rankName;
+        private String joinStatus;
+
+        public static JoinListItemRes of(Member member) {
+            String dept = member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null;
+            String rank = member.getRank() != null ? member.getRank().getRankName() : null;
+            String status = member.getStatus() == CommonEnums.Status.N ? "PENDING" : (member.getStatus() == CommonEnums.Status.Y ? "APPROVED" : "REJECTED");
+            return JoinListItemRes.builder()
+                    .id(member.getMemberId())
+                    .name(member.getName())
+                    .email(member.getEmail())
+                    .phone(member.getPhone())
+                    .departmentName(dept)
+                    .rankName(rank)
+                    .joinStatus(status)
+                    .build();
+        }
+    }
 }
