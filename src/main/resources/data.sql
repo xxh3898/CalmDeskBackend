@@ -60,12 +60,8 @@ INSERT INTO gifticon (gifticon_name, image, price, stock_quantity, period, statu
 
 -- [추가] 7-5. 미션 (Point History에서 참조하므로 필요)
 INSERT INTO mission_list (mission_code, reward_name, reward_description, goal_count, point_account, status) VALUES
-                                                                                                                ('MISSION_ATTEND_7', '7일 연속 출석', '7일 연속 출석 시 포인트 지급', 7, 1000, 'Y'),
-                                                                                                                ('MISSION_EARLY_BIRD', '얼리버드', '08:30 이전 출근', 1, 100, 'Y'),
-                                                                                                                ('MISSION_REVIEW', '리뷰 작성', '상담 리뷰 작성', 1, 500, 'Y'),
-                                                                                                                ('MISSION_MENTOR', '멘토링', '신입사원 멘토링 완료', 1, 2000, 'Y'),
-                                                                                                                ('MISSION_PROJECT', '프로젝트 완료', '프로젝트 성공적 완료', 1, 10000, 'Y');
-
+                                                                                                                ('ATT_DAILY', '일일 출석', '일일 출석', 1, 100, 'Y'),
+                                                                                                                ('ATT_RATE_80', '한달 80% 출석', '한달 80% 출석', 16, 1000, 'Y');
 -- 8. 상담
 INSERT INTO consultation (title, description, status, member_id, created_date, modify_date) VALUES
                                                                                                 ('업무 스트레스 상담', '최근 업무량이 늘어 힘듭니다.', 'WAITING', 1, NOW(), NOW()),
