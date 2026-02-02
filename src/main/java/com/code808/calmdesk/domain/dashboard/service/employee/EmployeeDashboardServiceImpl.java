@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
 import com.code808.calmdesk.domain.attendance.entity.StressFactor;
-import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
@@ -107,15 +106,15 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         // 4. 포인트
         int points = dashboardRepository.findCurrentPoint(memberId).orElse(0L).intValue();
 
-        // 5. 스트레스 (최신 데이터 조회)
-        StressSummary stressData = dashboardRepository.findLatestStress(member)
+        // 5. 스트레스 (최신 데이터 조회) - 데이터가 존재하는 가장 최근 날짜의 평균
+        Double currentStressAvg = dashboardRepository.findLatestDailyStress(member)
                 .orElse(null);
 
         int stressScore = 0;
         String stressStatus = "진단 필요";
 
-        if (stressData != null) {
-            stressScore = stressData.getScore();
+        if (currentStressAvg != null) {
+            stressScore = (int) Math.round(currentStressAvg);
             // 점수에 따른 상태 텍스트 로직
             if (stressScore <= 30) {
                 stressStatus = "매우 양호";
@@ -129,12 +128,12 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         // 6. 주간 스트레스 데이터 (이번 주 vs 지난 주)
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneWeekAgo = now.minusDays(7);
-        LocalDateTime twoWeeksAgo = now.minusDays(14);
+        LocalDate now = LocalDate.now();
+        LocalDate oneWeekAgo = now.minusDays(7);
+        LocalDate twoWeeksAgo = now.minusDays(14);
 
-        List<StressSummary> thisWeekStress = dashboardRepository.findStressHistory(member, oneWeekAgo, now);
-        List<StressSummary> lastWeekStress = dashboardRepository.findStressHistory(member, twoWeeksAgo, oneWeekAgo);
+        List<Object[]> thisWeekStress = dashboardRepository.findDailyStressStats(member, oneWeekAgo.plusDays(1), now);
+        List<Object[]> lastWeekStress = dashboardRepository.findDailyStressStats(member, twoWeeksAgo.plusDays(1), oneWeekAgo);
 
         List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> thisWeekChartData = mapToDailyStress(thisWeekStress);
         List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> lastWeekChartData = mapToDailyStress(lastWeekStress);
@@ -189,9 +188,6 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             return attendanceRepository.save(newAttendance);
         });
 
-        // 이미 출근 상태일 수도 있지만 checkIn 시간은 최초 출근 시간으로 유지하거나 비즈니스 로직에 따름.
-        // 여기서는 이미 존재하면 checkIn 시간 업데이트 안함 (orElseGet 로직).
-        // 만약 '지각' 등의 상태 변경이 필요하다면 별도 로직 필요.
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
 
@@ -233,7 +229,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .checkinFactors(new ArrayList<>())
                 .build();
 
-        // 양방향 연관관계 메서드 혹은 직접 리스트에 추가 (CascadeType.ALL)
+        // 양방향 연관관계 메서드 혹은 직접 리스트에 추가
         attendance.getEmotionCheckins().add(emotionCheckin);
 
         // StressFactor 저장
@@ -247,10 +243,6 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             }
         }
 
-        // Attendance가 이미 영속 상태라면 Dirty Checking으로 저장되겠지만, 
-        // emotionCheckin이 리스트에 추가된 것을 명시적으로 저장하거나 Cascade 설정에 따름.
-        // 여기서는 safe하게 emotionCheckin을 별도로 save 하지 않아도 attendance가 managed 상태면 cascade 됨.
-        // 다만 attendanceRepository.save(attendance); 를 호출해주는 것이 명확할 수 있음.
         attendanceRepository.save(attendance);
     }
 
@@ -285,13 +277,16 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
     }
 
-    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<StressSummary> stressSummaries) {
-        return stressSummaries.stream()
-                .map(s -> {
-                    String dayName = s.getStartTime().getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<Object[]> stressData) {
+        return stressData.stream()
+                .map(obj -> {
+                    LocalDate date = (LocalDate) obj[0];
+                    Double avgScore = (Double) obj[1];
+                    String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+
                     return EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
                             .day(dayName)
-                            .value(s.getScore())
+                            .value((int) Math.round(avgScore))
                             .build();
                 })
                 .collect(Collectors.toList());

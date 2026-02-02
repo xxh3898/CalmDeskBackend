@@ -1,14 +1,12 @@
 package com.code808.calmdesk.domain.dashboard.repository.employee;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
-import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.member.entity.Member;
 
 import jakarta.persistence.EntityManager;
@@ -59,13 +57,28 @@ public class EmployeeDashboardRepository {
                 .getSingleResult();
     }
 
-    public Optional<StressSummary> findLatestStress(Member member) {
-        List<StressSummary> result = em.createQuery(
-                "SELECT s FROM STRESS_SUMMARY s WHERE s.member = :member ORDER BY s.startTime DESC", StressSummary.class)
+    public Optional<Double> findLatestDailyStress(Member member) {
+        List<Double> result = em.createQuery(
+                "SELECT AVG(e.stressLevel) FROM EMOTION_CHECKIN e JOIN e.attendance a "
+                + "WHERE a.member = :member "
+                + "GROUP BY a.workDate "
+                + "ORDER BY a.workDate DESC", Double.class)
                 .setParameter("member", member)
                 .setMaxResults(1)
                 .getResultList();
         return result.stream().findFirst();
+    }
+
+    public List<Object[]> findDailyStressStats(Member member, LocalDate start, LocalDate end) {
+        return em.createQuery(
+                "SELECT a.workDate, AVG(e.stressLevel) FROM EMOTION_CHECKIN e JOIN e.attendance a "
+                + "WHERE a.member = :member AND a.workDate BETWEEN :start AND :end "
+                + "GROUP BY a.workDate "
+                + "ORDER BY a.workDate ASC", Object[].class)
+                .setParameter("member", member)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .getResultList();
     }
 
     public Optional<Long> findCurrentPoint(Long memberId) {
@@ -75,14 +88,5 @@ public class EmployeeDashboardRepository {
                 .setMaxResults(1)
                 .getResultList();
         return result.stream().findFirst();
-    }
-
-    public List<StressSummary> findStressHistory(Member member, LocalDateTime start, LocalDateTime end) {
-        return em.createQuery(
-                "SELECT s FROM STRESS_SUMMARY s WHERE s.member = :member AND s.startTime BETWEEN :start AND :end ORDER BY s.startTime ASC", StressSummary.class)
-                .setParameter("member", member)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .getResultList();
     }
 }
