@@ -184,16 +184,18 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         LocalDateTime now = LocalDateTime.now();
 
         // 1. Attendance 생성 (없을 경우) or 조회
-        Attendance attendance = dashboardRepository.findTodayAttendance(member, today).orElseGet(() -> {
-            Attendance newAttendance = Attendance.builder()
-                    .member(member)
-                    .workDate(today)
-                    .checkIn(now)
-                    .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
-                    .emotionCheckins(new ArrayList<>())
-                    .build();
-            return attendanceRepository.save(newAttendance);
-        });
+        if (dashboardRepository.findTodayAttendance(member, today).isPresent()) {
+            throw new IllegalArgumentException("이미 출근하셨습니다. 하루에 한 번만 출근할 수 있습니다.");
+        }
+
+        Attendance newAttendance = Attendance.builder()
+                .member(member)
+                .workDate(today)
+                .checkIn(now)
+                .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
+                .emotionCheckins(new ArrayList<>())
+                .build();
+        Attendance attendance = attendanceRepository.save(newAttendance);
 
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
@@ -213,7 +215,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
         // 1. Attendance 퇴근 처리
         Attendance attendance = dashboardRepository.findTodayAttendance(member, today)
-                .orElseThrow(() -> new IllegalStateException("출근 기록이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("출근 기록이 없습니다."));
+
+        if (attendance.getCheckOut() != null) {
+            throw new IllegalArgumentException("이미 퇴근하셨습니다. 하루에 한 번만 퇴근할 수 있습니다.");
+        }
 
         attendance.setCheckOut(now);
 
