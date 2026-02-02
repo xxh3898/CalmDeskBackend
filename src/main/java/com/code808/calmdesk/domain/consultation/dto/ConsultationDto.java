@@ -1,22 +1,43 @@
 package com.code808.calmdesk.domain.consultation.dto;
 
+import java.time.LocalDateTime;
+
 import com.code808.calmdesk.domain.consultation.entity.Consultation;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 public class ConsultationDto {
-
 
     @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ConsultationListItemRes{
+    public static class ConsultationCreateRequest {
+
+        @JsonProperty("title")
+        private String title;
+        @JsonProperty("description")
+        private String description;
+
+        public Consultation toEntity(com.code808.calmdesk.domain.member.entity.Member member) {
+            return Consultation.builder()
+                    .title(this.title)
+                    .description(this.description)
+                    .member(member)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ConsultationListItemRes {
+
         @JsonProperty("id")
         private Long id;
         @JsonProperty("title")
