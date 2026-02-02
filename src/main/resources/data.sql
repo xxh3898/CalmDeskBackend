@@ -99,9 +99,6 @@ INSERT INTO attendance (work_date, check_in, check_out, attendance_status, membe
                                                                                           (DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 18:00:00'), 'ATTEND', 1),
                                                                                           (DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 18:00:00'), 'ATTEND', 1);
 
--- 오늘 근태
-INSERT INTO attendance (work_date, check_in, check_out, attendance_status, member_id) VALUES
-    (CURRENT_DATE, CONCAT(CURRENT_DATE, ' 08:55:00'), NULL, 'ATTEND', 1);
 
 -- user2 최근 3일
 INSERT INTO attendance (work_date, check_in, check_out, attendance_status, member_id) VALUES
@@ -109,38 +106,98 @@ INSERT INTO attendance (work_date, check_in, check_out, attendance_status, membe
                                                                                           (DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 09:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 18:00:00'), 'ATTEND', 2),
                                                                                           (CURRENT_DATE, CONCAT(CURRENT_DATE, ' 08:50:00'), NULL, 'ATTEND', 2);
 
--- 10. 감정 체크인
+-- 10. 감정 체크인 (출근 1회, 퇴근 1회 생성 / attendance_id는 위 INSERT 순서대로 1~30)
 INSERT INTO emotion_checkin (attendance_id, stress_level, memo, created_date, modify_date) VALUES
-                                                                                               (1, 30, '상쾌한 월요일', DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY)),
-                                                                                               (2, 40, '업무 파악 중', DATE_SUB(NOW(), INTERVAL 29 DAY), DATE_SUB(NOW(), INTERVAL 29 DAY)),
-                                                                                               (3, 60, '회의가 많음', DATE_SUB(NOW(), INTERVAL 28 DAY), DATE_SUB(NOW(), INTERVAL 28 DAY)),
-                                                                                               (4, 50, '보통 하루', DATE_SUB(NOW(), INTERVAL 27 DAY), DATE_SUB(NOW(), INTERVAL 27 DAY)),
-                                                                                               (5, 80, '불금인데 야근', DATE_SUB(NOW(), INTERVAL 26 DAY), DATE_SUB(NOW(), INTERVAL 26 DAY)),
-                                                                                               (6, 20, '주말 푹 쉬고 옴', DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_SUB(NOW(), INTERVAL 25 DAY)),
-                                                                                               (7, 30, '업무 집중 잘됨', DATE_SUB(NOW(), INTERVAL 24 DAY), DATE_SUB(NOW(), INTERVAL 24 DAY)),
-                                                                                               (8, 45, '무난함', DATE_SUB(NOW(), INTERVAL 23 DAY), DATE_SUB(NOW(), INTERVAL 23 DAY)),
-                                                                                               (9, 70, '급한 에러 발생', DATE_SUB(NOW(), INTERVAL 22 DAY), DATE_SUB(NOW(), INTERVAL 22 DAY)),
-                                                                                               (10, 60, '피곤함', DATE_SUB(NOW(), INTERVAL 21 DAY), DATE_SUB(NOW(), INTERVAL 21 DAY)),
-                                                                                               (11, 30, '컨디션 좋음', DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY)),
-                                                                                               (12, 40, '점심 맛있었음', DATE_SUB(NOW(), INTERVAL 19 DAY), DATE_SUB(NOW(), INTERVAL 19 DAY)),
-                                                                                               (13, 50, '오후에 졸림', DATE_SUB(NOW(), INTERVAL 18 DAY), DATE_SUB(NOW(), INTERVAL 18 DAY)),
-                                                                                               (14, 85, '보고서 마감 압박', DATE_SUB(NOW(), INTERVAL 17 DAY), DATE_SUB(NOW(), INTERVAL 17 DAY)),
-                                                                                               (15, 90, '스트레스 최고조', DATE_SUB(NOW(), INTERVAL 16 DAY), DATE_SUB(NOW(), INTERVAL 16 DAY)),
-                                                                                               (16, 40, '주말 지나고 회복', DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 15 DAY)),
-                                                                                               (17, 35, '여유로운 편', DATE_SUB(NOW(), INTERVAL 14 DAY), DATE_SUB(NOW(), INTERVAL 14 DAY)),
-                                                                                               (18, 55, '동료와 약간의 마찰', DATE_SUB(NOW(), INTERVAL 13 DAY), DATE_SUB(NOW(), INTERVAL 13 DAY)),
-                                                                                               (19, 45, '무난하게 해결', DATE_SUB(NOW(), INTERVAL 12 DAY), DATE_SUB(NOW(), INTERVAL 12 DAY)),
-                                                                                               (20, 30, '금요일 퇴근 기다림', DATE_SUB(NOW(), INTERVAL 11 DAY), DATE_SUB(NOW(), INTERVAL 11 DAY)),
-                                                                                               (21, 20, '월요병 없음', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY)),
-                                                                                               (22, 40, '새 프로젝트 시작', DATE_SUB(NOW(), INTERVAL 9 DAY), DATE_SUB(NOW(), INTERVAL 9 DAY)),
-                                                                                               (23, 60, '일정이 타이트함', DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY)),
-                                                                                               (24, 70, '야근 확정', DATE_SUB(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY)),
-                                                                                               (25, 50, '그럭저럭', DATE_SUB(NOW(), INTERVAL 6 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY)),
-                                                                                               (26, 40, '날씨가 좋음', DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY)),
-                                                                                               (27, 30, '집중력 최고', DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY)),
-                                                                                               (28, 55, '약간 지침', DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY)),
-                                                                                               (29, 65, '어제 이슈 처리', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
-                                                                                               (30, 40, '오늘 아침 상쾌', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
+-- Day 30 (Attendance ID 1)
+(1, 2, '출근: 상쾌한 월요일', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), ' 08:50:00')),
+(1, 3, '퇴근: 업무 파악 완료', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), ' 18:05:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), ' 18:05:00')),
+-- Day 29 (Attendance ID 2)
+(2, 2, '출근: 비가 옴', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 29 DAY), ' 08:55:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 29 DAY), ' 08:55:00')),
+(2, 3, '퇴근: 내일 할 일 정리', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 29 DAY), ' 18:10:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 29 DAY), ' 18:10:00')),
+-- Day 28 (Attendance ID 3)
+(3, 3, '출근: 회의 준비', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 28 DAY), ' 09:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 28 DAY), ' 09:00:00')),
+(3, 4, '퇴근: 회의가 길었음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 28 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 28 DAY), ' 18:00:00')),
+-- Day 27 (Attendance ID 4)
+(4, 2, '출근: 날씨 좋음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 27 DAY), ' 08:45:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 27 DAY), ' 08:45:00')),
+(4, 3, '퇴근: 보고서 작성 중', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 27 DAY), ' 18:30:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 27 DAY), ' 18:30:00')),
+-- Day 26 (Attendance ID 5)
+(5, 4, '출근: 피곤함', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 26 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 26 DAY), ' 08:50:00')),
+(5, 5, '퇴근: 금요일 야근', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 26 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 26 DAY), ' 18:00:00')),
+-- Day 25 (Attendance ID 6) - LATE
+(6, 1, '출근: 늦잠', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 25 DAY), ' 09:10:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 25 DAY), ' 09:10:00')),
+(6, 2, '퇴근: 주말 잘 쉬자', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 25 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 25 DAY), ' 18:00:00')),
+-- Day 24 (Attendance ID 7)
+(7, 2, '출근: 상쾌함', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 24 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 24 DAY), ' 08:50:00')),
+(7, 2, '퇴근: 집중 잘됨', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 24 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 24 DAY), ' 18:00:00')),
+-- Day 23 (Attendance ID 8)
+(8, 2, '출근: 커피 한잔', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 23 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 23 DAY), ' 08:50:00')),
+(8, 3, '퇴근: 무난한 하루', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 23 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 23 DAY), ' 18:00:00')),
+-- Day 22 (Attendance ID 9)
+(9, 3, '출근: 긴급 이슈 확인', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 22 DAY), ' 08:55:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 22 DAY), ' 08:55:00')),
+(9, 5, '퇴근: 에러 해결하느라 늦음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 22 DAY), ' 19:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 22 DAY), ' 19:00:00')),
+-- Day 21 (Attendance ID 10)
+(10, 4, '출근: 어제 여파로 피곤', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 21 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 21 DAY), ' 08:50:00')),
+(10, 3, '퇴근: 일찍 자야지', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 21 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 21 DAY), ' 18:00:00')),
+-- Day 20 (Attendance ID 11)
+(11, 2, '출근: 일찍 도착', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), ' 08:40:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), ' 08:40:00')),
+(11, 2, '퇴근: 컨디션 회복', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), ' 18:00:00')),
+-- Day 19 (Attendance ID 12)
+(12, 2, '출근: 점심 약속 기대', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 19 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 19 DAY), ' 08:50:00')),
+(12, 3, '퇴근: 배부르고 졸림', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 19 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 19 DAY), ' 18:00:00')),
+-- Day 18 (Attendance ID 13) - LATE
+(13, 2, '출근: 버스 놓침', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 18 DAY), ' 09:05:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 18 DAY), ' 09:05:00')),
+(13, 4, '퇴근: 오후 업무 밀림', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 18 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 18 DAY), ' 18:00:00')),
+-- Day 17 (Attendance ID 14)
+(14, 4, '출근: 마감일 임박', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 17 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 17 DAY), ' 08:50:00')),
+(14, 5, '퇴근: 압박감 심함', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 17 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 17 DAY), ' 18:00:00')),
+-- Day 16 (Attendance ID 15)
+(15, 5, '출근: 스트레스 최고조', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 16 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 16 DAY), ' 08:50:00')),
+(15, 4, '퇴근: 겨우 마감', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 16 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 16 DAY), ' 18:00:00')),
+-- Day 15 (Attendance ID 16)
+(16, 2, '출근: 주말 지나고 회복', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), ' 08:30:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), ' 08:30:00')),
+(16, 2, '퇴근: 칼퇴', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), ' 17:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), ' 17:00:00')),
+-- Day 14 (Attendance ID 17)
+(17, 2, '출근: 여유로움', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY), ' 08:50:00')),
+(17, 2, '퇴근: 평온', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 14 DAY), ' 18:00:00')),
+-- Day 13 (Attendance ID 18)
+(18, 3, '출근: 회의 준비', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 13 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 13 DAY), ' 08:50:00')),
+(18, 4, '퇴근: 의견 충돌 있었음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 13 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 13 DAY), ' 18:00:00')),
+-- Day 12 (Attendance ID 19)
+(19, 3, '출근: 어제 일 수습', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 12 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 12 DAY), ' 08:50:00')),
+(19, 3, '퇴근: 잘 해결됨', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 12 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 12 DAY), ' 18:00:00')),
+-- Day 11 (Attendance ID 20)
+(20, 2, '출근: 금요일이다', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 11 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 11 DAY), ' 08:50:00')),
+(20, 1, '퇴근: 주말 시작', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 11 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 11 DAY), ' 18:00:00')),
+-- Day 10 (Attendance ID 21)
+(21, 1, '출근: 월요병 없음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), ' 08:50:00')),
+(21, 2, '퇴근: 시작이 좋음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), ' 18:00:00')),
+-- Day 9 (Attendance ID 22)
+(22, 2, '출근: 새 프로젝트', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 9 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 9 DAY), ' 08:50:00')),
+(22, 3, '퇴근: 할 일 많음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 9 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 9 DAY), ' 18:00:00')),
+-- Day 8 (Attendance ID 23)
+(23, 3, '출근: 일정 타이트함', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), ' 09:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), ' 09:00:00')),
+(23, 4, '퇴근: 야근 각', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), ' 18:00:00')),
+-- Day 7 (Attendance ID 24)
+(24, 4, '출근: 피로 누적', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), ' 08:50:00')),
+(24, 5, '퇴근: 너무 힘들다', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), ' 18:00:00')),
+-- Day 6 (Attendance ID 25)
+(25, 3, '출근: 그냥저냥', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), ' 08:50:00')),
+(25, 3, '퇴근: 내일은 주말', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), ' 18:00:00')),
+-- Day 5 (Attendance ID 26)
+(26, 2, '출근: 날씨 좋음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), ' 08:50:00')),
+(26, 2, '퇴근: 기분 좋음', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), ' 18:00:00')),
+-- Day 4 (Attendance ID 27)
+(27, 2, '출근: 집중력 최고', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), ' 08:50:00')),
+(27, 1, '퇴근: 뿌듯함', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), ' 18:00:00')),
+-- Day 3 (Attendance ID 28)
+(28, 2, '출근: 약간 지침', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), ' 08:50:00')),
+(28, 3, '퇴근: 충전 필요', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), ' 18:00:00')),
+-- Day 2 (Attendance ID 29)
+(29, 3, '출근: 이슈 발생', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 08:50:00')),
+(29, 4, '퇴근: 처리하느라 진땀', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), ' 18:00:00')),
+-- Day 1 (Attendance ID 30)
+(30, 2, '출근: 상쾌한 아침', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 08:50:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 08:50:00')),
+(30, 2, '퇴근: 내일도 화이팅', CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 18:00:00'), CONCAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), ' 18:00:00'));
 
 -- 11. 포인트 내역
 INSERT INTO point_history (point_type, amount, balance_after, source_type, member_id, gifticon_id, mission_id, create_date) VALUES
