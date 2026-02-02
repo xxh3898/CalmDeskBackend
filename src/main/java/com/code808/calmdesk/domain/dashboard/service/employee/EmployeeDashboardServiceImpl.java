@@ -117,7 +117,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         String stressStatus = "진단 필요";
 
         if (currentStressAvg != null) {
-            stressScore = (int) Math.round(currentStressAvg);
+            stressScore = (int) Math.round((currentStressAvg - 1) * 25); // 1~5 -> 0~100
             // 점수에 따른 상태 텍스트 로직
             if (stressScore <= 30) {
                 stressStatus = "매우 양호";
@@ -299,9 +299,12 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
             Double score = statsMap.getOrDefault(date, 0.0);
 
+            // 1~5점 척도 -> 0~100점 만점 환산 (1점=0점, 5점=100점)
+            int normalizedScore = (int) Math.round((score - 1) * 25);
+
             result.add(EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
                     .day(dayName)
-                    .value((int) Math.round(score))
+                    .value(normalizedScore)
                     .build());
         }
         return result;
