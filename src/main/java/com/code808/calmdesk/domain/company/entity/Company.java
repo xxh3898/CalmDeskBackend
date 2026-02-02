@@ -1,9 +1,9 @@
 package com.code808.calmdesk.domain.company.entity;
 
+import jakarta.persistence.*;
 import com.code808.calmdesk.domain.member.entity.Member;
 import lombok.*;
-import jakarta.persistence.*;
-
+import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +11,8 @@ import java.util.List;
 @Entity
 @Table(name = "COMPANY")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Company {
 
     @Id
@@ -34,9 +34,12 @@ public class Company {
     @Column(nullable = false)
     private Integer maxValue;
 
-    @OneToMany(mappedBy = "company" , cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Department> departments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL,  orphanRemoval = true)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Member> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Gifticon> gifticons = new ArrayList<>();
 }

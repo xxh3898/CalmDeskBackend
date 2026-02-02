@@ -1,0 +1,54 @@
+package com.code808.calmdesk.domain.gifticon.controller.admin;
+
+import com.code808.calmdesk.domain.gifticon.dto.ItemResponse;
+import lombok.RequiredArgsConstructor;
+import com.code808.calmdesk.domain.gifticon.service.ShopAdminService;
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/shop")
+@RequiredArgsConstructor
+public class ShopAdminController {
+
+    private final ShopAdminService shopAdminService;
+
+    // 1. 아이템 목록 조회
+    @GetMapping("/items")
+    public ResponseEntity<List<ItemResponse>> getItemsByCompany(@RequestParam("companyId") Long companyId) {
+        // Service에서 회사 ID로 필터링된 목록을 가져옴
+        List<ItemResponse> responses = shopAdminService.findAllByCompany(companyId);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 3. 아이템 활성 상태 토글
+    @PatchMapping("/items/{id}/toggle")
+    public ResponseEntity<?> toggleStatus(@PathVariable Long id) {
+        shopAdminService.toggleStatus(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // 아이템 전체 활성화
+    @PostMapping("/items/activate-all")
+    public ResponseEntity<Void> activateAll() {
+        shopAdminService.activateAll();
+        return ResponseEntity.ok().build();
+    }
+
+    // 아이템 전체 비활성화
+    @PostMapping("/items/deactivate-all")
+    public ResponseEntity<Void> deactivateAll() {
+        shopAdminService.deactivateAll();
+        return ResponseEntity.ok().build();
+    }
+
+    // 4. 수량 업데이트
+    @PutMapping("/items/{id}/{quantity}")
+    public ResponseEntity<?> updateQuantity(@PathVariable Long id, @PathVariable Integer quantity) {
+        shopAdminService.updateQuantity(id, quantity);
+        return ResponseEntity.ok().build();
+    }
+}
