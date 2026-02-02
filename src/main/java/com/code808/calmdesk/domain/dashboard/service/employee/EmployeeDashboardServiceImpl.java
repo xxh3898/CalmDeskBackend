@@ -300,7 +300,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             Double score = statsMap.getOrDefault(date, 0.0);
 
             // 1~5점 척도 -> 0~100점 만점 환산 (1점=0점, 5점=100점)
-            int normalizedScore = (int) Math.round((score - 1) * 25);
+            // 데이터가 없어서 0.0인 경우, 계산식 (0-1)*25 = -25가 되므로 0으로 처리
+            int normalizedScore = 0;
+            if (score > 0) {
+                normalizedScore = (int) Math.round((score - 1) * 25);
+            }
 
             result.add(EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
                     .day(dayName)
