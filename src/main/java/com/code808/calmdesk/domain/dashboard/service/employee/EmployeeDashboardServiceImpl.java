@@ -1,12 +1,15 @@
 package com.code808.calmdesk.domain.dashboard.service.employee;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -127,16 +130,19 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             }
         }
 
-        // 6. 주간 스트레스 데이터 (이번 주 vs 지난 주)
+        // 6. 주간 스트레스 데이터 (이번 주 vs 지난 주) - 월요일 기준 고정
         LocalDate now = LocalDate.now();
-        LocalDate oneWeekAgo = now.minusDays(7);
-        LocalDate twoWeeksAgo = now.minusDays(14);
+        LocalDate thisWeekMonday = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate thisWeekSunday = thisWeekMonday.plusDays(6);
 
-        List<Object[]> thisWeekStress = dashboardRepository.findDailyStressStats(member, oneWeekAgo.plusDays(1), now);
-        List<Object[]> lastWeekStress = dashboardRepository.findDailyStressStats(member, twoWeeksAgo.plusDays(1), oneWeekAgo);
+        LocalDate lastWeekMonday = thisWeekMonday.minusWeeks(1);
+        LocalDate lastWeekSunday = lastWeekMonday.plusDays(6);
 
-        List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> thisWeekChartData = mapToDailyStress(thisWeekStress);
-        List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> lastWeekChartData = mapToDailyStress(lastWeekStress);
+        List<Object[]> thisWeekStress = dashboardRepository.findDailyStressStats(member, thisWeekMonday, thisWeekSunday);
+        List<Object[]> lastWeekStress = dashboardRepository.findDailyStressStats(member, lastWeekMonday, lastWeekSunday);
+
+        List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> thisWeekChartData = mapToDailyStress(thisWeekStress, thisWeekMonday);
+        List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> lastWeekChartData = mapToDailyStress(lastWeekStress, lastWeekMonday);
 
         return EmployeeDashboardResponseDto.builder()
                 .userProfile(EmployeeDashboardResponseDto.UserProfile.builder()
@@ -277,18 +283,27 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
     }
 
-    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<Object[]> stressData) {
-        return stressData.stream()
-                .map(obj -> {
-                    LocalDate date = (LocalDate) obj[0];
-                    Double avgScore = (Double) obj[1];
-                    String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+    private List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> mapToDailyStress(List<Object[]> stressData, LocalDate startDate) {
+        // 1. DB 결과를 Map으로 변환
+        Map<LocalDate, Double> statsMap = stressData.stream()
+                .collect(Collectors.toMap(
+                        obj -> (LocalDate) obj[0],
+                        obj -> (Double) obj[1]
+                ));
 
-                    return EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
-                            .day(dayName)
-                            .value((int) Math.round(avgScore))
-                            .build();
-                })
-                .collect(Collectors.toList());
+        List<EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress> result = new ArrayList<>();
+
+        // 2. 시작일(월요일)부터 7일간 순회하며 데이터 채우기 (없으면 0)
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = startDate.plusDays(i);
+            String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+            Double score = statsMap.getOrDefault(date, 0.0);
+
+            result.add(EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
+                    .day(dayName)
+                    .value((int) Math.round(score))
+                    .build());
+        }
+        return result;
     }
 }
