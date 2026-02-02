@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.code808.calmdesk.domain.company.dto.DepartmentDto;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
-import com.code808.calmdesk.domain.dashboard.entity.DashboardWorkStatus;
-import com.code808.calmdesk.domain.dashboard.repository.employee.DashboardWorkStatusRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
@@ -24,7 +22,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final MemberRepository memberRepository;
-    private final DashboardWorkStatusRepository workStatusRepository;
+    private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
 
     @Override
     public DepartmentDto.DetailResponse getDepartmentDetails(Long departmentId) {
@@ -42,7 +40,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         List<Member> members = memberRepository.findByDepartment(department);
 
         // 멤버들의 현재 상태 조회 (Bulk 조회)
-        List<DashboardWorkStatus> statuses = workStatusRepository.findByMemberIn(members);
+        List<com.code808.calmdesk.domain.attendance.entity.WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
 
         // Map<MemberId, StatusDescription> 생성
         Map<Long, String> statusMap = statuses.stream()
