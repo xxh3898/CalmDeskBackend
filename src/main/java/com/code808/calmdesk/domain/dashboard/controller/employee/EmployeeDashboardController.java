@@ -13,6 +13,7 @@ import com.code808.calmdesk.domain.dashboard.dto.employee.DashboardStatusUpdateR
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.service.employee.EmployeeDashboardService;
+import com.code808.calmdesk.domain.gifticon.service.ShopEmployeeService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class EmployeeDashboardController {
 
     private final EmployeeDashboardService dashboardService;
     private final MemberRepository memberRepository;
+    private final ShopEmployeeService shopEmployeeService;
 
     @GetMapping
     public ResponseEntity<EmployeeDashboardResponseDto> getDashboard(Principal principal) {
@@ -36,6 +38,13 @@ public class EmployeeDashboardController {
     public ResponseEntity<Void> clockIn(Principal principal, @RequestBody EmotionCheckInRequest req) {
         Long memberId = getMemberId(principal);
         dashboardService.clockIn(memberId, req);
+
+        // 1. 진행도를 먼저 업데이트해서 목표치(1/1)를 채웁니다.
+        // 1. 매일 출근 미션 (단발성 혹은 덮어쓰기라면 false, 누적이라면 true)
+        // 출근 미션 코드가 "ATT_DAILY"라고 가정
+        shopEmployeeService.updateMissionProgress(memberId, "ATT_DAILY", 1, false);
+        shopEmployeeService.updateMissionProgress(memberId, "ATT_RATE_80", 1, true);
+
         return ResponseEntity.ok().build();
     }
 
