@@ -97,27 +97,29 @@ public class VacationServiceImpl implements VacationService {
             throw new IllegalArgumentException("해당 기간에 이미 신청되거나 승인된 휴가가 있습니다.");
         }
 
-        // 남은 휴가 개수 체크 (워케이션은 제외)
+        // 남은 휴가 개수 체크 (워케이션은 제외). 신규 가입자 등 VacationRest 없으면 기본 15일로 생성
         if (type != Vacation.Type.WORKCATION) {
-            var restOpt = vacationRepository.findByMemberId(memberId);
-            if (restOpt.isPresent()) {
-                VacationRest vacationRest = restOpt.get();
-                // totalCount는 일 단위, spentCount는 반차 단위
-                double totalDays = vacationRest.getTotalCount();  // 일 단위
-                double spentDays = vacationRest.getSpentCount() / 2.0;  // 반차 단위를 일 단위로 변환
-                double remainingDays = totalDays - spentDays;
+            VacationRest vacationRest = vacationRepository.findByMemberId(memberId)
+                    .orElseGet(() -> {
+                        VacationRest newRest = VacationRest.builder()
+                                .restId(member.getMemberId())
+                                .totalCount(15)
+                                .spentCount(0)
+                                .member(member)
+                                .build();
+                        return vacationRestRepository.save(newRest);
+                    });
+            // totalCount는 일 단위, spentCount는 반차 단위
+            double totalDays = vacationRest.getTotalCount();
+            double spentDays = vacationRest.getSpentCount() / 2.0;
+            double remainingDays = totalDays - spentDays;
 
-                // 신청하려는 휴가 일수
-                double requestedDays = type == Vacation.Type.HALF ? 0.5 : vacationDays;
+            double requestedDays = type == Vacation.Type.HALF ? 0.5 : vacationDays;
 
-                if (remainingDays < requestedDays) {
-                    throw new IllegalArgumentException(
-                            String.format("남은 휴가가 부족합니다. (남은 휴가: %.1f일, 신청하려는 휴가: %.1f일)",
-                                    remainingDays, requestedDays));
-                }
-            } else {
-                // VacationRest가 없으면 기본값으로 체크
-                throw new IllegalArgumentException("휴가 정보를 찾을 수 없습니다.");
+            if (remainingDays < requestedDays) {
+                throw new IllegalArgumentException(
+                        String.format("남은 휴가가 부족합니다. (남은 휴가: %.1f일, 신청하려는 휴가: %.1f일)",
+                                remainingDays, requestedDays));
             }
         }
 
@@ -157,27 +159,25 @@ public class VacationServiceImpl implements VacationService {
         vacation.approve(approver);
         vacationRepository.save(vacation);
 
-        // 워케이션이 아닌 경우에만 spentCount 증가
+        // 워케이션이 아닌 경우에만 spentCount 증가 (VacationRest 없으면 기본 15일로 생성 후 차감)
         if (vacation.getType() != Vacation.Type.WORKCATION) {
-            var restOpt = vacationRepository.findByMemberId(vacation.getRequestMember().getMemberId());
-            if (restOpt.isPresent()) {
-                VacationRest vacationRest = restOpt.get();
-                // spentCount는 반차 단위로 저장됨
-                // 연차: 사용한 일수만큼 차감 (예: 4일 사용 → spentCount 8 증가 → 잔여 연차 4일 차감)
-                // 반차: 0.5일 차감 (vacationDays = 1 → spentCount 1 증가 → 잔여 연차 0.5일 차감)
-                int vacationDaysValue = vacation.getVacationDays();
-                int countToAdd;
-                if (vacation.getType() == Vacation.Type.HALF) {
-                    // 반차: vacationDays = 1 → spentCount 1 증가 (0.5일 차감)
-                    countToAdd = vacationDaysValue;
-                } else {
-                    // 연차: vacationDays = 실제 일수 → spentCount는 일수 * 2 증가
-                    // 예: 4일 사용 → spentCount 8 증가 → (8 / 2.0) = 4일 차감
-                    countToAdd = vacationDaysValue * 2;
-                }
-                vacationRest.addSpentCount(countToAdd);
-                vacationRestRepository.save(vacationRest);
-            }
+            Member requestMember = vacation.getRequestMember();
+            VacationRest vacationRest = vacationRepository.findByMemberId(requestMember.getMemberId())
+                    .orElseGet(() -> {
+                        VacationRest newRest = VacationRest.builder()
+                                .restId(requestMember.getMemberId())
+                                .totalCount(15)
+                                .spentCount(0)
+                                .member(requestMember)
+                                .build();
+                        return vacationRestRepository.save(newRest);
+                    });
+            int vacationDaysValue = vacation.getVacationDays();
+            int countToAdd = vacation.getType() == Vacation.Type.HALF
+                    ? vacationDaysValue
+                    : vacationDaysValue * 2;
+            vacationRest.addSpentCount(countToAdd);
+            vacationRestRepository.save(vacationRest);
         }
 
         return VacationDto.VacationRequestRes.of(vacation.getVacationId(), "휴가가 승인되었습니다.");

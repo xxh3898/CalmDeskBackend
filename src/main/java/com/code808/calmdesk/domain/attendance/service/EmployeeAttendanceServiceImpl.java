@@ -50,7 +50,7 @@ public class EmployeeAttendanceServiceImpl implements EmployeeAttendanceService 
         long monthWorkDays = attendanceRepository.countWorkDaysInMonth(memberId, start, end);
         long lateOrAbsenceCount = attendanceRepository.countLateOrAbsenceInMonth(memberId, start, end);
 
-        double remainingVacation = 0.0;
+        double remainingVacation = 15.0;
         var restOpt = vacationRepository.findByMemberId(memberId);
         if (restOpt.isPresent()) {
             VacationRest vr = restOpt.get();
