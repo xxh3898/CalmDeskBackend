@@ -33,8 +33,16 @@ public class ConsultationController {
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-    @GetMapping
-    public ResponseEntity<List<ConsultationDto.ConsultationListItemRes>> getConsultationList() {
-        return ResponseEntity.ok(consultationService.getConsultationList());
+    /**
+     * GET /api/consultations/me
+     * 직원 본인 상담 신청 목록 (근태 캘린더 등에서 사용)
+     */
+    @GetMapping("/me")
+    public ResponseEntity<List<ConsultationDto.ConsultationListItemRes>> getMyConsultations(java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        List<ConsultationDto.ConsultationListItemRes> list = consultationService.getMyConsultationList(principal.getName());
+        return ResponseEntity.ok(list);
     }
 }
