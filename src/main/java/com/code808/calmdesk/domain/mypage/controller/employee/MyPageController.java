@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/mypage")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 public class MyPageController {
 
     private final MyPageService myPageService;
