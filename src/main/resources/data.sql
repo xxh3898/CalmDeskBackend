@@ -1,4 +1,8 @@
--- TRUNCATE 구문 제거됨 (ddl-auto: create 모드에서는 불필요하며, 테이블 없을 시 에러 유발)
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE member;
+TRUNCATE TABLE department;
+TRUNCATE TABLE company;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. 회사
 INSERT INTO company (company_name, company_code, category, min_value, max_value) VALUES
@@ -187,3 +191,12 @@ INSERT INTO gift_order (period, order_date, approval_amount, member_id, gifticon
                                                                                                                         (365, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), 10000, 4, 3, 0, 10000, 'SPEND'),
                                                                                                                         (90, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), 20000, 1, 4, 0, 20000, 'SPEND'),
                                                                                                                         (30, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), 4500, 3, 1, 0, 4500, 'SPEND');
+-- 13. 스트레스 일간 요약
+INSERT INTO stress_summary
+(avg_stress_level, checkin_count, summary_date, created_date, department_id, member_id, modify_date)
+VALUES
+    (42, 5, '2026-02-02', CURRENT_TIMESTAMP, 1, 1, CURRENT_TIMESTAMP),
+    (68, 8, '2026-02-02', CURRENT_TIMESTAMP, 1, 2, CURRENT_TIMESTAMP),
+    (35, 4, '2026-02-02', CURRENT_TIMESTAMP, 1, 3, CURRENT_TIMESTAMP),
+    (77, 10, '2026-02-02', CURRENT_TIMESTAMP, 1, 4, CURRENT_TIMESTAMP),
+    (52, 6, '2026-02-02', CURRENT_TIMESTAMP, 1, 5, CURRENT_TIMESTAMP);
