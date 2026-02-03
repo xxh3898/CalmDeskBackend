@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class PointHistoryResponse {
-    private String pointType;
-    private int amount;
-    private int balanceAfter;
-    private String sourceType;
-    private LocalDateTime date;
+    private String pointType; // EARN, SPEND
+    private int amount; // 변동 금액
+    private int balanceAfter; // 변동 후 잔액
+    private String sourceType; // REWARD, GIFTICON
+    private LocalDateTime date; // 발생 시간
 }

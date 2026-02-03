@@ -1,21 +1,5 @@
 package com.code808.calmdesk.domain.attendance.service;
 
-import com.code808.calmdesk.domain.attendance.dto.*;
-import com.code808.calmdesk.domain.attendance.entity.Attendance;
-import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
-import com.code808.calmdesk.domain.common.enums.CommonEnums;
-import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import com.code808.calmdesk.domain.vacation.dto.VacationRequestReq;
-import com.code808.calmdesk.domain.vacation.dto.VacationRequestRes;
-import com.code808.calmdesk.domain.vacation.entity.Vacation;
-import com.code808.calmdesk.domain.vacation.entity.VacationRest;
-import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
-import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +9,23 @@ import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.code808.calmdesk.domain.attendance.dto.AttendanceDto;
+import com.code808.calmdesk.domain.attendance.entity.Attendance;
+import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.vacation.dto.VacationDto;
+import com.code808.calmdesk.domain.vacation.entity.Vacation;
+import com.code808.calmdesk.domain.vacation.entity.VacationRest;
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
+import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class EmployeeAttendanceService {
      * 프론트 휴가 신청
      */
     @Transactional
-    public VacationRequestRes requestVacation(Long memberId, VacationRequestReq req) {
+    public VacationDto.VacationRequestRes requestVacation(Long memberId, VacationDto.VacationRequestReq req) {
         // 유효성 검사
         if (req.getStartDate() == null || req.getEndDate() == null) {
             throw new IllegalArgumentException("시작일과 종료일을 모두 입력해주세요.");
@@ -113,7 +114,7 @@ public class EmployeeAttendanceService {
 
         Vacation saved = vacationRepository.save(vacation);
 
-        return VacationRequestRes.builder()
+        return VacationDto.VacationRequestRes.builder()
                 .id(saved.getVacationId())
                 .message("휴가 신청이 완료되었습니다.")
                 .build();
@@ -123,7 +124,7 @@ public class EmployeeAttendanceService {
      * 프론트 요약 카드: 이번 달 출근 14/21일, 지각/결근 1건, 잔여 연차 12.5일, 이번 주 근무 28.5시간
      */
     @Transactional(readOnly = true)
-    public AttendanceSummaryRes getSummary(Long memberId, int year, int month) {
+    public AttendanceDto.AttendanceSummaryRes getSummary(Long memberId, int year, int month) {
         YearMonth ym = YearMonth.of(year, month);
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
@@ -155,7 +156,7 @@ public class EmployeeAttendanceService {
                 .mapToDouble(a -> Duration.between(a.getCheckIn(), a.getCheckOut()).toMinutes() / 60.0)
                 .sum();
 
-        return AttendanceSummaryRes.builder()
+        return AttendanceDto.AttendanceSummaryRes.builder()
                 .monthWorkDays((int) monthWorkDays)
                 .monthTotalDays(monthTotalDays)
                 .lateOrAbsenceCount((int) lateOrAbsenceCount)
@@ -168,7 +169,7 @@ public class EmployeeAttendanceService {
      * 프론트 전체 기록 타임라인 / 일별 상세용
      */
     @Transactional(readOnly = true)
-    public List<AttendanceHistoryItemRes> getHistory(Long memberId, int year, int month) {
+    public List<AttendanceDto.AttendanceHistoryItemRes> getHistory(Long memberId, int year, int month) {
         YearMonth ym = YearMonth.of(year, month);
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
@@ -189,7 +190,7 @@ public class EmployeeAttendanceService {
             }
             String note = a.getNote() != null && !a.getNote().isBlank() ? a.getNote() : "특이사항 없음";
 
-            return AttendanceHistoryItemRes.builder()
+            return AttendanceDto.AttendanceHistoryItemRes.builder()
                     .id(a.getAttendanceId())
                     .day(a.getWorkDate().getDayOfMonth())
                     .date(dateStr)
@@ -206,7 +207,7 @@ public class EmployeeAttendanceService {
      * 프론트 휴가 현황용
      */
     @Transactional(readOnly = true)
-    public List<LeaveRequestItemRes> getLeaveRequests(Long memberId) {
+    public List<AttendanceDto.LeaveRequestItemRes> getLeaveRequests(Long memberId) {
         List<Vacation> list = vacationRepository.findByRequestMember(memberId);
         return list.stream().map(v -> {
             String type = mapVacationType(v.getType());
@@ -214,7 +215,7 @@ public class EmployeeAttendanceService {
             String status = v.getStatus() == CommonEnums.Status.Y ? "승인완료" : "승인대기";
             String days = formatDays(v.getType(), v.getVacationDays());
 
-            return LeaveRequestItemRes.builder()
+            return AttendanceDto.LeaveRequestItemRes.builder()
                     .id(v.getVacationId())
                     .type(type)
                     .period(period)
@@ -226,17 +227,23 @@ public class EmployeeAttendanceService {
 
     private String mapStatus(Attendance.AttendanceStatus s) {
         return switch (s) {
-            case ATTEND -> "정상";
-            case LATE -> "지각";
-            case ABSENCE -> "결근";
+            case ATTEND ->
+                "정상";
+            case LATE ->
+                "지각";
+            case ABSENCE ->
+                "결근";
         };
     }
 
     private String mapVacationType(Vacation.Type t) {
         return switch (t) {
-            case ANNUAL -> "연차";
-            case HALF -> "반차";
-            case WORKCATION -> "워케이션";
+            case ANNUAL ->
+                "연차";
+            case HALF ->
+                "반차";
+            case WORKCATION ->
+                "워케이션";
         };
     }
 
@@ -268,11 +275,10 @@ public class EmployeeAttendanceService {
     }
 
     /**
-     * 휴가 승인 (관리자용)
-     * 승인 시 VacationRest의 spentCount 증가
+     * 휴가 승인 (관리자용) 승인 시 VacationRest의 spentCount 증가
      */
     @Transactional
-    public VacationRequestRes approveVacation(Long vacationId, Long approverMemberId) {
+    public VacationDto.VacationRequestRes approveVacation(Long vacationId, Long approverMemberId) {
         // 휴가 조회
         Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 휴가입니다."));
@@ -300,7 +306,7 @@ public class EmployeeAttendanceService {
             }
         }
 
-        return VacationRequestRes.builder()
+        return VacationDto.VacationRequestRes.builder()
                 .id(vacation.getVacationId())
                 .message("휴가가 승인되었습니다.")
                 .build();
@@ -311,10 +317,14 @@ public class EmployeeAttendanceService {
      */
     private Vacation.Type parseVacationType(String typeStr) {
         return switch (typeStr) {
-            case "연차" -> Vacation.Type.ANNUAL;
-            case "반차" -> Vacation.Type.HALF;
-            case "워케이션" -> Vacation.Type.WORKCATION;
-            default -> throw new IllegalArgumentException("유효하지 않은 휴가 종류입니다: " + typeStr);
+            case "연차" ->
+                Vacation.Type.ANNUAL;
+            case "반차" ->
+                Vacation.Type.HALF;
+            case "워케이션" ->
+                Vacation.Type.WORKCATION;
+            default ->
+                throw new IllegalArgumentException("유효하지 않은 휴가 종류입니다: " + typeStr);
         };
     }
 }
