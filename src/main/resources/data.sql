@@ -126,23 +126,12 @@ VALUES
     );
 
 -- 5. 계좌
-INSERT IGNORE INTO
-    account (
-        member_id,
-        remaining_point,
-        total_earned,
-        total_spent,
-        account_leave,
-        total_earned_point,
-        total_spent_point
-    )
-VALUES
-    (1, 47000, 97000, 50000, 0, 97000, 50000),
-    (2, 15000, 20000, 5000, 0, 20000, 5000),
-    (3, 5000, 5000, 0, 0, 5000, 0),
-    (4, 100000, 200000, 100000, 0, 200000, 100000),
-    (5, 0, 0, 0, 0, 0, 0);
-
+INSERT INTO account (member_id, account_leave, total_earned_point, total_spent_point) VALUES
+(1, 47000, 97000, 50000),
+(2, 15000, 20000, 5000),
+(3, 5000, 5000, 0),
+(4, 100000, 200000, 100000),
+(5, 0, 0, 0);
 -- 6. 휴가
 INSERT IGNORE INTO
     vacation_rest (rest_id, total_count, spent_count, member_id)

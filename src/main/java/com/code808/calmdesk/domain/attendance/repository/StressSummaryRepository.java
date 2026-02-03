@@ -13,7 +13,11 @@ import com.code808.calmdesk.domain.company.entity.Department;
 
 public interface StressSummaryRepository extends JpaRepository<StressSummary, Long> {
 
+    @Query("SELECT s FROM StressSummary s WHERE s.member.memberId = :memberId ORDER BY s.summaryDate DESC")
     Optional<StressSummary> findLatestByMemberId(@Param("memberId") Long memberId);
+
+    @Query("SELECT s FROM StressSummary s WHERE s.member.memberId = :memberId ORDER BY s.summaryDate DESC")
+    Optional<StressSummary> findLatestByMemberIdAndPeriod(@Param("memberId") Long memberId, @Param("period") String period);
 
     // 기간 내 모든 스트레스 요약 조회
     List<StressSummary> findBySummaryDateBetween(LocalDate startDate, LocalDate endDate);
