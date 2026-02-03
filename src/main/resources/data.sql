@@ -38,14 +38,13 @@ INSERT INTO member (name, email, password, phone, role, status, join_date, compa
                                                                                                                                               ('최지현', 'user4@test.com', '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa', '010-4444-4444', 'ADMIN', 'Y', DATE_SUB(CURRENT_DATE, INTERVAL 3 YEAR), 1, 1, 4, NOW(), NOW()),
                                                                                                                                               ('정우성', 'user5@test.com', '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa', '010-5555-5555', 'EMPLOYEE', 'Y', DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH), 1, 2, 1, NOW(), NOW());
 
--- 5. 계좌
-INSERT INTO account (member_id, remaining_point, total_earned, total_spent, account_leave, total_earned_point, total_spent_point) VALUES
-                                                                                                                                      (1, 47000, 97000, 50000, 0, 97000, 50000),
-                                                                                                                                      (2, 15000, 20000, 5000, 0, 20000, 5000),
-                                                                                                                                      (3, 5000, 5000, 0, 0, 5000, 0),
-                                                                                                                                      (4, 100000, 200000, 100000, 0, 200000, 100000),
-                                                                                                                                      (5, 0, 0, 0, 0, 0, 0);
-
+-- 5. 계좌 
+INSERT INTO account (member_id, account_leave, total_earned_point, total_spent_point) VALUES
+(1, 47000, 97000, 50000),
+(2, 15000, 20000, 5000),
+(3, 5000, 5000, 0),
+(4, 100000, 200000, 100000),
+(5, 0, 0, 0);
 -- 6. 휴가
 INSERT INTO vacation_rest (rest_id, total_count, spent_count, member_id) VALUES
                                                                              (1, 15, 5, 1),
@@ -53,6 +52,14 @@ INSERT INTO vacation_rest (rest_id, total_count, spent_count, member_id) VALUES
                                                                              (3, 12, 0, 3),
                                                                              (4, 20, 10, 4),
                                                                              (5, 12, 1, 5);
+
+-- 6-1. 스트레스 요약
+INSERT INTO stress_summary (summary_date, avg_stress_level, checkin_count, member_id, department_id, created_date, modify_date) VALUES
+(CURRENT_DATE, 20, 5, 1, 1, NOW(), NOW()),
+(CURRENT_DATE, 45, 10, 2, 2, NOW(), NOW()),
+(CURRENT_DATE, 65, 15, 3, 3, NOW(), NOW()),
+(CURRENT_DATE, 35, 8, 4, 1, NOW(), NOW()),
+(CURRENT_DATE, 10, 3, 5, 2, NOW(), NOW());
 
 -- 7. 기프티콘
 INSERT INTO gifticon (gifticon_name, image, price, stock_quantity, period, status, company_id) VALUES

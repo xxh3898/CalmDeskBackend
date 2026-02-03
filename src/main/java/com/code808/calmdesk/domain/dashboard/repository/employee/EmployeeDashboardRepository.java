@@ -82,9 +82,9 @@ public class EmployeeDashboardRepository {
                 .getResultList();
     }
 
-    public Optional<Long> findCurrentPoint(Long memberId) {
-        List<Long> result = em.createQuery(
-                "SELECT a.remainingPoint FROM Account a WHERE a.member.memberId = :memberId", Long.class)
+    public Optional<Integer> findCurrentPoint(Long memberId) {
+        List<Integer> result = em.createQuery(
+                "SELECT a.accountLeave FROM Account a WHERE a.member.memberId = :memberId", Integer.class)
                 .setParameter("memberId", memberId)
                 .setMaxResults(1)
                 .getResultList();
