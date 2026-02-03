@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,6 @@ import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboa
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.vacation.entity.VacationRest;
-import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +31,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     private final MemberRepository memberRepository;
     private final EmployeeDashboardRepository dashboardRepository;
-    private final VacationRestRepository vacationRestRepository;
+    private final VacationRepository vacationRepository;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -81,7 +81,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }).orElse("업무 준비 중");
 
         // 3. 연차 정보
-        VacationRest vacationRest = vacationRestRepository.findByMemberId(member.getMemberId())
+        VacationRest vacationRest = vacationRepository.findByMemberId(member.getMemberId())
                 .orElse(VacationRest.builder().totalCount(15).spentCount(0).build());
 
         // 4. 포인트

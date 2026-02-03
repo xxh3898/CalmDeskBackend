@@ -1,6 +1,7 @@
 package com.code808.calmdesk.domain.consultation.controller;
 
 import com.code808.calmdesk.domain.consultation.dto.ConsultationCreateRequest;
+import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.service.ConsultationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,5 +31,10 @@ public class ConsultationController {
     public ResponseEntity<Map<String, Long>> getWaitingCount() {
         long count = consultationService.getWaitingCount();
         return ResponseEntity.ok(Map.of("count", count));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ConsultationDto.ConsultationListItemRes>> getConsultationList() {
+        return ResponseEntity.ok(consultationService.getConsultationList());
     }
 }
