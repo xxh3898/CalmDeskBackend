@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Arrays;
 
@@ -75,6 +76,7 @@ public class CompanyServiceImpl implements CompanyService {
                 savedDept,
                 defaultRank,
                 Member.Role.ADMIN,
+                LocalDate.now(),
                 CommonEnums.Status.Y
         );
 
@@ -127,6 +129,7 @@ public class CompanyServiceImpl implements CompanyService {
                 department,
                 rank,
                 Member.Role.EMPLOYEE,
+                LocalDate.now(),
                 CommonEnums.Status.N
         );
 
@@ -136,15 +139,6 @@ public class CompanyServiceImpl implements CompanyService {
         );
 
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
-    }
-
-    @Override
-    public List<CompanyDto.JoinListItemRes> listPendingJoins(Long companyId) {
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다."));
-        return memberRepository.findByCompany_CompanyIdAndStatusWithDetails(companyId, CommonEnums.Status.N).stream()
-                .map(CompanyDto.JoinListItemRes::of)
-                .toList();
     }
 
     @Override
@@ -175,7 +169,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (member.getStatus() != CommonEnums.Status.N) {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
-        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(), CommonEnums.Status.Y);
+        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(),  LocalDate.now(), CommonEnums.Status.Y);
         memberRepository.save(member);
     }
 
@@ -198,4 +192,5 @@ public class CompanyServiceImpl implements CompanyService {
         member.updateCompanyStatus(CommonEnums.Status.R);
         memberRepository.save(member);
     }
+
 }

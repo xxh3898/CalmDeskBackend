@@ -48,18 +48,15 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginDto.LoginResponse login(LoginDto.LoginRequest request){
         Member member = memberRepository.findEmailWithDetails(request.getEmail())
-                .orElseThrow(()-> new RuntimeException("존재하지 않는 사용자입니다."));
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
         if (member.getCompany() != null) {
             if (member.getStatus() == CommonEnums.Status.N) {
-                throw new RuntimeException("입사 승인 대기 중입니다. 관리자 승인 후 로그인할 수 있습니다.");
-            }
-            if (member.getStatus() == CommonEnums.Status.R) {
-                throw new RuntimeException("입사 신청이 반려되었습니다.");
+                throw new IllegalArgumentException("입사 승인 대기 중입니다. 관리자 승인 후 로그인할 수 있습니다.");
             }
         }
 

@@ -12,6 +12,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,12 +84,14 @@ public class Member extends BaseTimeEntity {
             Department department,
             Rank rank,
             Role role,
+            LocalDate registerDate,
             CommonEnums.Status status
     ) {
         this.company = company;
         this.department = department;
         this.rank = rank;
         this.role = role;
+        this.registerDate = registerDate;
         this.status = status;
     }
     public void updateCompanyStatus(
