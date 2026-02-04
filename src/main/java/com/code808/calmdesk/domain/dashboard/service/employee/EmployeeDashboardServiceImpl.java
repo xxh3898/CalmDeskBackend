@@ -90,6 +90,14 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         if (workStatusOpt.isPresent()) {
             currentStatus = workStatusOpt.get().getStatus().getDescription();
             startTime = workStatusOpt.get().getStartTime();
+
+            // 만약 상태가 '퇴근'이고, 시작 시간이 오늘 이전이라면 '출근 전'으로 표시
+            if (workStatusOpt.get().getStatus() == WorkStatusType.OFF) {
+                if (startTime.toLocalDate().isBefore(today)) {
+                    currentStatus = WorkStatusType.READY.getDescription();
+                    startTime = null;
+                }
+            }
         } else {
             // Fallback: 오늘 Attendance 기록 확인
             Optional<Attendance> todayAttendance = dashboardRepository.findTodayAttendance(member, today);
