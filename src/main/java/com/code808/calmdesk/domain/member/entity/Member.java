@@ -95,8 +95,18 @@ public class Member extends BaseTimeEntity {
         this.status = status;
     }
     public void updateCompanyStatus(
+            Company company,
+            Department department,
+            Rank rank,
+            Role role,
+            LocalDate registerDate,
             CommonEnums.Status status
     ){
+        this.company = company;
+        this.department = department;
+        this.rank = rank;
+        this.role = role;
+        this.registerDate = registerDate;
         this.status = status;
     }
 

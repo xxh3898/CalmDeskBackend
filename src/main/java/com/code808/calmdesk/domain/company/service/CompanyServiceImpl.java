@@ -189,8 +189,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (member.getStatus() != CommonEnums.Status.N) {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
-        member.updateCompanyStatus(CommonEnums.Status.R);
-        memberRepository.save(member);
+        memberRepository.delete(member);
     }
 
 }

@@ -7,5 +7,6 @@ import java.util.List;
 public interface DashboardService {
     List<DashboardDto.DepartmentStats> getDepartmentStats(DashboardDto.DashboardRequest request);
     List<DashboardDto.HighRiskMember> getHighRiskMembers(DashboardDto.DashboardRequest request);
-//    DashboardDto.CompanyStats getCompanyStats(DashboardDto.DashboardRequest request);
+    DashboardDto.CompanyStats getCompanyStats(DashboardDto.DashboardRequest request);
+    DashboardDto.DashboardResponse getAllStats(DashboardDto.DashboardRequest request);
 }

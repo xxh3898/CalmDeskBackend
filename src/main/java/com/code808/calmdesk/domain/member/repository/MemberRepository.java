@@ -39,6 +39,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     List<Member> findByDepartment(Department department);
 
+    long countByRegisterDateBefore(java.time.LocalDate date);
+
     @Query("SELECT m FROM MEMBER m LEFT JOIN FETCH m.department LEFT JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.status = :status")
     List<Member> findByCompany_CompanyIdAndStatusWithDetails(@Param("companyId") Long companyId, @Param("status") CommonEnums.Status status);
 

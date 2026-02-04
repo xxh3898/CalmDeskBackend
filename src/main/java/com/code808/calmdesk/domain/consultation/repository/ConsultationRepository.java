@@ -14,6 +14,8 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
     long countByStatus(Consultation.Status status);
 
+    long countByCreatedDateBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
     @Query("SELECT c FROM Consultation c LEFT JOIN FETCH c.member m LEFT JOIN FETCH m.department ORDER BY c.createdDate DESC")
     List<Consultation> findAllByOrderByCreatedDateDesc();
 
