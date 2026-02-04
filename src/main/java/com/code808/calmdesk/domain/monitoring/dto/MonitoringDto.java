@@ -82,4 +82,32 @@ public class MonitoringDto {
         private String factor;  // "업무량"
         private int value;      // 45
     }
+
+    /**
+     * 스트레스 점수 환산 로직 (1~5점 -> 0~100점 비선형 변환) 1 (최고) -> 0 2 (좋음) -> 10 3 (보통) ->
+     * 30 4 (우울) -> 70 5 (힘듦) -> 100
+     */
+    public static int convertScore(double rawScore) {
+        if (rawScore <= 1.0) {
+            return 0;
+        }
+        if (rawScore >= 5.0) {
+            return 100;
+        }
+
+        // 구간별 선형 보간 (Linear Interpolation)
+        if (rawScore <= 2.0) {
+            // 1~2 구간 -> 0~10
+            return (int) Math.round((rawScore - 1.0) * 10);
+        } else if (rawScore <= 3.0) {
+            // 2~3 구간 -> 10~30 (차이 20)
+            return (int) Math.round(10 + (rawScore - 2.0) * 20);
+        } else if (rawScore <= 4.0) {
+            // 3~4 구간 -> 30~70 (차이 40)
+            return (int) Math.round(30 + (rawScore - 3.0) * 40);
+        } else {
+            // 4~5 구간 -> 70~100 (차이 30)
+            return (int) Math.round(70 + (rawScore - 4.0) * 30);
+        }
+    }
 }
