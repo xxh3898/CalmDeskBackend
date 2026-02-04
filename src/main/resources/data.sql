@@ -1,23 +1,62 @@
--- TRUNCATE 구문 제거됨 (ddl-auto: create 모드에서는 불필요하며, 테이블 없을 시 에러 유발)
+SET FOREIGN_KEY_CHECKS = 0;
+
+TRUNCATE TABLE member;
+
+TRUNCATE TABLE department;
+
+TRUNCATE TABLE company;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- 1. 회사
-INSERT IGNORE INTO company (
-    company_name,
-    company_code,
-    category,
-    min_value,
-    max_value
-)
-VALUES
-    ('칼름데스크', 'CALMDESK', 'IT', 0, 100000),
-    ('테크솔루션', 'TECHSOL', 'IT', 0, 100000),
-    ('퓨처인사이트', 'FUTURE', 'CONSULTING', 0, 50000),
-    ('그린에너지', 'GREEN', 'ENERGY', 0, 80000),
-    ('스마트물류', 'LOGIS', 'LOGISTICS', 0, 70000);
+INSERT INTO
+    company (
+        company_name,
+        company_code,
+        category,
+        min_value,
+        max_value
+    )
+VALUES (
+        '칼름데스크',
+        'CALMDESK',
+        'IT',
+        0,
+        100000
+    ),
+    (
+        '테크솔루션',
+        'TECHSOL',
+        'IT',
+        0,
+        100000
+    ),
+    (
+        '퓨처인사이트',
+        'FUTURE',
+        'CONSULTING',
+        0,
+        50000
+    ),
+    (
+        '그린에너지',
+        'GREEN',
+        'ENERGY',
+        0,
+        80000
+    ),
+    (
+        '스마트물류',
+        'LOGIS',
+        'LOGISTICS',
+        0,
+        70000
+    );
 
 -- 2. 부서
-INSERT IGNORE INTO department (department_name, company_id)
-VALUES
-    ('개발팀', 1),
+INSERT INTO
+    department (department_name, company_id)
+VALUES ('개발팀', 1),
     ('디자인팀', 1),
     ('기획팀', 1),
     ('인사팀', 1),
@@ -25,9 +64,9 @@ VALUES
     ('마케팅팀', 1);
 
 -- 3. 직급
-INSERT IGNORE INTO member_rank (rank_name)
-VALUES
-    ('사원'),
+INSERT INTO
+    member_rank (rank_name)
+VALUES ('사원'),
     ('대리'),
     ('과장'),
     ('차장'),
@@ -35,29 +74,29 @@ VALUES
 
 -- 4. 회원
 -- 비밀번호: pass1234!
-INSERT IGNORE INTO member (
-    name,
-    email,
-    password,
-    phone,
-    role,
-    status,
-    join_date,
-    company_id,
-    department_id,
-    rank_id,
-    created_date,
-    modify_date
-)
-VALUES
-    (
+INSERT INTO
+    member (
+        name,
+        email,
+        password,
+        phone,
+        role,
+        status,
+        join_date,
+        company_id,
+        department_id,
+        rank_id,
+        created_date,
+        modify_date
+    )
+VALUES (
         '김철수',
         'user1@test.com',
         '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
         '010-1111-1111',
         'EMPLOYEE',
         'Y',
-        '2024-02-01',
+        DATE_SUB(CURRENT_DATE, INTERVAL 2 YEAR),
         1,
         1,
         3,
@@ -71,7 +110,7 @@ VALUES
         '010-2222-2222',
         'EMPLOYEE',
         'Y',
-        '2025-02-01',
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR),
         1,
         2,
         2,
@@ -85,7 +124,10 @@ VALUES
         '010-3333-3333',
         'EMPLOYEE',
         'Y',
-        '2025-08-01',
+        DATE_SUB(
+            CURRENT_DATE,
+            INTERVAL 6 MONTH
+        ),
         1,
         3,
         1,
@@ -99,7 +141,7 @@ VALUES
         '010-4444-4444',
         'ADMIN',
         'Y',
-        '2023-02-01',
+        DATE_SUB(CURRENT_DATE, INTERVAL 3 YEAR),
         1,
         1,
         4,
@@ -113,7 +155,10 @@ VALUES
         '010-5555-5555',
         'EMPLOYEE',
         'Y',
-        '2026-01-01',
+        DATE_SUB(
+            CURRENT_DATE,
+            INTERVAL 1 MONTH
+        ),
         1,
         2,
         1,
@@ -122,40 +167,44 @@ VALUES
     );
 
 -- 5. 계좌
-INSERT IGNORE INTO account (
-    member_id,
-    account_leave,
-    total_earned_point,
-    total_spent_point
-)
-VALUES
-    (1, 47000, 97000, 50000),
+INSERT INTO
+    account (
+        member_id,
+        account_leave,
+        total_earned_point,
+        total_spent_point
+    )
+VALUES (1, 47000, 97000, 50000),
     (2, 15000, 20000, 5000),
     (3, 5000, 5000, 0),
     (4, 100000, 200000, 100000),
     (5, 0, 0, 0);
-
 -- 6. 휴가
-INSERT IGNORE INTO vacation_rest (rest_id, total_count, spent_count, member_id)
-VALUES
-    (1, 15, 5, 1),
+INSERT INTO
+    vacation_rest (
+        rest_id,
+        total_count,
+        spent_count,
+        member_id
+    )
+VALUES (1, 15, 5, 1),
     (2, 15, 2, 2),
     (3, 12, 0, 3),
     (4, 20, 10, 4),
     (5, 12, 1, 5);
 
 -- 7. 기프티콘
-INSERT IGNORE INTO gifticon (
-    gifticon_name,
-    image,
-    price,
-    stock_quantity,
-    period,
-    status,
-    company_id
-)
-VALUES
-    (
+INSERT INTO
+    gifticon (
+        gifticon_name,
+        image,
+        price,
+        stock_quantity,
+        period,
+        status,
+        company_id
+    )
+VALUES (
         '스타벅스 아메리카노',
         'https://via.placeholder.com/150',
         4500,
@@ -202,16 +251,23 @@ VALUES
     );
 
 -- [추가] 7-5. 미션 (Point History에서 참조하므로 필요)
-INSERT IGNORE INTO mission_list (
-    mission_code,
-    reward_name,
-    reward_description,
-    goal_count,
-    point_account,
-    status
-)
-VALUES
-    ('ATT_DAILY', '일일 출석', '일일 출석', 1, 100, 'Y'),
+INSERT INTO
+    mission_list (
+        mission_code,
+        reward_name,
+        reward_description,
+        goal_count,
+        point_account,
+        status
+    )
+VALUES (
+        'ATT_DAILY',
+        '일일 출석',
+        '일일 출석',
+        1,
+        100,
+        'Y'
+    ),
     (
         'ATT_RATE_80',
         '한달 80% 출석',
@@ -220,18 +276,17 @@ VALUES
         1000,
         'Y'
     );
-
 -- 8. 상담
-INSERT IGNORE INTO consultation (
-    title,
-    description,
-    status,
-    member_id,
-    created_date,
-    modify_date
-)
-VALUES
-    (
+INSERT INTO
+    consultation (
+        title,
+        description,
+        status,
+        member_id,
+        created_date,
+        modify_date
+    )
+VALUES (
         '업무 스트레스 상담',
         '최근 업무량이 늘어 힘듭니다.',
         'WAITING',
@@ -273,15 +328,15 @@ VALUES
     );
 
 -- 9. 근태 (Attendance)
-INSERT IGNORE INTO attendance (
-    work_date,
-    check_in,
-    check_out,
-    attendance_status,
-    member_id
-)
-VALUES
-    (
+INSERT INTO
+    attendance (
+        work_date,
+        check_in,
+        check_out,
+        attendance_status,
+        member_id
+    )
+VALUES (
         DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY),
         CONCAT(
             DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY),
@@ -673,15 +728,15 @@ VALUES
     );
 
 -- user2 최근 3일
-INSERT IGNORE INTO attendance (
-    work_date,
-    check_in,
-    check_out,
-    attendance_status,
-    member_id
-)
-VALUES
-    (
+INSERT INTO
+    attendance (
+        work_date,
+        check_in,
+        check_out,
+        attendance_status,
+        member_id
+    )
+VALUES (
         DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY),
         CONCAT(
             DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY),
@@ -716,15 +771,15 @@ VALUES
     );
 
 -- 10. 감정 체크인
-INSERT IGNORE INTO emotion_checkin (
-    attendance_id,
-    stress_level,
-    memo,
-    created_date,
-    modify_date
-)
-VALUES
-    (
+INSERT INTO
+    emotion_checkin (
+        attendance_id,
+        stress_level,
+        memo,
+        created_date,
+        modify_date
+    )
+VALUES (
         1,
         2,
         '출근: 상쾌한 월요일',
@@ -1506,18 +1561,18 @@ VALUES
     );
 
 -- 11. 포인트 내역 (mission_id 1, 5가 있으므로 mission_list insert가 선행되어야 함)
-INSERT IGNORE INTO point_history (
-    point_type,
-    amount,
-    balance_after,
-    source_type,
-    member_id,
-    gifticon_id,
-    mission_id,
-    create_date
-)
-VALUES
-    (
+INSERT INTO
+    point_history (
+        point_type,
+        amount,
+        balance_after,
+        source_type,
+        member_id,
+        gifticon_id,
+        mission_id,
+        create_date
+    )
+VALUES (
         'EARN',
         1000,
         48000,
@@ -1569,18 +1624,27 @@ VALUES
     );
 
 -- 12. 주문 내역 (수정됨: earn_point, spend_point, type 컬럼 추가)
-INSERT IGNORE INTO gift_order (
-    period,
-    order_date,
-    approval_amount,
-    member_id,
-    gifticon_id,
-    earn_point,
-    spend_point,
-    type
-)
-VALUES
-    (30, CURRENT_DATE, 4500, 1, 1, 0, 4500, 'SPEND'),
+INSERT INTO
+    gift_order (
+        period,
+        order_date,
+        approval_amount,
+        member_id,
+        gifticon_id,
+        earn_point,
+        spend_point,
+        type
+    )
+VALUES (
+        30,
+        CURRENT_DATE,
+        4500,
+        1,
+        1,
+        0,
+        4500,
+        'SPEND'
+    ),
     (
         60,
         DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
@@ -1621,450 +1685,115 @@ VALUES
         4500,
         'SPEND'
     );
-
--- ==========================================
--- 1. 스트레스 요인 데이터 (Attendance -> EmotionCheckin -> StressFactor)
--- ==========================================
--- 최근 3달간의 추가 근태 및 감정 체크인 데이터 생성
--- (기존 data.sql의 attendance_id 이후로 가정, 100번대부터 시작)
--- [Attendance] 추가 데이터 (회원 1~5번 대상)
-INSERT IGNORE INTO attendance (
-    work_date,
-    check_in,
-    check_out,
-    attendance_status,
-    member_id
-)
-VALUES
-    (
-        '2026-01-01',
-        '2026-01-01 09:00:00',
-        '2026-01-01 18:00:00',
-        'ATTEND',
-        1
+-- 13. 스트레스 일간 요약
+INSERT INTO
+    stress_summary (
+        avg_stress_level,
+        checkin_count,
+        summary_date,
+        created_date,
+        department_id,
+        member_id,
+        modify_date
+    )
+VALUES (
+        1,
+        2,
+        '2026-02-03',
+        CURRENT_TIMESTAMP,
+        1,
+        1,
+        CURRENT_TIMESTAMP
     ),
     (
-        '2025-12-01',
-        '2025-12-01 09:00:00',
-        '2025-12-01 18:00:00',
-        'ATTEND',
-        2
+        2,
+        2,
+        '2026-02-03',
+        CURRENT_TIMESTAMP,
+        1,
+        2,
+        CURRENT_TIMESTAMP
     ),
     (
-        '2025-11-01',
-        '2025-11-01 09:00:00',
-        '2025-11-01 18:00:00',
-        'ATTEND',
-        3
+        3,
+        2,
+        '2026-02-03',
+        CURRENT_TIMESTAMP,
+        1,
+        3,
+        CURRENT_TIMESTAMP
     ),
     (
-        '2026-01-05',
-        '2026-01-05 09:00:00',
-        '2026-01-05 18:00:00',
-        'ATTEND',
-        4
+        4,
+        2,
+        '2026-02-03',
+        CURRENT_TIMESTAMP,
+        1,
+        4,
+        CURRENT_TIMESTAMP
     ),
     (
-        '2025-12-10',
-        '2025-12-10 09:00:00',
-        '2025-12-10 18:00:00',
-        'ATTEND',
-        5
-    ),
-    (
-        '2026-02-01',
-        '2026-02-01 09:00:00',
-        '2026-02-01 18:00:00',
-        'ATTEND',
-        1
-    ),
-    (
-        '2026-01-20',
-        '2026-01-20 09:00:00',
-        '2026-01-20 18:00:00',
-        'ATTEND',
-        2
+        5,
+        2,
+        '2026-02-03',
+        CURRENT_TIMESTAMP,
+        1,
+        5,
+        CURRENT_TIMESTAMP
     );
 
--- [EmotionCheckin] 추가 데이터 (위 Attendance ID에 매핑된다고 가정, 임의의 attendance_id 사용)
--- 실제 DB 환경에 따라 attendance_id는 조정이 필요할 수 있습니다. 여기서는 기존 data.sql의 ID(1~30)를 일부 재사용하거나 새로 추가된 ID를 사용한다고 가정합니다.
-INSERT IGNORE INTO emotion_checkin (
-    checkin_id,
-    attendance_id,
-    stress_level,
-    memo,
-    created_date,
-    modify_date
-)
-VALUES
-    (
-        201,
-        1,
-        80,
-        '업무 과다',
-        '2026-02-01 10:00:00',
-        '2026-02-01 10:00:00'
-    ),
-    (
-        202,
+INSERT INTO
+    stress_summary (
+        avg_stress_level,
+        checkin_count,
+        summary_date,
+        created_date,
+        department_id,
+        member_id,
+        modify_date
+    )
+VALUES (
+        2.0,
         2,
-        75,
-        '대인 관계 힘듦',
-        '2026-02-01 11:00:00',
-        '2026-02-01 11:00:00'
+        CURRENT_DATE,
+        CURRENT_TIMESTAMP,
+        1,
+        1,
+        CURRENT_TIMESTAMP
     ),
     (
-        203,
+        3.0,
+        2,
+        CURRENT_DATE,
+        CURRENT_TIMESTAMP,
+        1,
+        2,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        3.0,
+        2,
+        CURRENT_DATE,
+        CURRENT_TIMESTAMP,
+        1,
         3,
-        40,
-        '보통임',
-        '2026-02-01 14:00:00',
-        '2026-02-01 14:00:00'
+        CURRENT_TIMESTAMP
     ),
     (
-        204,
+        4.0,
+        2,
+        CURRENT_DATE,
+        CURRENT_TIMESTAMP,
+        1,
         4,
-        90,
-        '프로젝트 마감',
-        '2026-02-02 09:00:00',
-        '2026-02-02 09:00:00'
+        CURRENT_TIMESTAMP
     ),
     (
-        205,
+        5.0,
+        2,
+        CURRENT_DATE,
+        CURRENT_TIMESTAMP,
+        1,
         5,
-        60,
-        '약간 피곤',
-        '2026-02-02 15:00:00',
-        '2026-02-02 15:00:00'
-    ),
-    (
-        206,
-        6,
-        85,
-        '고객 클레임',
-        '2026-02-02 16:00:00',
-        '2026-02-02 16:00:00'
-    ),
-    (
-        207,
-        10,
-        30,
-        '기분 좋음',
-        '2026-02-03 09:00:00',
-        '2026-02-03 09:00:00'
-    ),
-    (
-        208,
-        15,
-        70,
-        '야근 연속',
-        '2025-12-05 20:00:00',
-        '2025-12-05 20:00:00'
+        CURRENT_TIMESTAMP
     );
-
--- [StressFactor] 주요 스트레스 요인 (Top 4 요인 분석용)
--- Emotion Checkin ID 1~8 (data.sql 기존 데이터 포함) 참조
-INSERT IGNORE INTO stress_factor (category, emotion_checkin_id)
-VALUES
-    ('업무량 과다', 201),
-    ('대인관계 갈등', 202),
-    ('업무량 과다', 204),
-    ('고객 응대', 206),
-    ('건강 문제', 205),
-    ('업무량 과다', 204), -- Reinforce overload
-    ('고객 응대', 203), -- Using 203 which is normal but adding factor for test
-    ('개인 사정', 207),
-    ('업무량 과다', 201), -- More overload
-    ('대인관계 갈등', 202),
-    ('고객 응대', 206),
-    ('업무량 과다', 204),
-    ('직무 부적응', 208);
-
--- ==========================================
--- 2. 스트레스 요약 (Stress Summary) - 월별 추이 및 부서비교용
--- ==========================================
--- 최근 6개월 데이터 분포
-INSERT IGNORE INTO stress_summary (
-    avg_stress_level,
-    checkin_count,
-    summary_date,
-    created_date,
-    modify_date,
-    department_id,
-    member_id
-)
-VALUES
-    -- [이번 달]
-    (35.5, 20, '2026-02-01', NOW(), NOW(), 1, 1), -- 개발팀 (정상)
-    (75.2, 18, '2026-02-01', NOW(), NOW(), 2, 2), -- 디자인팀 (위험군)
-    (45.0, 22, '2026-02-01', NOW(), NOW(), 3, 3), -- 기획팀 (주의)
-    (82.1, 15, '2026-02-01', NOW(), NOW(), 1, 4), -- 개발팀 (위험군)
-    (25.0, 5, '2026-02-01', NOW(), NOW(), 2, 5), -- 디자인팀 (정상)
-    -- [1달 전]
-    (40.0, 20, '2026-01-01', NOW(), NOW(), 1, 1),
-    (70.0, 19, '2026-01-01', NOW(), NOW(), 2, 2),
-    (50.0, 21, '2026-01-01', NOW(), NOW(), 3, 3),
-    (60.0, 20, '2026-01-01', NOW(), NOW(), 1, 4),
-    -- [2달 전]
-    (45.0, 22, '2025-12-01', NOW(), NOW(), 1, 1),
-    (65.0, 18, '2025-12-01', NOW(), NOW(), 2, 2),
-    (55.0, 20, '2025-12-01', NOW(), NOW(), 3, 3),
-    -- [3달 전]
-    -- [3달 전]
-    (30.0, 21, '2025-11-01', NOW(), NOW(), 1, 1),
-    (60.0, 20, '2025-11-01', NOW(), NOW(), 2, 2),
-    -- [4달 전]
-    (38.0, 20, '2025-10-01', NOW(), NOW(), 1, 1),
-    (58.0, 19, '2025-10-01', NOW(), NOW(), 2, 2),
-    -- [5달 전]
-    (42.0, 22, '2025-09-01', NOW(), NOW(), 1, 1),
-    (55.0, 20, '2025-09-01', NOW(), NOW(), 2, 2);
-
--- ==========================================
--- 3. 상담 내역 (Consultation) - 상담 건수 추이용
--- ==========================================
-INSERT IGNORE INTO consultation (
-    title,
-    description,
-    status,
-    member_id,
-    created_date,
-    modify_date
-)
-VALUES
-    (
-        '업무 조정 요청',
-        '업무량이 너무 많습니다.',
-        'WAITING',
-        1,
-        DATE_SUB(NOW(), INTERVAL 2 DAY),
-        NOW()
-    ),
-    (
-        '팀 내 갈등',
-        '의견 충돌이 있습니다.',
-        'IN_PROGRESS',
-        2,
-        DATE_SUB(NOW(), INTERVAL 5 DAY),
-        NOW()
-    ),
-    (
-        '번아웃 증상',
-        '지속적인 무기력감',
-        'COMPLETED',
-        4,
-        DATE_SUB(NOW(), INTERVAL 1 MONTH),
-        NOW()
-    ),
-    (
-        '이직 고민',
-        '커리어 상담 요청',
-        'COMPLETED',
-        3,
-        DATE_SUB(NOW(), INTERVAL 1 MONTH),
-        NOW()
-    ),
-    (
-        '직무 스트레스',
-        '적성에 맞지 않는 것 같습니다.',
-        'WAITING',
-        5,
-        DATE_SUB(NOW(), INTERVAL 2 MONTH),
-        NOW()
-    ),
-    (
-        '건강 상담',
-        '수면 장애',
-        'COMPLETED',
-        1,
-        '2025-12-05 09:00:00',
-        NOW()
-    ),
-    (
-        '대인관계',
-        '상사와의 갈등',
-        'COMPLETED',
-        2,
-        DATE_SUB(NOW(), INTERVAL 3 MONTH),
-        NOW()
-    ),
-    (
-        '개인사',
-        '가정 문제',
-        'COMPLETED',
-        3,
-        DATE_SUB(NOW(), INTERVAL 3 MONTH),
-        NOW()
-    ),
-    (
-        '연차 사용',
-        '휴식 권고',
-        'COMPLETED',
-        4,
-        DATE_SUB(NOW(), INTERVAL 4 MONTH),
-        NOW()
-    ),
-    (
-        '심리 상담',
-        '우울감',
-        'COMPLETED',
-        1,
-        DATE_SUB(NOW(), INTERVAL 5 MONTH),
-        NOW()
-    );
-
--- ==========================================
--- 4. 쿨다운 (CoolDown) - 쿨다운 사용 추이용
--- ==========================================
-INSERT IGNORE INTO cooldown (member_id, created_date, modify_date)
-VALUES
-    (1, '2026-02-03 12:00:00', NOW()),
-    (2, '2026-02-02 12:00:00', NOW()),
-    (3, '2026-01-30 12:00:00', NOW()),
-    (4, '2026-01-28 12:00:00', NOW()),
-    (1, '2026-02-01 12:00:00', NOW()), -- 이번 달
-    (2, '2026-01-20 12:00:00', NOW()),
-    (5, '2026-01-10 12:00:00', NOW()),
-    (1, '2026-01-05 12:00:00', NOW()), -- 1달 전
-    (3, '2026-01-05 12:00:00', NOW()),
-    (4, '2025-12-30 12:00:00', NOW()),
-    (2, '2025-12-05 12:00:00', NOW()), -- 2달 전
-    (1, '2025-12-05 12:00:00', NOW()),
-    (5, '2025-11-20 12:00:00', NOW()),
-    (3, '2025-11-05 12:00:00', NOW()), -- 3달 전
-    (2, '2025-10-30 12:00:00', NOW()),
-    (4, '2025-10-05 12:00:00', NOW()), -- 4달 전
-    (1, '2025-09-05 12:00:00', NOW());
-
--- 5달 전
--- 추가 상담 데이터 (Consultation)
-INSERT IGNORE INTO consultation (
-    title,
-    description,
-    status,
-    member_id,
-    created_date,
-    modify_date
-)
-VALUES
-    (
-        '업무 스트레스',
-        '프로젝트 마감 압박',
-        'COMPLETED',
-        1,
-        NOW(),
-        NOW()
-    ),
-    ('대인 관계', '상사와의 갈등', 'WAITING', 2, NOW(), NOW()),
-    ('번아웃', '무기력증 호소', 'WAITING', 3, NOW(), NOW()),
-    ('경력 개발', '이직 고민', 'COMPLETED', 4, NOW(), NOW()),
-    ('건강 문제', '수면 장애', 'WAITING', 5, NOW(), NOW()),
-    (
-        '업무 과다',
-        '야근으로 인한 피로',
-        'COMPLETED',
-        1,
-        DATE_SUB(NOW(), INTERVAL 10 DAY),
-        NOW()
-    ),
-    (
-        '팀 내 소통',
-        '팀원 간 소통 부재',
-        'WAITING',
-        2,
-        DATE_SUB(NOW(), INTERVAL 5 DAY),
-        NOW()
-    ),
-    (
-        '적응 문제',
-        '신규 업무 적응 어려움',
-        'COMPLETED',
-        3,
-        DATE_SUB(NOW(), INTERVAL 1 MONTH),
-        NOW()
-    ),
-    (
-        '성과 압박',
-        'KPI 달성 부담',
-        'COMPLETED',
-        4,
-        DATE_SUB(NOW(), INTERVAL 1 MONTH),
-        NOW()
-    ),
-    (
-        '개인 사정',
-        '가족 건강 문제',
-        'COMPLETED',
-        5,
-        DATE_SUB(NOW(), INTERVAL 2 MONTH),
-        NOW()
-    ),
-    (
-        '직무 불만족',
-        '현재 직무와 적성 불일치',
-        'COMPLETED',
-        1,
-        DATE_SUB(NOW(), INTERVAL 2 MONTH),
-        NOW()
-    ),
-    (
-        '조직 문화',
-        '수직적인 문화',
-        'COMPLETED',
-        2,
-        DATE_SUB(NOW(), INTERVAL 3 MONTH),
-        NOW()
-    ),
-    (
-        '연봉 협상',
-        '연봉 불만족',
-        'COMPLETED',
-        3,
-        DATE_SUB(NOW(), INTERVAL 3 MONTH),
-        NOW()
-    ),
-    (
-        '복지 제도',
-        '육아 휴직 문의',
-        'COMPLETED',
-        4,
-        DATE_SUB(NOW(), INTERVAL 4 MONTH),
-        NOW()
-    ),
-    (
-        '퇴사 고민',
-        '진로 변경',
-        'COMPLETED',
-        5,
-        DATE_SUB(NOW(), INTERVAL 5 MONTH),
-        NOW()
-    );
-
--- 추가 쿨다운 데이터 (Cooldown)
-INSERT IGNORE INTO cooldown (member_id, created_date, modify_date)
-VALUES
-    (1, DATE_SUB(NOW(), INTERVAL 1 DAY), NOW()),
-    (2, DATE_SUB(NOW(), INTERVAL 2 DAY), NOW()),
-    (3, DATE_SUB(NOW(), INTERVAL 3 DAY), NOW()),
-    (4, DATE_SUB(NOW(), INTERVAL 4 DAY), NOW()),
-    (5, DATE_SUB(NOW(), INTERVAL 5 DAY), NOW()),
-    (1, DATE_SUB(NOW(), INTERVAL 6 DAY), NOW()),
-    (2, DATE_SUB(NOW(), INTERVAL 1 WEEK), NOW()),
-    (3, DATE_SUB(NOW(), INTERVAL 1 WEEK), NOW()),
-    (4, DATE_SUB(NOW(), INTERVAL 8 DAY), NOW()),
-    (5, DATE_SUB(NOW(), INTERVAL 9 DAY), NOW()),
-    (1, DATE_SUB(NOW(), INTERVAL 2 WEEK), NOW()),
-    (2, DATE_SUB(NOW(), INTERVAL 2 WEEK), NOW()),
-    (3, DATE_SUB(NOW(), INTERVAL 15 DAY), NOW()),
-    (4, DATE_SUB(NOW(), INTERVAL 16 DAY), NOW()),
-    (5, DATE_SUB(NOW(), INTERVAL 17 DAY), NOW()),
-    (1, DATE_SUB(NOW(), INTERVAL 1 MONTH), NOW()),
-    (2, DATE_SUB(NOW(), INTERVAL 1 MONTH), NOW()),
-    (3, DATE_SUB(NOW(), INTERVAL 35 DAY), NOW()),
-    (4, DATE_SUB(NOW(), INTERVAL 40 DAY), NOW()),
-    (5, DATE_SUB(NOW(), INTERVAL 45 DAY), NOW()),
-    (1, DATE_SUB(NOW(), INTERVAL 2 MONTH), NOW()),
-    (2, DATE_SUB(NOW(), INTERVAL 2 MONTH), NOW()),
-    (3, DATE_SUB(NOW(), INTERVAL 3 MONTH), NOW()),
-    (4, DATE_SUB(NOW(), INTERVAL 4 MONTH), NOW()),
-    (5, DATE_SUB(NOW(), INTERVAL 5 MONTH), NOW());

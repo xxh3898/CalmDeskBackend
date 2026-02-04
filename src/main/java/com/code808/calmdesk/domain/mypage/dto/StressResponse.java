@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 public class StressResponse {
 
-    private Integer avgStress;       // 평균 스트레스 (0~100)
+    private Double avgStress;       // 평균 스트레스 (0~100)
     private String level;            // LOW, NORMAL, HIGH, CRITICAL
     private String levelText;        // 한글 레벨명
     private String message;          // 상태 메시지
@@ -28,7 +28,7 @@ public class StressResponse {
         if (summary == null) {
             return createDefault();
         }
-        int avg = summary.getAvgStressLevel() != null ? summary.getAvgStressLevel() : 0;
+        Double avg = summary.getAvgStressLevel() != null ? summary.getAvgStressLevel() : 0;
         String level;
         String levelText;
         String message;
@@ -76,7 +76,7 @@ public class StressResponse {
      */
     public static StressResponse createDefault() {
         return StressResponse.builder()
-                .avgStress(0)
+                .avgStress(0.0)
                 .level("LOW")
                 .levelText("안정")
                 .message("데이터 수집 중")

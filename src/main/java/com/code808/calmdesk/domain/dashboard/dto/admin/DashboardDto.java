@@ -40,16 +40,21 @@ public class DashboardDto {
     @Builder
     public static class CompanyStats {
         private Double avgStressLevel;
+        private Double avgStreessPercentage;
         private Double stressChange;
         private Long totalMembers;
         private Long highRiskCount;
 
         public static CompanyStats of(Double todayAvg, Double yesterdayAvg,
                                       Long totalMembers, Long highRiskCount) {
+            Double maxScore = 5.0;
+            Double todayAvgPct = (todayAvg != null) ? (todayAvg/maxScore) * 100 : 0.0;
+            Double yesterdayAvgPct = (yesterdayAvg != null) ? (yesterdayAvg/maxScore) * 100 : 0.0;
+
             return CompanyStats.builder()
                     .avgStressLevel(todayAvg)
-                    .stressChange(todayAvg != null && yesterdayAvg != null ?
-                            todayAvg - yesterdayAvg : null)
+                    .avgStreessPercentage(todayAvgPct)
+                    .stressChange(todayAvgPct != null && yesterdayAvgPct != null ? todayAvgPct - yesterdayAvgPct : null)
                     .totalMembers(totalMembers)
                     .highRiskCount(highRiskCount)
                     .build();
@@ -64,7 +69,7 @@ public class DashboardDto {
         private Long memberId;
         private String memberName;
         private String departmentName;
-        private Integer stressLevel;
+        private Double stressLevel;
         private LocalDate summaryDate;
 
         public static HighRiskMember of(StressSummary summary) {
@@ -97,6 +102,28 @@ public class DashboardDto {
         private LocalDate date;
 
         @Min(value = 0, message = "임계값은 0 이상이어야 합니다.")
-        private Integer threshold = 0;
+        private Integer threshold = 4;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class DashboardResponse {
+        private LocalDate date;
+        private CompanyStats companyStats;
+        private List<DepartmentStats> departmentStats;
+        private List<HighRiskMember> highRiskMembers;
+        public static DashboardResponse of(LocalDate date,
+                                           CompanyStats companyStats,
+                                           List<DepartmentStats> departmentStats,
+                                           List<HighRiskMember> highRiskMembers) {
+            return DashboardResponse.builder()
+                    .date(date)
+                    .companyStats(companyStats)
+                    .departmentStats(departmentStats)
+                    .highRiskMembers(highRiskMembers)
+                    .build();
+        }
     }
 }

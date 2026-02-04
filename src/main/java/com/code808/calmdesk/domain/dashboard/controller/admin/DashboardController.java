@@ -27,4 +27,9 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getHighRiskMembers(request));
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<DashboardDto.DashboardResponse> getDashboardStats(
+            @Valid @ModelAttribute DashboardDto.DashboardRequest request){
+        return ResponseEntity.ok(dashboardService.getAllStats(request));
+    }
 }
