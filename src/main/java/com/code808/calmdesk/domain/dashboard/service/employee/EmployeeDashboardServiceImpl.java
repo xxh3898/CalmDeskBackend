@@ -121,11 +121,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         if (currentStressAvg != null) {
             stressScore = MonitoringDto.convertScore(currentStressAvg); // 1~5 -> 0~100 (비선형 변환)
             // 점수에 따른 상태 텍스트 로직
-            if (stressScore <= 30) {
+            if (stressScore <= 10) {
                 stressStatus = "매우 양호";
-            } else if (stressScore <= 60) {
+            } else if (stressScore < 30) {
                 stressStatus = "양호";
-            } else if (stressScore <= 80) {
+            } else if (stressScore < 70) {
                 stressStatus = "주의";
             } else {
                 stressStatus = "위험";

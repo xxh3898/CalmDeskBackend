@@ -149,8 +149,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         if (summaries.isEmpty()) {
             return List.of(
                     new MonitoringDto.Distribution("위험 (70%+)", 0, "#fb7185"),
-                    new MonitoringDto.Distribution("주의 (40-70%)", 0, "#fca5a5"),
-                    new MonitoringDto.Distribution("정상 (0-40%)", 0, "#818cf8")
+                    new MonitoringDto.Distribution("주의 (30-70%)", 0, "#fca5a5"),
+                    new MonitoringDto.Distribution("정상 (0-30%)", 0, "#818cf8")
             );
         }
 
@@ -158,17 +158,17 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         long risk = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70).count();
         long caution = summaries.stream().filter(s -> {
                     int score = MonitoringDto.convertScore(s.getAvgStressLevel());
-                    return score >= 40 && score < 70;
+                    return score >= 30 && score < 70;
                 }).count();
-        long normal = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) < 40).count();
+        long normal = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) < 30).count();
 
         // 파이 차트를 위해 퍼센트로 변환? 프론트엔드 목업은 숫자로 되어있지만 라벨은 %임.
         // 목업 데이터: 12, 25, 63 (합 100).
         // 프론트엔드 기대에 맞춰 카운트나 퍼센트 반환. Recharts Pie는 원본 값도 잘 처리함.
         return List.of(
                 new MonitoringDto.Distribution("위험 (70%+)", (int) risk, "#fb7185"),
-                new MonitoringDto.Distribution("주의 (40-70%)", (int) caution, "#fca5a5"),
-                new MonitoringDto.Distribution("정상 (0-40%)", (int) normal, "#818cf8")
+                new MonitoringDto.Distribution("주의 (30-70%)", (int) caution, "#fca5a5"),
+                new MonitoringDto.Distribution("정상 (0-30%)", (int) normal, "#818cf8")
         );
     }
 
