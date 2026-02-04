@@ -33,7 +33,8 @@ public class Vacation extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String reason;
 
-    @Column(length = 1, nullable = false)
+    /** Y=승인완료, N=승인대기, R=반려 (DB에 문자열로 저장, 여유 길이로 truncate 방지) */
+    @Column(length = 10, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
@@ -55,6 +56,13 @@ public class Vacation extends BaseTimeEntity {
     public void approve(Member approver) {
         this.status = CommonEnums.Status.Y;
         this.approverMember = approver;
+    }
+
+    /**
+     * 휴가 반려 처리
+     */
+    public void reject() {
+        this.status = CommonEnums.Status.R;
     }
 
     public enum Type{

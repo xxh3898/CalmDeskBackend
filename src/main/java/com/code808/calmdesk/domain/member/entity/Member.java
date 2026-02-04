@@ -12,6 +12,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,8 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(length = 1, nullable = false)
+    /** Y=승인, N=대기, R=반려 (DB에 문자열 저장, 여유 길이로 truncate 방지) */
+    @Column(length = 10, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
@@ -82,12 +84,29 @@ public class Member extends BaseTimeEntity {
             Department department,
             Rank rank,
             Role role,
+            LocalDate registerDate,
             CommonEnums.Status status
     ) {
         this.company = company;
         this.department = department;
         this.rank = rank;
         this.role = role;
+        this.registerDate = registerDate;
+        this.status = status;
+    }
+    public void updateCompanyStatus(
+            Company company,
+            Department department,
+            Rank rank,
+            Role role,
+            LocalDate registerDate,
+            CommonEnums.Status status
+    ){
+        this.company = company;
+        this.department = department;
+        this.rank = rank;
+        this.role = role;
+        this.registerDate = registerDate;
         this.status = status;
     }
 

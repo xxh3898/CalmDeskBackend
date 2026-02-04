@@ -25,6 +25,10 @@ import com.code808.calmdesk.domain.attendance.entity.WorkStatusType;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -42,7 +46,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     private final MemberRepository memberRepository;
     private final EmployeeDashboardRepository dashboardRepository;
-    private final VacationRestRepository vacationRestRepository;
+    private final VacationRepository vacationRepository;
     private final AttendanceRepository attendanceRepository;
     private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
     private final CoolDownRepository coolDownRepository;
@@ -107,7 +111,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         // 3. 연차 정보
-        VacationRest vacationRest = vacationRestRepository.findByMemberId(member.getMemberId())
+        VacationRest vacationRest = vacationRepository.findByMemberId(member.getMemberId())
                 .orElse(VacationRest.builder().totalCount(15).spentCount(0).build());
 
         // 4. 포인트
@@ -160,8 +164,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .build())
                 .vacationStats(EmployeeDashboardResponseDto.VacationStats.builder()
                         .totalDays(vacationRest.getTotalCount())
-                        .usedDays((double) vacationRest.getSpentCount())
-                        .remainingDays((double) (vacationRest.getTotalCount() - vacationRest.getSpentCount()))
+                        .usedDays(vacationRest.getSpentCount() / 2.0)   // spentCount는 반차 단위(연차 1일=2, 반차 0.5일=1) → 일 단위로 변환
+                        .remainingDays(vacationRest.getTotalCount() - vacationRest.getSpentCount() / 2.0)
                         .build())
                 .pointStats(EmployeeDashboardResponseDto.PointStats.builder()
                         .amount(points)

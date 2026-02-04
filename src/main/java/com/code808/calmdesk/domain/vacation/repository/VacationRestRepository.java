@@ -9,6 +9,4 @@ import java.util.Optional;
 
 public interface VacationRestRepository extends JpaRepository<VacationRest, Long> {
 
-    @Query("SELECT vr FROM VacationRest vr WHERE vr.member.memberId = :memberId")
-    Optional<VacationRest> findByMemberId(@Param("memberId") Long memberId);
 }
