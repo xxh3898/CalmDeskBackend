@@ -100,9 +100,13 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
         double consultDiffPercent = prevConsultationCount > 0 ? ((double) (consultationCount - prevConsultationCount) / prevConsultationCount * 100) : 0;
 
+        // 직원 추세 (Employee Trend) - registerDate(가입 수락일) 기준
+        long prevTotalMembers = memberRepository.countByRegisterDateBefore(start);
+        long employeeDiff = totalMembers - prevTotalMembers;
+
         return MonitoringDto.Stats.builder()
                 .totalEmployees(totalMembers + "명")
-                .employeeTrend(totalMembers > 0 ? "+0" : "0") // 현재는 수동 추가 또는 복잡한 추적 로직 가정
+                .employeeTrend(String.format("%+d", employeeDiff))
                 .avgStress(String.format("%.1f%%", currentStress))
                 .stressTrend(String.format("%+.1f%%", stressDiff))
                 .highRiskCount(highRiskCount + "명")
