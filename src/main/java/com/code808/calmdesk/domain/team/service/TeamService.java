@@ -14,4 +14,10 @@ public interface TeamService {
      * memberId가 해당 company 소속인지 검증 후 반환
      */
     Map<String, String> getMemberAttendanceByMonth(Long memberId, Long companyId, int year, int month);
+
+    /** 회사 소속 부서명 목록 (추가된 부서만) */
+    List<String> getDepartmentNamesByCompanyId(Long companyId);
+
+    /** 회사에 부서 추가 (중복 시 예외) */
+    void createDepartment(Long companyId, String departmentName);
 }

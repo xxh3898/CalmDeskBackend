@@ -2,6 +2,10 @@ package com.code808.calmdesk.domain.team.service;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.company.repository.CompanyRepository;
+import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
@@ -37,6 +41,8 @@ public class TeamServiceImpl implements TeamService {
     private final CoolDownRepository coolDownRepository;
     private final AttendanceRepository attendanceRepository;
     private final VacationRepository vacationRepository;
+    private final CompanyRepository companyRepository;
+    private final DepartmentRepository departmentRepository;
 
     @Override
     public List<TeamMemberResponse> getMembersByCompanyId(Long companyId) {
@@ -107,5 +113,31 @@ public class TeamServiceImpl implements TeamService {
         }
 
         return result;
+    }
+
+    @Override
+    public List<String> getDepartmentNamesByCompanyId(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("회사를 찾을 수 없습니다."));
+        return departmentRepository.findByCompany(company).stream()
+                .map(Department::getDepartmentName)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void createDepartment(Long companyId, String departmentName) {
+        if (departmentName == null || departmentName.isBlank()) {
+            throw new IllegalArgumentException("부서명을 입력해주세요.");
+        }
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("회사를 찾을 수 없습니다."));
+        if (departmentRepository.findByCompanyAndDepartmentName(company, departmentName.trim()).isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 부서입니다.");
+        }
+        departmentRepository.save(Department.builder()
+                .departmentName(departmentName.trim())
+                .company(company)
+                .build());
     }
 }
