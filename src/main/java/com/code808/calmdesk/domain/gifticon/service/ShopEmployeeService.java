@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.service;
 
+import com.code808.calmdesk.domain.Notification.event.NotificationEvent;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.gifticon.dto.*;
 import com.code808.calmdesk.domain.gifticon.entity.*;
@@ -10,6 +11,7 @@ import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,9 @@ public class ShopEmployeeService {
     private final MemberRepository memberRepository;
     private final MemberMissionRepository memberMissionRepository;
     private final PointHistoryRepository pointHistoryRepository;
+
+    // ⭐ 이벤트 발행을 위한 주입
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
@@ -133,12 +138,18 @@ public class ShopEmployeeService {
     // 2. 보상 수령 로직 (목표 달성 체크 추가)
     @Transactional
     public void completeMission(Long memberId, Long missionId) {
-        // [수정] findByMember_MemberIdAndMissionList_MissionListId 메서드로 통일 권장
+
+        // 1. 미션 수행 이력 조회 (없으면 새로 생성하여 가져옴)
         MemberMission memberMission = memberMissionRepository
                 .findByMember_MemberIdAndMissionList_MissionListId(memberId, missionId)
                 .orElseGet(() -> {
-                    Member member = memberRepository.findById(memberId).orElseThrow();
-                    MissionList mission = missionRepository.findById(missionId).orElseThrow();
+                    // 미션 이력이 없는 경우, Member와 Mission 정보를 찾아 새로 생성
+                    Member member = memberRepository.findById(memberId)
+                            .orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다. ID: " + memberId));
+
+                    MissionList mission = missionRepository.findById(missionId)
+                            .orElseThrow(() -> new EntityNotFoundException("해당 미션을 찾을 수 없습니다. ID: " + missionId));
+
                     return MemberMission.builder()
                             .member(member)
                             .missionList(mission)
@@ -146,23 +157,38 @@ public class ShopEmployeeService {
                             .status(CommonEnums.Status.N)
                             .build();
                 });
+
+        // 2. 검증: 이미 완료된 미션인지 확인
         if (memberMission.getStatus() == CommonEnums.Status.Y) {
             throw new IllegalStateException("이미 보상을 획득한 미션입니다.");
         }
 
-        // ⭐ 추가: 목표 수치에 도달했는지 검증
+        // 3. 검증: 목표 수치에 도달했는지 확인
         if (memberMission.getProgressCount() < memberMission.getMissionList().getGoalCount()) {
-            throw new IllegalStateException("미션 목표를 아직 달성하지 못했습니다.");
+            throw new IllegalStateException("미션 목표를 아직 달성하지 못했습니다. (현재: "
+                    + memberMission.getProgressCount() + ", 목표: " + memberMission.getMissionList().getGoalCount() + ")");
         }
 
-        Member member = memberMission.getMember();
+        // 4. 계좌 정보 조회
         Account account = accountRepository.findByMember_MemberId(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("계좌 정보가 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("해당 회원의 계좌 정보가 없습니다."));
 
-        account.deposit(memberMission.getMissionList().getPointAccount());
-        memberMission.complete(); // status = Y 처리
+        // 5. 보상 지급 및 상태 변경
+        int rewardPoint = memberMission.getMissionList().getPointAccount();
+        account.deposit(rewardPoint); // 계좌에 포인트 입금
+        memberMission.complete();     // status = 'Y' 처리 및 수정일 갱신
 
+        // 6. DB 반영
         memberMissionRepository.save(memberMission);
+
+        // 7. 실시간 알림 이벤트 발행
+        // 이 코드가 실행되면 NotificationEventListener가 동작하여 DB 저장과 SSE 전송을 처리합니다.
+        eventPublisher.publishEvent(new NotificationEvent(
+                memberId,
+                "미션 완료 및 보상 지급",
+                "'" + memberMission.getMissionList().getRewardName() + "' 미션을 완료하여 "
+                        + rewardPoint + "포인트가 지급되었습니다!"
+        ));
     }
 
     // 3. 진행률 업데이트 (isAccumulative 파라미터 활용 최적화)
