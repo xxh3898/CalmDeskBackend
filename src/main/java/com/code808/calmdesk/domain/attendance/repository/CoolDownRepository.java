@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.code808.calmdesk.domain.attendance.entity.CoolDown;
 
 public interface CoolDownRepository extends JpaRepository<CoolDown, Long> {
+
+    long countByMember_MemberId(Long memberId);
 }

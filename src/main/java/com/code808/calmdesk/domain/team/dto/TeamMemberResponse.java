@@ -24,8 +24,11 @@ public class TeamMemberResponse {
     private Integer remainingLeave;
     /** 최신 스트레스 요약의 평균 스트레스 수준(0~100 등). 없으면 null */
     private Integer stress;
+    /** 현재 근태 상태: 출근 전, 업무 중, 자리 비움, 쿨다운, 퇴근 등 */
+    private String attendanceStatus;
+    private Integer cooldownCount;
 
-    public static TeamMemberResponse from(Member member, Integer remainingLeave, Integer stress) {
+    public static TeamMemberResponse from(Member member, Integer remainingLeave, Integer stress, String attendanceStatus, Integer cooldownCount) {
         String departmentName = member.getDepartment() != null && member.getDepartment().getDepartmentName() != null
                 ? member.getDepartment().getDepartmentName() : "";
         String rankName = member.getRank() != null && member.getRank().getRankName() != null
@@ -43,6 +46,8 @@ public class TeamMemberResponse {
                 .joinDate(joinDateStr)
                 .remainingLeave(remainingLeave != null ? remainingLeave : 0)
                 .stress(stress)
+                .attendanceStatus(attendanceStatus != null ? attendanceStatus : "출근 전")
+                .cooldownCount(cooldownCount != null ? cooldownCount : 0)
                 .build();
     }
 }
