@@ -21,9 +21,6 @@ public class AdminTeamController {
     private final TeamService teamService;
     private final MemberRepository memberRepository;
 
-    /**
-     * 팀원 목록 조회 - 로그인한 관리자와 같은 회사 소속만 반환
-     */
     @GetMapping("/members")
     public ResponseEntity<List<TeamMemberResponse>> getMembers(Principal principal) {
         Member admin = memberRepository.findEmailWithDetails(principal.getName())
