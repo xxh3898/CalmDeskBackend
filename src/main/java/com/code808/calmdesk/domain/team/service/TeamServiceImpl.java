@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.team.service;
 
+import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.team.dto.TeamMemberResponse;
@@ -21,19 +22,26 @@ public class TeamServiceImpl implements TeamService {
 
     private final MemberRepository memberRepository;
     private final VacationRestRepository vacationRestRepository;
+    private final StressSummaryRepository stressSummaryRepository;
 
     @Override
     public List<TeamMemberResponse> getMembersByCompanyId(Long companyId) {
         List<Member> members = memberRepository.findAllByCompanyIdWithDepartmentAndRank(companyId);
         Map<Long, Integer> remainingByMemberId = new HashMap<>();
+        Map<Long, Integer> stressByMemberId = new HashMap<>();
         for (Member m : members) {
             vacationRestRepository.findByMemberId(m.getMemberId())
                     .ifPresent(vr -> remainingByMemberId.put(m.getMemberId(),
                             vr.getTotalCount() - vr.getSpentCount()));
+            stressSummaryRepository.findLatestByMemberId(m.getMemberId())
+                    .ifPresent(ss -> stressByMemberId.put(m.getMemberId(), ss.getAvgStressLevel()));
         }
 
         return members.stream()
-                .map(m -> TeamMemberResponse.from(m, remainingByMemberId.get(m.getMemberId())))
+                .map(m -> TeamMemberResponse.from(
+                        m,
+                        remainingByMemberId.get(m.getMemberId()),
+                        stressByMemberId.get(m.getMemberId())))
                 .collect(Collectors.toList());
     }
 }

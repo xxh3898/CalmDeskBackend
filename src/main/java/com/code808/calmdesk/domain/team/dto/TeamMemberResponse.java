@@ -22,8 +22,10 @@ public class TeamMemberResponse {
     private String rankName;
     private String joinDate;
     private Integer remainingLeave;
+    /** 최신 스트레스 요약의 평균 스트레스 수준(0~100 등). 없으면 null */
+    private Integer stress;
 
-    public static TeamMemberResponse from(Member member, Integer remainingLeave) {
+    public static TeamMemberResponse from(Member member, Integer remainingLeave, Integer stress) {
         String departmentName = member.getDepartment() != null && member.getDepartment().getDepartmentName() != null
                 ? member.getDepartment().getDepartmentName() : "";
         String rankName = member.getRank() != null && member.getRank().getRankName() != null
@@ -40,6 +42,7 @@ public class TeamMemberResponse {
                 .rankName(rankName)
                 .joinDate(joinDateStr)
                 .remainingLeave(remainingLeave != null ? remainingLeave : 0)
+                .stress(stress)
                 .build();
     }
 }
