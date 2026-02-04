@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PurchaseRequest {
 
-    private Long itemId;
-    private Long userId;
-    private Long price;
+    private Long itemId; // GIFTICON_ID
+    private Long userId; // MEMBER_ID
+    private Long price; // APPROVAL_AMOUNT
 }

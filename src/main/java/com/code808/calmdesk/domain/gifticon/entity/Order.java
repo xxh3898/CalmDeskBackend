@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.gifticon.entity;
 
+import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Order {
+public class Order extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +30,20 @@ public class Order {
     @Column(name = "APPROVAL_AMOUNT", nullable = false)
     private Integer approvalAmount;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Order.Type type;
+
+    @Column(nullable = false)
+    private Integer earnPoint;
+
+    @Column(nullable = false)
+    private Integer spendPoint;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MISSION_ID")
+    private MissionList missionList;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MEMBER_ID", nullable = false)
     private Member member;
@@ -38,4 +53,7 @@ public class Order {
     private Gifticon gifticon;
 
     public Long getId() { return orderId; }
+    public enum Type {
+        EARN, SPEND
+    }
 }

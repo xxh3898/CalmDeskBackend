@@ -4,7 +4,7 @@ import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.code808.calmdesk.domain.consultation.dto.ConsultationCreateRequest;
+import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.entity.Consultation;
 import com.code808.calmdesk.domain.consultation.repository.ConsultationRepository;
 
@@ -22,7 +22,7 @@ public class ConsultationService {
     private final com.code808.calmdesk.domain.member.repository.MemberRepository memberRepository;
 
     @Transactional
-    public Long createConsultation(ConsultationCreateRequest request, String email) {
+    public Long createConsultation(ConsultationDto.ConsultationCreateRequest request, String email) {
         com.code808.calmdesk.domain.member.entity.Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email: " + email));
 

@@ -1,8 +1,8 @@
 package com.code808.calmdesk.domain.consultation.controller;
 
-import com.code808.calmdesk.domain.consultation.dto.ConsultationCreateRequest;
 import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.service.ConsultationService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ public class ConsultationController {
 
     @PostMapping
     public ResponseEntity<Void> createConsultation(
-            @RequestBody @Valid ConsultationCreateRequest request,
+            @RequestBody @Valid ConsultationDto.ConsultationCreateRequest request,
             java.security.Principal principal) {
         Long consultationId = consultationService.createConsultation(request, principal.getName());
         return ResponseEntity.created(URI.create("/api/consultations/" + consultationId)).build();

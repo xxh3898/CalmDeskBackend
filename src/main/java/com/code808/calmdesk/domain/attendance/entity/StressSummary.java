@@ -1,39 +1,41 @@
 package com.code808.calmdesk.domain.attendance.entity;
 
+import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.company.entity.Department;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Builder
-@AllArgsConstructor
+@Entity
+@Table(name = "STRESS_SUMMARY")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity(name = "STRESS_SUMMARY")
-public class StressSummary {
+@AllArgsConstructor
+@Builder
+public class StressSummary extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long stressSummaryid;
+    @Column(name = "summary_id")
+    private Long summaryId;
 
-    @Column(nullable = false, length = 30)
-    private String period;
+    @Column(name = "summary_date", nullable = false)
+    private LocalDate summaryDate;
 
-    @Column(nullable = false)
-    private Integer avgStress;
+    @Column(name = "avg_stress_level", nullable = false)
+    private Integer avgStressLevel;
 
-    @Column(nullable = false)
-    private Integer score;
-
-    @Column(nullable = false)
-    private LocalDateTime startTime;
-
-    @Column(nullable = false)
-    private LocalDateTime endTime;
+    @Column(name = "checkin_count", nullable = false)
+    private Integer checkinCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MEMBER_ID")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 }

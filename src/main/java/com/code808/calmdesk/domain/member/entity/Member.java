@@ -5,6 +5,9 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.entity.Company;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
+
+import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
+import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -65,8 +68,15 @@ public class Member extends BaseTimeEntity {
     @JoinColumn(name = "RANK_ID")
     private Rank rank;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Account account;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PointHistory> pointHistorys = new ArrayList<>();
+
 
     public void updateCompanyInfo(
             Company company,
@@ -87,7 +97,9 @@ public class Member extends BaseTimeEntity {
         this.status = status;
     }
 
-    public Long getId() { return memberId; }
+    public Long getId() {
+        return memberId;
+    }
 
-    public enum Role { EMPLOYEE, ADMIN }
+    public enum Role {EMPLOYEE, ADMIN}
 }

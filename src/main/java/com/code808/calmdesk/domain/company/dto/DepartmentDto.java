@@ -46,11 +46,15 @@ public class DepartmentDto {
         private String avatar;
 
         public static MemberResponse from(Member member) {
+            return from(member, "출근 전");
+        }
+
+        public static MemberResponse from(Member member, String status) {
             return MemberResponse.builder()
                     .memberId(member.getMemberId())
                     .name(member.getName())
                     .role(member.getRank() != null ? member.getRank().getRankName() : "사원")
-                    .status("업무 중") // TODO: 추후 Attendance 도메인 연동 시 수정
+                    .status(status)
                     .email(member.getEmail())
                     .phone(member.getPhone())
                     .avatar(null) // TODO: 프로필 이미지 구현 시 추가

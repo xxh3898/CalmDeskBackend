@@ -21,6 +21,7 @@ import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboa
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.vacation.entity.VacationRest;
+import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -130,8 +131,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .build())
                 .vacationStats(EmployeeDashboardResponseDto.VacationStats.builder()
                         .totalDays(vacationRest.getTotalCount())
-                        .usedDays(vacationRest.getSpentCount() / 2.0)  // spentCount는 반차 단위(연차 1일=2, 반차 0.5일=1)
-                        .remainingDays((double) vacationRest.getTotalCount() - (vacationRest.getSpentCount() / 2.0))
+                        .usedDays((double) vacationRest.getSpentCount())
+                        .remainingDays((double) (vacationRest.getTotalCount() - vacationRest.getSpentCount()))
                         .build())
                 .pointStats(EmployeeDashboardResponseDto.PointStats.builder()
                         .amount(points)
