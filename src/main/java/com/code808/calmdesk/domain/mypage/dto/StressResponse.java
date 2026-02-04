@@ -1,6 +1,7 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 public class StressResponse {
 
-    private Integer avgStress;       // 평균 스트레스 (0~100)
+    private Double avgStress;       // 평균 스트레스 (0~100)
     private String level;            // LOW, NORMAL, HIGH, CRITICAL
     private String levelText;        // 한글 레벨명
     private String message;          // 상태 메시지
@@ -28,7 +29,10 @@ public class StressResponse {
         if (summary == null) {
             return createDefault();
         }
-        int avg = summary.getAvgStressLevel() != null ? summary.getAvgStressLevel() : 0;
+        // 원시 점수(1~5)를 0~100 점수로 환산
+        double raw = summary.getAvgStressLevel() != null ? summary.getAvgStressLevel() : 0.0;
+        int converted = MonitoringDto.convertScore(raw);
+        double avg = converted;
         String level;
         String levelText;
         String message;
@@ -76,7 +80,7 @@ public class StressResponse {
      */
     public static StressResponse createDefault() {
         return StressResponse.builder()
-                .avgStress(0)
+                .avgStress(0.0)
                 .level("LOW")
                 .levelText("안정")
                 .message("데이터 수집 중")

@@ -12,10 +12,9 @@ import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
 import com.code808.calmdesk.domain.team.dto.TeamMemberResponse;
 import com.code808.calmdesk.domain.vacation.entity.Vacation;
-import com.code808.calmdesk.domain.vacation.entity.VacationRest;
-import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
 import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,6 @@ import java.util.stream.Collectors;
 public class TeamServiceImpl implements TeamService {
 
     private final MemberRepository memberRepository;
-    private final VacationRestRepository vacationRestRepository;
     private final StressSummaryRepository stressSummaryRepository;
     private final WorkStatusRepository workStatusRepository;
     private final CoolDownRepository coolDownRepository;
@@ -51,11 +49,16 @@ public class TeamServiceImpl implements TeamService {
         Map<Long, Integer> stressByMemberId = new HashMap<>();
         Map<Long, Integer> cooldownCountByMemberId = new HashMap<>();
         for (Member m : members) {
-            vacationRestRepository.findByMemberId(m.getMemberId())
+            vacationRepository.findByMemberId(m.getMemberId())
                     .ifPresent(vr -> remainingByMemberId.put(m.getMemberId(),
                             vr.getTotalCount() - vr.getSpentCount()));
-            stressSummaryRepository.findLatestByMemberId(m.getMemberId())
-                    .ifPresent(ss -> stressByMemberId.put(m.getMemberId(), ss.getAvgStressLevel()));
+            // 원시 avgStressLevel(1~5)을 0~100 점수로 환산해서 팀원 카드에 사용
+            stressSummaryRepository.findTopByMember_MemberIdOrderBySummaryDateDesc(m.getMemberId())
+                    .ifPresent(ss -> {
+                        double raw = ss.getAvgStressLevel() != null ? ss.getAvgStressLevel() : 0.0;
+                        int converted = MonitoringDto.convertScore(raw);
+                        stressByMemberId.put(m.getMemberId(), converted);
+                    });
             int count = (int) coolDownRepository.countByMember_MemberId(m.getMemberId());
             cooldownCountByMemberId.put(m.getMemberId(), count);
         }

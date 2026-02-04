@@ -16,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Arrays;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +76,7 @@ public class CompanyServiceImpl implements CompanyService {
                 savedDept,
                 defaultRank,
                 Member.Role.ADMIN,
+                LocalDate.now(),
                 CommonEnums.Status.Y
         );
 
@@ -126,6 +129,7 @@ public class CompanyServiceImpl implements CompanyService {
                 department,
                 rank,
                 Member.Role.EMPLOYEE,
+                LocalDate.now(),
                 CommonEnums.Status.N
         );
 
@@ -136,4 +140,56 @@ public class CompanyServiceImpl implements CompanyService {
 
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
     }
+
+    @Override
+    public List<CompanyDto.JoinListItemRes> listAllJoins(Long companyId) {
+        companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다."));
+        return memberRepository.findByCompany_CompanyIdAndStatusInWithDetails(
+                        companyId,
+                        Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R)
+                ).stream()
+                .map(CompanyDto.JoinListItemRes::of)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void approveJoin(Long memberId, String adminEmail) {
+        Member admin = memberRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("승인자를 찾을 수 없습니다."));
+        if (admin.getCompany() == null) {
+            throw new RuntimeException("관리자는 회사에 소속되어 있어야 합니다.");
+        }
+        Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
+                .orElseThrow(() -> new RuntimeException("대상을 찾을 수 없습니다."));
+        if (member.getCompany() == null || !member.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
+            throw new RuntimeException("해당 회사의 입사 신청자가 아닙니다.");
+        }
+        if (member.getStatus() != CommonEnums.Status.N) {
+            throw new RuntimeException("대기 상태가 아닙니다.");
+        }
+        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(),  LocalDate.now(), CommonEnums.Status.Y);
+        memberRepository.save(member);
+    }
+
+    @Override
+    @Transactional
+    public void rejectJoin(Long memberId, String adminEmail) {
+        Member admin = memberRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("승인자를 찾을 수 없습니다."));
+        if (admin.getCompany() == null) {
+            throw new RuntimeException("관리자는 회사에 소속되어 있어야 합니다.");
+        }
+        Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
+                .orElseThrow(() -> new RuntimeException("대상을 찾을 수 없습니다."));
+        if (member.getCompany() == null || !member.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
+            throw new RuntimeException("해당 회사의 입사 신청자가 아닙니다.");
+        }
+        if (member.getStatus() != CommonEnums.Status.N) {
+            throw new RuntimeException("대기 상태가 아닙니다.");
+        }
+        memberRepository.delete(member);
+    }
+
 }

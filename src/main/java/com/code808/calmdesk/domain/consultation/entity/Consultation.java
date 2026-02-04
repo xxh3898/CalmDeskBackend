@@ -47,4 +47,9 @@ public class Consultation extends BaseTimeEntity {
         this.status = Status.WAITING;
         this.member = member;
     }
+
+    /** 관리자 상담 처리: 상태 변경 (진행중/완료/취소) */
+    public void updateStatus(Status status) {
+        this.status = status;
+    }
 }
