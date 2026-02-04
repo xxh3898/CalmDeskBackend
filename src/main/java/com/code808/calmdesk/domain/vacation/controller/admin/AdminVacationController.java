@@ -1,7 +1,6 @@
 package com.code808.calmdesk.domain.vacation.controller.admin;
 
 import com.code808.calmdesk.domain.attendance.dto.AttendanceDto;
-import com.code808.calmdesk.domain.attendance.service.EmployeeAttendanceServiceImpl;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.vacation.dto.VacationDto.VacationRequestRes;
 import com.code808.calmdesk.domain.vacation.service.VacationService;
