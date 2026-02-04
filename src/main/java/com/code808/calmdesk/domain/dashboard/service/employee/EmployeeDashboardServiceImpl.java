@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.attendance.dto.StressDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +29,10 @@ import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardRespo
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
 import com.code808.calmdesk.domain.vacation.entity.VacationRest;
 import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
-
+import com.code808.calmdesk.domain.attendance.service.StressSummaryService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -44,6 +46,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
     private final AttendanceRepository attendanceRepository;
     private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
     private final CoolDownRepository coolDownRepository;
+    private final StressSummaryService stressSummaryService;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -118,7 +121,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         String stressStatus = "진단 필요";
 
         if (currentStressAvg != null) {
-            stressScore = (int) Math.round((currentStressAvg - 1) * 25); // 1~5 -> 0~100
+            stressScore = MonitoringDto.convertScore(currentStressAvg); // 1~5 -> 0~100 (비선형 변환)
             // 점수에 따른 상태 텍스트 로직
             if (stressScore <= 30) {
                 stressStatus = "매우 양호";
@@ -195,8 +198,10 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
                 .emotionCheckins(new ArrayList<>())
                 .build();
+
         Attendance attendance = attendanceRepository.save(newAttendance);
 
+        attendanceRepository.flush();
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
 
@@ -222,12 +227,19 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         attendance.setCheckOut(now);
-
+        attendanceRepository.flush();
         // 2. 감정 체크인 저장 (퇴근 시 기분)
         saveEmotionCheckIn(attendance, request);
 
         // 3. WorkStatus 업데이트 -> OFF
         updateWorkStatus(member, WorkStatusType.OFF);
+
+        // Stress 로직 추가
+        StressDto.SummaryRequest summaryRequest = StressDto.SummaryRequest.builder()
+                .memberId(memberId)
+                .summaryDate(today)
+                .build();
+        stressSummaryService.createDailySummary(summaryRequest);
     }
 
     private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {
@@ -310,11 +322,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
             Double score = statsMap.getOrDefault(date, 0.0);
 
-            // 1~5점 척도 -> 0~100점 만점 환산 (1점=0점, 5점=100점)
-            // 데이터가 없어서 0.0인 경우, 계산식 (0-1)*25 = -25가 되므로 0으로 처리
+            // 1~5점 척도 -> 0~100점 만점 환산 (비선형 변환)
+            // 데이터가 없어서 0.0인 경우, convertScore(0) -> 0 처리
             int normalizedScore = 0;
             if (score > 0) {
-                normalizedScore = (int) Math.round((score - 1) * 25);
+                normalizedScore = MonitoringDto.convertScore(score);
             }
 
             result.add(EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()

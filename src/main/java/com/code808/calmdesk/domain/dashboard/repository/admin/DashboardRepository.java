@@ -2,6 +2,7 @@ package com.code808.calmdesk.domain.dashboard.repository.admin;
 
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.dashboard.repository.admin.projection.DepartmentStatsProjection;
+import com.code808.calmdesk.domain.dashboard.repository.admin.projection.CompanyStatsProjection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 @Repository
 public interface DashboardRepository extends JpaRepository<StressSummary, Long> {
-    Optional<StressSummary> findByMember_MemberIdAndSummaryDate(Long memberId, LocalDate summaryDate);
+//    Optional<StressSummary> findByMember_MemberIdAndSummaryDate(Long memberId, LocalDate summaryDate);
 
     @Query("SELECT d.departmentId as departmentId, " +
             "d.departmentName as departmentName, " +
@@ -52,4 +53,15 @@ public interface DashboardRepository extends JpaRepository<StressSummary, Long> 
             @Param("companyId") Long companyId,
             @Param("date") LocalDate date
     );
+
+    @Query("SELECT AVG(s.avgStressLevel) as avgStressLevel, " +
+            "COUNT(s.summaryId) as totalMembers, " +
+            "SUM(CASE WHEN s.avgStressLevel >= :threshold THEN 1 ELSE 0 END) as highRiskCount " +
+            "FROM StressSummary s " +
+            "WHERE s.member.company.companyId = :companyId " +
+            "AND s.summaryDate = :date")
+    CompanyStatsProjection findCompanyStats(
+            @Param("companyId") Long companyId,
+            @Param("date") LocalDate date,
+            @Param("threshold") Integer threshold);
 }
