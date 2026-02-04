@@ -53,24 +53,22 @@ public class ShopEmployeeController {
 //        return ResponseEntity.ok(shopEmployeeService.getAllMissions(userId));
 //    }
 
-        // 미션 완료 및 보상 지급
-        @PostMapping("/mission/complete")
-        public ResponseEntity<?> completeMission(@RequestBody MissionCompleteRequest request) {
-            try {
-                // request에서 memberId와 missionId를 꺼내서 전달
-                // 1. 진행도를 먼저 업데이트해서 목표치(1/1)를 채웁니다.
-                shopEmployeeService.updateMissionProgress(request.getUserId(), "ATT_DAILY", 1, false);
-                shopEmployeeService.updateMissionProgress(request.getUserId(), "ATT_RATE_80", 1, true);
-
-                // 2. 그 다음에 보상을 지급합니다. (이제 1/1이므로 통과됨)
-                shopEmployeeService.completeMission(request.getUserId(), request.getMissionId());
+    // 미션 완료 및 보상 지급
+    @PostMapping("/mission/complete")
+    public ResponseEntity<?> completeMission(@RequestBody MissionCompleteRequest request) {
+        try {
+            // request에서 memberId와 missionId를 꺼내서 전달
 
 
-                return ResponseEntity.ok("미션 보상이 지급되었습니다.");
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
+            // 2. 그 다음에 보상을 지급합니다. (이제 1/1이므로 통과됨)
+            shopEmployeeService.completeMission(request.getUserId(), request.getMissionId());
+
+
+            return ResponseEntity.ok("미션 보상이 지급되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
 
 
     // 모든 사용자의 전체 구매 내역 조회
@@ -81,5 +79,24 @@ public class ShopEmployeeController {
         return ResponseEntity.ok(history);
     }
 
+
+    @PostMapping("/attendance/check-in")
+    public ResponseEntity<?> checkIn(@RequestBody Map<String, Long> request) {
+        try {
+            Long userId = request.get( "userId");
+
+            // 1. 진행도를 먼저 업데이트해서 목표치(1/1)를 채웁니다.
+            // 1. 매일 출근 미션 (단발성 혹은 덮어쓰기라면 false, 누적이라면 true)
+            // 출근 미션 코드가 "ATT_DAILY"라고 가정
+            shopEmployeeService.updateMissionProgress(userId, "ATT_DAILY", 1, false);
+            shopEmployeeService.updateMissionProgress(userId, "ATT_RATE_80", 1, true);
+
+
+            return ResponseEntity.ok("출근 확인되었습니다. 미션 진행도가 반영되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
+
+}
 
