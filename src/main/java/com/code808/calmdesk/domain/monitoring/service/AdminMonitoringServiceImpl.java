@@ -72,20 +72,24 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
 
         // 평균 스트레스 (Avg Stress)
         Double avgStressVal = stressSummaryRepository.findAvgStressByDateRange(start, end);
-        double currentStress = avgStressVal != null ? avgStressVal : 0.0;
+        double currentStress = avgStressVal != null ? MonitoringDto.convertScore(avgStressVal) : 0.0;
 
         // 추세 비교를 위한 전월 데이터 (Prev Month for Trend)
         LocalDate prevStart = start.minusMonths(1);
         LocalDate prevEnd = end.minusMonths(1);
         Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRange(prevStart, prevEnd);
-        double prevStress = prevAvrStressVal != null ? prevAvrStressVal : 0.0;
+        double prevStress = prevAvrStressVal != null ? MonitoringDto.convertScore(prevAvrStressVal) : 0.0;
         double stressDiff = currentStress - prevStress;
 
         // 고위험군 (High Risk)
         List<StressSummary> summaries = stressSummaryRepository.findBySummaryDateBetween(start, end);
-        long highRiskCount = summaries.stream().filter(s -> s.getAvgStressLevel() >= 70).count();
+        long highRiskCount = summaries.stream()
+                .filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
+                .count();
         List<StressSummary> prevSummaries = stressSummaryRepository.findBySummaryDateBetween(prevStart, prevEnd);
-        long prevHighRiskCount = prevSummaries.stream().filter(s -> s.getAvgStressLevel() >= 70).count();
+        long prevHighRiskCount = prevSummaries.stream()
+                .filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
+                .count();
         long riskDiff = highRiskCount - prevHighRiskCount;
 
         // 쿨다운 (Cooldown)
@@ -132,7 +136,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
 
             list.add(MonitoringDto.Trend.builder()
                     .month(date.getMonthValue() + "월")
-                    .stress(stress != null ? Math.round(stress * 10) / 10.0 : 0)
+                    .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
                     .consultation((int) consult)
                     .cooldown((int) cooldown)
                     .build());
@@ -150,9 +154,13 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             );
         }
 
-        long risk = summaries.stream().filter(s -> s.getAvgStressLevel() >= 70).count();
-        long caution = summaries.stream().filter(s -> s.getAvgStressLevel() >= 40 && s.getAvgStressLevel() < 70).count();
-        long normal = summaries.stream().filter(s -> s.getAvgStressLevel() < 40).count();
+
+        long risk = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70).count();
+        long caution = summaries.stream().filter(s -> {
+                    int score = MonitoringDto.convertScore(s.getAvgStressLevel());
+                    return score >= 40 && score < 70;
+                }).count();
+        long normal = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) < 40).count();
 
         // 파이 차트를 위해 퍼센트로 변환? 프론트엔드 목업은 숫자로 되어있지만 라벨은 %임.
         // 목업 데이터: 12, 25, 63 (합 100).
@@ -180,7 +188,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             // 고위험군은 아래에서 일괄 계산하여 채워넣음. 우선 0으로 초기화.
             list.add(MonitoringDto.DeptComparison.builder()
                     .dept(dept.getDepartmentName())
-                    .avg(Math.round(avg * 10) / 10.0)
+                    .avg(avg != 0.0 ? MonitoringDto.convertScore(avg) : 0.0)
                     .highRisk(0)
                     .build());
         }
@@ -189,7 +197,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         List<StressSummary> all = stressSummaryRepository.findBySummaryDateBetween(start, end);
         for (MonitoringDto.DeptComparison item : list) {
             long count = all.stream()
-                    .filter(s -> s.getDepartment().getDepartmentName().equals(item.getDept()) && s.getAvgStressLevel() >= 70)
+                    .filter(s -> s.getDepartment().getDepartmentName().equals(item.getDept()) 
+                            && MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
                     .count();
             item.setHighRisk((int) count);
         }
