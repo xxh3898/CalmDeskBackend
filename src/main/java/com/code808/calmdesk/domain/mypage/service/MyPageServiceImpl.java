@@ -121,7 +121,9 @@ public class MyPageServiceImpl implements MyPageService {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        Optional<StressSummary> summaryOpt = stressSummaryRepository.findLatestByMemberId(memberId);
+        // ✅ 수정된 메서드 호출: 데이터가 2개 이상이어도 에러 없이 최신 것 반환
+        Optional<StressSummary> summaryOpt = stressSummaryRepository.findTopByMember_MemberIdOrderBySummaryDateDesc(memberId);
+
         return summaryOpt.map(StressResponse::from)
                 .orElseGet(StressResponse::createDefault);
     }
