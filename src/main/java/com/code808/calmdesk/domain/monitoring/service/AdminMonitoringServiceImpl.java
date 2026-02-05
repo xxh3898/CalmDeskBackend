@@ -84,7 +84,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter);
 
         // 2. 추세
-        List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, endOfPeriod, isQuarter);
+        List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, isQuarter);
 
         // 3. 분포
         List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfPeriod, endOfPeriod);
@@ -137,9 +137,10 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
         double consultDiffPercent = prevConsultationCount > 0 ? ((double) (consultationCount - prevConsultationCount) / prevConsultationCount * 100) : 0;
 
-        // 직원 수 변동 추이 (HR SaaS 가입 수락일 기준)
-        long prevTotalMembers = memberRepository.countByRegisterDateBefore(start);
-        long employeeDiff = totalMembers - prevTotalMembers;
+        // 직원 수 변동 추이 (전월 말 대비 실시간 증감)
+        LocalDate startOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
+        long membersAtStartOfCurrentMonth = memberRepository.countByRegisterDateBefore(startOfCurrentMonth);
+        long employeeDiff = totalMembers - membersAtStartOfCurrentMonth;
 
         return MonitoringDto.Stats.builder()
                 .totalEmployees(totalMembers + "명")
@@ -155,7 +156,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, LocalDate endOfPeriod, boolean isQuarter) {
+    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, boolean isQuarter) {
         List<MonitoringDto.Trend> list = new ArrayList<>();
 
         if (isQuarter) {
