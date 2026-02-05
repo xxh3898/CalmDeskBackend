@@ -14,6 +14,33 @@ import jakarta.validation.constraints.NotNull;
 
 public class DashboardDto {
 
+    /**
+     * 스트레스 점수를 0~100 범위의 백분율로 변환
+     * 비선형 구간별 선형 보간 적용
+     */
+    public static int convertScore(double rawScore) {
+        if (rawScore <= 1.0) {
+            return 0;
+        }
+        if (rawScore >= 5.0) {
+            return 100;
+        }
+        // 구간별 선형 보간 (Linear Interpolation)
+        if (rawScore <= 2.0) {
+            // 1~2 구간 -> 0~10
+            return (int) Math.round((rawScore - 1.0) * 10);
+        } else if (rawScore <= 3.0) {
+            // 2~3 구간 -> 10~30 (차이 20)
+            return (int) Math.round(10 + (rawScore - 2.0) * 20);
+        } else if (rawScore <= 4.0) {
+            // 3~4 구간 -> 30~70 (차이 40)
+            return (int) Math.round(30 + (rawScore - 3.0) * 40);
+        } else {
+            // 4~5 구간 -> 70~100 (차이 30)
+            return (int) Math.round(70 + (rawScore - 4.0) * 30);
+        }
+    }
+
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -22,14 +49,19 @@ public class DashboardDto {
         private Long departmentId;
         private String departmentName;
         private Double avgStressLevel;
+        private Double avgStressPercentage;
         private Long memberCount;
         private Long cooldownCount;
 
         public static DepartmentStats of(DepartmentStatsProjection projection) {
+            Double avgStress = projection.getAvgStressLevel();
+            Double avgStressPct = (avgStress != null) ? (double) convertScore(avgStress) : 0.0;
+
             return DepartmentStats.builder()
                     .departmentId(projection.getDepartmentId())
                     .departmentName(projection.getDepartmentName())
-                    .avgStressLevel(projection.getAvgStressLevel())
+                    .avgStressLevel(avgStress)
+                    .avgStressPercentage(avgStressPct)
                     .memberCount(projection.getMemberCount())
                     .cooldownCount(projection.getCooldownCount())
                     .build();
@@ -56,9 +88,9 @@ public class DashboardDto {
                                       Double todayAttendance, Double yesterdayAttendance,
                                       Long consultationCount, Long vacationCount) {
 
-            Double maxScore = 5.0;
-            Double todayAvgPct = (todayAvg != null) ? (todayAvg / maxScore) * 100 : 0.0;
-            Double yesterdayAvgPct = (yesterdayAvg != null) ? (yesterdayAvg / maxScore) * 100 : 0.0;
+            // convertScore 메서드를 사용하여 비선형 백분율 변환
+            Double todayAvgPct = (todayAvg != null) ? (double) convertScore(todayAvg) : 0.0;
+            Double yesterdayAvgPct = (yesterdayAvg != null) ? (double) convertScore(yesterdayAvg) : 0.0;
 
             return CompanyStats.builder()
                     .avgStressLevel(todayAvg)
@@ -83,14 +115,19 @@ public class DashboardDto {
         private String memberName;
         private String departmentName;
         private Double stressLevel;
+        private Double stressPercentage;
         private LocalDate summaryDate;
 
         public static HighRiskMember of(StressSummary summary) {
+            Double stress = summary.getAvgStressLevel();
+            Double stressPct = (stress != null) ? (double) convertScore(stress) : 0.0;
+
             return HighRiskMember.builder()
                     .memberId(summary.getMember().getMemberId())
                     .memberName(summary.getMember().getName())
                     .departmentName(summary.getDepartment().getDepartmentName())
-                    .stressLevel(summary.getAvgStressLevel())
+                    .stressLevel(stress)
+                    .stressPercentage(stressPct)
                     .summaryDate(summary.getSummaryDate())
                     .build();
         }
@@ -108,7 +145,6 @@ public class DashboardDto {
     @AllArgsConstructor
     public static class DashboardRequest {
 
-        @NotNull(message = "회사 ID는 필수 항목입니다.")
         private Long companyId;
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

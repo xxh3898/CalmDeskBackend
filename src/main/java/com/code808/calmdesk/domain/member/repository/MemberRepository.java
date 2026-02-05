@@ -16,6 +16,8 @@ import com.code808.calmdesk.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import javax.swing.text.html.Option;
+
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByEmail(String email);
@@ -52,4 +54,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT m FROM MEMBER m LEFT JOIN FETCH m.department LEFT JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.status IN :statuses ORDER BY m.createdDate DESC")
     List<Member> findByCompany_CompanyIdAndStatusInWithDetails(@Param("companyId") Long companyId, @Param("statuses") List<CommonEnums.Status> statuses);
+
+    @Query("SELECT m.company.companyId FROM MEMBER m WHERE m.email = :email")
+    Optional<Long> findCompanyIdByEmail(@Param("email") String email);
 }

@@ -104,6 +104,20 @@ VALUES (
         NOW()
     ),
     (
+        '최지현',
+        'user4@test.com',
+        '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
+        '010-4444-4444',
+        'ADMIN',
+        'Y',
+        DATE_SUB(CURRENT_DATE, INTERVAL 3 YEAR),
+        1,
+        1,
+        4,
+        NOW(),
+        NOW()
+    ),
+    (
         '이영희',
         'user2@test.com',
         '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
@@ -114,6 +128,23 @@ VALUES (
         1,
         2,
         2,
+        NOW(),
+        NOW()
+    ),
+    (
+        '정우성',
+        'user5@test.com',
+        '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
+        '010-5555-5555',
+        'EMPLOYEE',
+        'Y',
+        DATE_SUB(
+            CURRENT_DATE,
+            INTERVAL 1 MONTH
+        ),
+        1,
+        2,
+        1,
         NOW(),
         NOW()
     ),
@@ -135,33 +166,81 @@ VALUES (
         NOW()
     ),
     (
-        '최지현',
-        'user4@test.com',
+        '홍길동',
+        'user9@test.com',
         '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
-        '010-4444-4444',
-        'ADMIN',
+        '010-9999-9999',
+        'EMPLOYEE',
         'Y',
-        DATE_SUB(CURRENT_DATE, INTERVAL 3 YEAR),
+        DATE_SUB(CURRENT_DATE, INTERVAL 5 YEAR),
         1,
-        1,
-        4,
+        3,
+        5,
         NOW(),
         NOW()
     ),
     (
-        '정우성',
-        'user5@test.com',
+        '한미소',
+        'user6@test.com',
         '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
-        '010-5555-5555',
+        '010-6666-6666',
+        'EMPLOYEE',
+        'Y',
+        DATE_SUB(CURRENT_DATE, INTERVAL 4 YEAR),
+        1,
+        4,
+        3,
+        NOW(),
+        NOW()
+    ),
+    (
+        '강하늘',
+        'user7@test.com',
+        '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
+        '010-7777-7777',
         'EMPLOYEE',
         'Y',
         DATE_SUB(
             CURRENT_DATE,
-            INTERVAL 1 MONTH
+            INTERVAL 18 MONTH
         ),
         1,
+        4,
         2,
+        NOW(),
+        NOW()
+    ),
+    (
+        '윤도현',
+        'user8@test.com',
+        '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
+        '010-8888-8888',
+        'EMPLOYEE',
+        'Y',
+        DATE_SUB(
+            CURRENT_DATE,
+            INTERVAL 3 MONTH
+        ),
         1,
+        5,
+        1,
+        NOW(),
+        NOW()
+    ),
+    (
+        '임윤아',
+        'user10@test.com',
+        '$2a$10$f/eYobDQgSJInVvSDhCghOTh2jqSdwIW72jAHa2TQRJUgrZ5RYsRa',
+        '010-1010-1010',
+        'ADMIN',
+        'Y',
+        DATE_SUB(
+            CURRENT_DATE,
+            INTERVAL 2 MONTH
+        ),
+        1,
+        5,
+        2,
         NOW(),
         NOW()
     );
@@ -712,62 +791,6 @@ VALUES (
         ),
         'ATTEND',
         1
-    ),
-    (
-        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-            ' 08:50:00'
-        ),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-            ' 18:00:00'
-        ),
-        'ATTEND',
-        1
-    );
-
--- user2 최근 3일
-INSERT INTO
-    attendance (
-        work_date,
-        check_in,
-        check_out,
-        attendance_status,
-        member_id
-    )
-VALUES (
-        DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY),
-            ' 08:50:00'
-        ),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY),
-            ' 18:00:00'
-        ),
-        'ATTEND',
-        2
-    ),
-    (
-        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-            ' 09:00:00'
-        ),
-        CONCAT(
-            DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
-            ' 18:00:00'
-        ),
-        'ATTEND',
-        2
-    ),
-    (
-        CURRENT_DATE,
-        CONCAT(CURRENT_DATE, ' 08:50:00'),
-        NULL,
-        'ATTEND',
-        2
     );
 
 -- 10. 감정 체크인
@@ -1686,114 +1709,433 @@ VALUES (
         'SPEND'
     );
 -- 13. 스트레스 일간 요약
-INSERT INTO
-    stress_summary (
-        avg_stress_level,
-        checkin_count,
-        summary_date,
-        created_date,
-        department_id,
-        member_id,
-        modify_date
-    )
-VALUES (
-        1,
-        2,
-        '2026-02-03',
-        CURRENT_TIMESTAMP,
-        1,
-        1,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        2,
-        2,
-        '2026-02-03',
-        CURRENT_TIMESTAMP,
-        1,
-        2,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        3,
-        2,
-        '2026-02-03',
-        CURRENT_TIMESTAMP,
-        1,
-        3,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        4,
-        2,
-        '2026-02-03',
-        CURRENT_TIMESTAMP,
-        1,
-        4,
-        CURRENT_TIMESTAMP
-    ),
-    (
-        5,
-        2,
-        '2026-02-03',
-        CURRENT_TIMESTAMP,
-        1,
-        5,
-        CURRENT_TIMESTAMP
-    );
+DELETE FROM stress_summary;
 
 INSERT INTO
     stress_summary (
-        avg_stress_level,
-        checkin_count,
-        summary_date,
-        created_date,
-        department_id,
+    avg_stress_level,
+    checkin_count,
+    summary_date,
+    created_date,
+    department_id,
+    member_id,
+    modify_date
+)
+VALUES
+    (2.5, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 1, 1, NOW()),
+    (3.0, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 2, 2, NOW()),
+    (2.0, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 3, 3, NOW()),
+    (4.5, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 1, 4, NOW()),
+    (4.0, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 2, 5, NOW()),
+    (4.5, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 4, 6, NOW()),
+    (2.5, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 4, 7, NOW()),
+    (1.0, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 5, 8, NOW()),
+    (4.5, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 3, 9, NOW()),
+    (4.0, 2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NOW(), 5, 10, NOW()),
+    (3.0, 2, CURRENT_DATE, NOW(), 1, 1, NOW()),
+    (3.0, 2, CURRENT_DATE, NOW(), 2, 2, NOW()),
+    (2.0, 2, CURRENT_DATE, NOW(), 3, 3, NOW()),
+    (5.0, 2, CURRENT_DATE, NOW(), 1, 4, NOW()),
+    (4.5, 2, CURRENT_DATE, NOW(), 2, 5, NOW()),
+    (4.0, 2, CURRENT_DATE, NOW(), 4, 6, NOW()),
+    (2.5, 2, CURRENT_DATE, NOW(), 4, 7, NOW()),
+    (1.5, 2, CURRENT_DATE, NOW(), 5, 8, NOW()),
+    (5.0, 2, CURRENT_DATE, NOW(), 3, 9, NOW()),
+    (4.5, 2, CURRENT_DATE, NOW(), 5, 10, NOW());
+
+INSERT INTO
+    attendance (
+        work_date,
+        check_in,
+        check_out,
+        attendance_status,
+        member_id
+    )
+VALUES (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:55:20'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:05:10'
+        ),
+        'ATTEND',
+        1
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 09:12:45'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:02:30'
+        ),
+        'LATE',
+        2
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:50:00'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:10:00'
+        ),
+        'ATTEND',
+        3
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:58:15'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:01:05'
+        ),
+        'ATTEND',
+        4
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 09:05:30'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:00:20'
+        ),
+        'LATE',
+        5
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:45:10'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:15:40'
+        ),
+        'ATTEND',
+        6
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:59:59'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:03:12'
+        ),
+        'ATTEND',
+        7
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 08:52:40'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:07:55'
+        ),
+        'ATTEND',
+        8
+    ),
+    (
+        DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 09:20:10'
+        ),
+        CONCAT(
+            CAST(
+                DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) AS CHAR
+            ),
+            ' 18:00:00'
+        ),
+        'LATE',
+        9
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:54:30'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:02:15'
+        ),
+        'ATTEND',
+        1
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:58:10'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:01:40'
+        ),
+        'ATTEND',
+        2
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 09:15:00'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:05:20'
+        ),
+        'LATE',
+        3
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:50:20'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:10:10'
+        ),
+        'ATTEND',
+        4
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:59:00'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:00:50'
+        ),
+        'ATTEND',
+        5
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 09:02:45'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:04:30'
+        ),
+        'LATE',
+        6
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:48:30'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:06:20'
+        ),
+        'ATTEND',
+        7
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:57:15'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:03:45'
+        ),
+        'ATTEND',
+        8
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 08:53:10'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:00:10'
+        ),
+        'ATTEND',
+        9
+    ),
+    (
+        CURRENT_DATE,
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 09:10:00'
+        ),
+        CONCAT(
+            CAST(CURRENT_DATE AS CHAR),
+            ' 18:00:00'
+        ),
+        'LATE',
+        10
+    );
+
+-- 쿨다운 횟수 추가
+DELETE FROM cooldown;
+
+INSERT INTO
+    cooldown (
         member_id,
+        created_date,
         modify_date
     )
 VALUES (
-        2.0,
-        2,
-        CURRENT_DATE,
-        CURRENT_TIMESTAMP,
         1,
-        1,
-        CURRENT_TIMESTAMP
+        '2026-02-04 09:10:00',
+        '2026-02-04 09:10:00'
     ),
     (
-        3.0,
-        2,
-        CURRENT_DATE,
-        CURRENT_TIMESTAMP,
         1,
-        2,
-        CURRENT_TIMESTAMP
+        '2026-02-04 14:20:00',
+        '2026-02-04 14:20:00'
     ),
     (
-        3.0,
-        2,
-        CURRENT_DATE,
-        CURRENT_TIMESTAMP,
         1,
+        '2026-02-04 17:30:00',
+        '2026-02-04 17:30:00'
+    ),
+    (
+        2,
+        '2026-02-04 10:30:00',
+        '2026-02-04 10:30:00'
+    ),
+    (
         3,
-        CURRENT_TIMESTAMP
+        '2026-02-04 13:45:00',
+        '2026-02-04 14:00:00'
     ),
     (
-        4.0,
-        2,
-        CURRENT_DATE,
-        CURRENT_TIMESTAMP,
-        1,
         4,
-        CURRENT_TIMESTAMP
+        '2026-02-04 11:00:00',
+        '2026-02-04 11:00:00'
     ),
     (
-        5.0,
-        2,
-        CURRENT_DATE,
-        CURRENT_TIMESTAMP,
-        1,
         5,
-        CURRENT_TIMESTAMP
+        '2026-02-04 17:05:00',
+        '2026-02-04 17:05:00'
+    ),
+    (
+        9,
+        '2026-02-04 15:20:00',
+        '2026-02-04 15:20:00'
+    ),
+    (
+        1,
+        '2026-02-05 09:05:00',
+        '2026-02-05 09:05:00'
+    ),
+    (
+        1,
+        '2026-02-05 13:15:00',
+        '2026-02-05 13:15:00'
+    ),
+    (
+        2,
+        '2026-02-05 10:30:00',
+        '2026-02-05 10:30:00'
+    ),
+    (
+        2,
+        '2026-02-05 16:40:00',
+        '2026-02-05 16:40:00'
+    ),
+    (
+        3,
+        '2026-02-05 13:45:00',
+        '2026-02-05 14:00:00'
+    ),
+    (
+        5,
+        '2026-02-05 17:05:00',
+        '2026-02-05 17:05:00'
+    ),
+    (
+        6,
+        '2026-02-05 11:30:00',
+        '2026-02-05 11:30:00'
+    ),
+    (
+        7,
+        '2026-02-05 14:50:00',
+        '2026-02-05 14:50:00'
+    ),
+    (
+        8,
+        '2026-02-05 10:10:00',
+        '2026-02-05 10:10:00'
+    ),
+    (
+        9,
+        '2026-02-05 11:00:00',
+        '2026-02-05 11:00:00'
+    ),
+    (
+        9,
+        '2026-02-05 16:00:00',
+        '2026-02-05 16:00:00'
     );
