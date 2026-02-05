@@ -26,7 +26,7 @@ public class StressSummary extends BaseTimeEntity {
     private LocalDate summaryDate;
 
     @Column(name = "avg_stress_level", nullable = false)
-    private Integer avgStressLevel;
+    private Double avgStressLevel;
 
     @Column(name = "checkin_count", nullable = false)
     private Integer checkinCount;
@@ -38,4 +38,9 @@ public class StressSummary extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    public void updateStressData(Double avgStressLevel, Integer checkinCount) {
+        this.avgStressLevel = avgStressLevel;
+        this.checkinCount = checkinCount;
+    }
 }

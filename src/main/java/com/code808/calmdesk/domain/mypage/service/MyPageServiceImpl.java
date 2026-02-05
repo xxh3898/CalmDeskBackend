@@ -14,8 +14,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
@@ -49,6 +52,23 @@ public class MyPageServiceImpl implements MyPageService {
         return balance != null ? balance.intValue() : 0;
     }
 
+    /** yyyy-MM-dd 또는 yyyy.MM.dd 형식의 입사일 문자열을 LocalDate로 파싱. 실패 시 null */
+    private LocalDate parseJoinDate(String joinDateStr) {
+        if (joinDateStr == null || joinDateStr.isBlank()) {
+            return null;
+        }
+        String normalized = joinDateStr.trim().replace('.', '-');
+        try {
+            return LocalDate.parse(normalized);
+        } catch (Exception e) {
+            try {
+                return LocalDate.parse(joinDateStr.trim(), DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            } catch (Exception e2) {
+                return null;
+            }
+        }
+    }
+
     @Override
     public ProfileResponse getProfile(Long memberId) {
         Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
@@ -74,6 +94,13 @@ public class MyPageServiceImpl implements MyPageService {
                 throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
             }
             member.setPhone(request.getPhone());
+        }
+
+        if (request.getJoinDate() != null && !request.getJoinDate().isBlank()) {
+            LocalDate parsed = parseJoinDate(request.getJoinDate());
+            if (parsed != null) {
+                member.setRegisterDate(parsed);
+            }
         }
 
         memberRepository.save(member);
@@ -121,8 +148,28 @@ public class MyPageServiceImpl implements MyPageService {
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        Optional<StressSummary> summaryOpt = stressSummaryRepository.findLatestByMemberId(memberId);
-        return summaryOpt.map(StressResponse::from)
-                .orElseGet(StressResponse::createDefault);
+        // 이번 주(월~일) 기준 주간 스트레스 집계
+        LocalDate now = LocalDate.now();
+        LocalDate weekStart = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekEnd = weekStart.plusDays(6);
+
+        List<StressSummary> weekSummaries = stressSummaryRepository
+                .findByMember_MemberIdAndSummaryDateBetween(memberId, weekStart, weekEnd);
+
+        if (weekSummaries == null || weekSummaries.isEmpty()) {
+            return StressResponse.createDefault();
+        }
+
+        double avgRaw = weekSummaries.stream()
+                .mapToDouble(s -> s.getAvgStressLevel() != null ? s.getAvgStressLevel() : 0.0)
+                .average()
+                .orElse(0.0);
+        int totalCheckins = weekSummaries.stream()
+                .mapToInt(s -> s.getCheckinCount() != null ? s.getCheckinCount() : 0)
+                .sum();
+        String periodStr = "이번 주 (" + weekStart.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                + " ~ " + weekEnd.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")) + ")";
+
+        return StressResponse.fromWeekly(avgRaw, periodStr, totalCheckins);
     }
 }

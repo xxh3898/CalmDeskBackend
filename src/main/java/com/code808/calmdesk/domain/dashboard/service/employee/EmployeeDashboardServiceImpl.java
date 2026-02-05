@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.attendance.dto.StressDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,10 @@ import com.code808.calmdesk.domain.attendance.entity.WorkStatusType;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -31,7 +36,7 @@ import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
 import com.code808.calmdesk.domain.vacation.entity.VacationRest;
 import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
-
+import com.code808.calmdesk.domain.attendance.service.StressSummaryService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -41,10 +46,11 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     private final MemberRepository memberRepository;
     private final EmployeeDashboardRepository dashboardRepository;
-    private final VacationRestRepository vacationRestRepository;
+    private final VacationRepository vacationRepository;
     private final AttendanceRepository attendanceRepository;
     private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
     private final CoolDownRepository coolDownRepository;
+    private final StressSummaryService stressSummaryService;
 
     @Override
     public EmployeeDashboardResponseDto getDashboardData(Long memberId) {
@@ -113,7 +119,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         // 3. 연차 정보
-        VacationRest vacationRest = vacationRestRepository.findByMemberId(member.getMemberId())
+        VacationRest vacationRest = vacationRepository.findByMemberId(member.getMemberId())
                 .orElse(VacationRest.builder().totalCount(15).spentCount(0).build());
 
         // 4. 포인트
@@ -166,8 +172,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                         .build())
                 .vacationStats(EmployeeDashboardResponseDto.VacationStats.builder()
                         .totalDays(vacationRest.getTotalCount())
-                        .usedDays((double) vacationRest.getSpentCount())
-                        .remainingDays((double) (vacationRest.getTotalCount() - vacationRest.getSpentCount()))
+                        .usedDays(vacationRest.getSpentCount() / 2.0)   // spentCount는 반차 단위(연차 1일=2, 반차 0.5일=1) → 일 단위로 변환
+                        .remainingDays(vacationRest.getTotalCount() - vacationRest.getSpentCount() / 2.0)
                         .build())
                 .pointStats(EmployeeDashboardResponseDto.PointStats.builder()
                         .amount(points)
@@ -204,8 +210,10 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
                 .emotionCheckins(new ArrayList<>())
                 .build();
+
         Attendance attendance = attendanceRepository.save(newAttendance);
 
+        attendanceRepository.flush();
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
 
@@ -231,12 +239,19 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
 
         attendance.setCheckOut(now);
-
+        attendanceRepository.flush();
         // 2. 감정 체크인 저장 (퇴근 시 기분)
         saveEmotionCheckIn(attendance, request);
 
         // 3. WorkStatus 업데이트 -> OFF
         updateWorkStatus(member, WorkStatusType.OFF);
+
+        // Stress 로직 추가
+        StressDto.SummaryRequest summaryRequest = StressDto.SummaryRequest.builder()
+                .memberId(memberId)
+                .summaryDate(today)
+                .build();
+        stressSummaryService.createDailySummary(summaryRequest);
     }
 
     private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {

@@ -61,9 +61,11 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/mypage/**").authenticated()
                                 .requestMatchers("/api/admin/mypage/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/admin/monitoring").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/admin/team/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/admin/team/**").authenticated()
                         //                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         //                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -77,7 +79,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);

@@ -7,17 +7,28 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.company.entity.Department;
 
+@Repository
 public interface StressSummaryRepository extends JpaRepository<StressSummary, Long> {
 
-    @Query("SELECT s FROM StressSummary s WHERE s.member.memberId = :memberId ORDER BY s.summaryDate DESC")
-    Optional<StressSummary> findLatestByMemberId(@Param("memberId") Long memberId);
+    Optional<StressSummary> findByMember_MemberIdAndSummaryDate(
+            Long memberId,
+            LocalDate summaryDate
+    );
 
-    @Query("SELECT s FROM StressSummary s WHERE s.member.memberId = :memberId ORDER BY s.summaryDate DESC")
-    Optional<StressSummary> findLatestByMemberIdAndPeriod(@Param("memberId") Long memberId, @Param("period") String period);
+    boolean existsByMember_MemberIdAndSummaryDate(
+            Long memberId,
+            LocalDate summaryDate
+    );
+
+    /**
+     * 가장 최근 요약 (여러 건 있어도 summaryDate 기준으로 가장 최신 1건만)
+     */
+    Optional<StressSummary> findTopByMember_MemberIdOrderBySummaryDateDesc(Long memberId);
 
     // 기간 내 모든 스트레스 요약 조회
     List<StressSummary> findBySummaryDateBetween(LocalDate startDate, LocalDate endDate);
@@ -51,4 +62,13 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
     // 정상군 (3.0 미만 -> 30점 미만)
     @Query("SELECT COUNT(s) FROM StressSummary s WHERE s.summaryDate BETWEEN :startDate AND :endDate AND s.avgStressLevel < 3.0")
     long countNormal(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * 회원별 기간 내 스트레스 요약 목록 (주간 집계용)
+     */
+    List<StressSummary> findByMember_MemberIdAndSummaryDateBetween(
+            Long memberId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
