@@ -49,9 +49,11 @@ public class TeamServiceImpl implements TeamService {
         Map<Long, Integer> stressByMemberId = new HashMap<>();
         Map<Long, Integer> cooldownCountByMemberId = new HashMap<>();
         for (Member m : members) {
-            vacationRepository.findByMemberId(m.getMemberId())
-                    .ifPresent(vr -> remainingByMemberId.put(m.getMemberId(),
-                            vr.getTotalCount() - vr.getSpentCount()));
+            // 연차: VacationRest 없으면 신규 직원으로 간주하여 15일, 있으면 totalCount - spentCount/2 (spentCount는 반차 단위)
+            int remaining = vacationRepository.findByMemberId(m.getMemberId())
+                    .map(vr -> (int) (vr.getTotalCount() - vr.getSpentCount() / 2.0))
+                    .orElse(15);
+            remainingByMemberId.put(m.getMemberId(), remaining);
             // 원시 avgStressLevel(1~5)을 0~100 점수로 환산해서 팀원 카드에 사용
             stressSummaryRepository.findTopByMember_MemberIdOrderBySummaryDateDesc(m.getMemberId())
                     .ifPresent(ss -> {
