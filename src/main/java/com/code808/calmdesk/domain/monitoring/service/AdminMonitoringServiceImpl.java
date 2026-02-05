@@ -139,7 +139,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
 
         // 직원 수 변동 추이 (전월 말 대비 실시간 증감)
         LocalDate startOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
-        long membersAtStartOfCurrentMonth = memberRepository.countByRegisterDateBefore(startOfCurrentMonth);
+        long membersAtStartOfCurrentMonth = memberRepository.countByJoinDateBefore(startOfCurrentMonth);
         long employeeDiff = totalMembers - membersAtStartOfCurrentMonth;
 
         return MonitoringDto.Stats.builder()
