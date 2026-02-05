@@ -52,6 +52,23 @@ public class MyPageServiceImpl implements MyPageService {
         return balance != null ? balance.intValue() : 0;
     }
 
+    /** yyyy-MM-dd 또는 yyyy.MM.dd 형식의 입사일 문자열을 LocalDate로 파싱. 실패 시 null */
+    private LocalDate parseJoinDate(String joinDateStr) {
+        if (joinDateStr == null || joinDateStr.isBlank()) {
+            return null;
+        }
+        String normalized = joinDateStr.trim().replace('.', '-');
+        try {
+            return LocalDate.parse(normalized);
+        } catch (Exception e) {
+            try {
+                return LocalDate.parse(joinDateStr.trim(), DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+            } catch (Exception e2) {
+                return null;
+            }
+        }
+    }
+
     @Override
     public ProfileResponse getProfile(Long memberId) {
         Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
@@ -77,6 +94,13 @@ public class MyPageServiceImpl implements MyPageService {
                 throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
             }
             member.setPhone(request.getPhone());
+        }
+
+        if (request.getJoinDate() != null && !request.getJoinDate().isBlank()) {
+            LocalDate parsed = parseJoinDate(request.getJoinDate());
+            if (parsed != null) {
+                member.setRegisterDate(parsed);
+            }
         }
 
         memberRepository.save(member);
