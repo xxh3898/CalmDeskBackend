@@ -5,4 +5,5 @@ public interface DepartmentStatsProjection {
     String getDepartmentName();
     Double getAvgStressLevel();
     Long getMemberCount();
+    Long getCooldownCount();
 }
