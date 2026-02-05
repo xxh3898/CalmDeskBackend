@@ -61,8 +61,19 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             isQuarter = true;
 
         } else {
-            // 월간 보기 (기본값): 대상 연도의 현재 월에 집중
-            startOfPeriod = LocalDate.of(targetYear, now.getMonthValue(), 1);
+            // 월간 보기: 현재 기준 '전월' 통계 (예: 2월이면 1월 데이터 표시)
+            LocalDate prevMonthDate = now.minusMonths(1);
+            int prevMonth = prevMonthDate.getMonthValue();
+
+            // targetYear가 현재 연도와 다르면, 해당 연도의 '전월' (즉, 같은 월)을 보여줄지 결정.
+            // 하지만 보통 '월간'은 '최근 마감된 월'을 의미하므로, 연도가 선택되어도 그 연도의 식별된 월(prevMonth)을 사용.
+            // 단, 만약 1월에 실행해서 prevMonth가 12월(작년)이 되면, targetYear 로직이 중요해짐.
+            // 사용자가 명시적 연도를 선택했다면, 그 연도의 '지난 달'과 같은 월을 표시하는 것이 자연스러움.
+            // 현재 로직: 선택된 연도의 (현재시간 - 1달) 월.
+            // 예: 2026년 2월 5일 -> prevMonth = 1.
+            // targetYear = 2026 -> 2026-01-01 ~ 2026-01-31
+            // targetYear = 2025 -> 2025-01-01 ~ 2025-01-31
+            startOfPeriod = LocalDate.of(targetYear, prevMonth, 1);
             endOfPeriod = startOfPeriod.withDayOfMonth(startOfPeriod.lengthOfMonth());
         }
 
@@ -120,8 +131,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         double avgCooldown = totalMembers > 0 ? (double) cooldownCount / totalMembers : 0;
         long prevCooldownCount = coolDownRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
         double prevAvgCooldown = totalMembers > 0 ? (double) prevCooldownCount / totalMembers : 0;
-        double cooldownDiffPercent = prevAvgCooldown > 0 ? ((avgCooldown - prevAvgCooldown) / prevAvgCooldown * 100) : 0;
-
+        double cooldownDiff = avgCooldown - prevAvgCooldown;
         // 상담 신청 건수
         long consultationCount = consultationRepository.countByCreatedDateBetween(startDT, endDT);
         long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
@@ -139,7 +149,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .highRiskCount(highRiskCount + "명")
                 .riskTrend(String.format("%+d", riskDiff))
                 .avgCooldown(String.format("%.1f회", avgCooldown))
-                .cooldownTrend(String.format("%+.0f%%", cooldownDiffPercent))
+                .cooldownTrend(String.format("%+.1f회", cooldownDiff))
                 .consultationCount(consultationCount + "건")
                 .consultationTrend(String.format("%+.0f%%", consultDiffPercent))
                 .build();
