@@ -40,4 +40,11 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
     @Query("SELECT AVG(s.avgStressLevel) FROM StressSummary s WHERE s.summaryDate BETWEEN :startDate AND :endDate")
     Double findAvgStressByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+    /** 회원별 기간 내 스트레스 요약 목록 (주간 집계용) */
+    List<StressSummary> findByMember_MemberIdAndSummaryDateBetween(
+            Long memberId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
 }
