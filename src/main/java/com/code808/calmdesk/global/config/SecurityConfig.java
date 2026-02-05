@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/consultations/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/admin/shop/items/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/employee/dashboard/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/employee/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.PATCH, "/api/admin/shop/**").authenticated() // 👈 PATCH 추가
                                 .requestMatchers(HttpMethod.PUT, "/api/admin/shop/**").authenticated()
