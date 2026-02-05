@@ -35,28 +35,55 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     private final StressFactorRepository stressFactorRepository;
 
     @Override
-    public MonitoringDto getMonitoringData(String period) { // TODO: 기간 필터링 구현 필요 (현재는 월 단위 고정)
+    public MonitoringDto getMonitoringData(String period, Integer year) {
+        // 1. 기준 연도 설정
+        int targetYear = (year != null) ? year : LocalDate.now().getYear();
         LocalDate now = LocalDate.now();
-        LocalDate startOfMonth = now.withDayOfMonth(1);
-        LocalDate endOfMonth = now.withDayOfMonth(now.lengthOfMonth());
 
-        LocalDateTime startDateTime = startOfMonth.atStartOfDay();
-        LocalDateTime endDateTime = endOfMonth.atTime(LocalTime.MAX);
+        LocalDate startOfPeriod;
+        LocalDate endOfPeriod;
+        boolean isQuarter = false;
+
+        if ("Q1".equalsIgnoreCase(period)) {
+            startOfPeriod = LocalDate.of(targetYear, 1, 1);
+            endOfPeriod = LocalDate.of(targetYear, 3, 31);
+            isQuarter = true;
+        } else if ("Q2".equalsIgnoreCase(period)) {
+            startOfPeriod = LocalDate.of(targetYear, 4, 1);
+            endOfPeriod = LocalDate.of(targetYear, 6, 30);
+            isQuarter = true;
+        } else if ("Q3".equalsIgnoreCase(period)) {
+            startOfPeriod = LocalDate.of(targetYear, 7, 1);
+            endOfPeriod = LocalDate.of(targetYear, 9, 30);
+            isQuarter = true;
+        } else if ("Q4".equalsIgnoreCase(period)) {
+            startOfPeriod = LocalDate.of(targetYear, 10, 1);
+            endOfPeriod = LocalDate.of(targetYear, 12, 31);
+            isQuarter = true;
+
+        } else {
+            // 월간 보기 (기본값): 대상 연도의 현재 월에 집중
+            startOfPeriod = LocalDate.of(targetYear, now.getMonthValue(), 1);
+            endOfPeriod = startOfPeriod.withDayOfMonth(startOfPeriod.lengthOfMonth());
+        }
+
+        LocalDateTime startDateTime = startOfPeriod.atStartOfDay();
+        LocalDateTime endDateTime = endOfPeriod.atTime(LocalTime.MAX);
 
         // 1. 통계
-        MonitoringDto.Stats stats = calculateStats(startOfMonth, endOfMonth, startDateTime, endDateTime);
+        MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter);
 
-        // 2. 추세 (현재 월 제외 최근 6개월)
-        List<MonitoringDto.Trend> trends = calculateTrends(now);
+        // 2. 추세
+        List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, endOfPeriod, isQuarter);
 
-        // 3. 분포 (이번 달)
-        List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfMonth, endOfMonth);
+        // 3. 분포
+        List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfPeriod, endOfPeriod);
 
         // 4. 부서별 비교
-        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfMonth, endOfMonth);
+        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfPeriod, endOfPeriod);
 
         // 5. 주요 요인
-        List<MonitoringDto.Factor> factors = calculateFactors(startOfMonth, endOfMonth);
+        List<MonitoringDto.Factor> factors = calculateFactors(startOfPeriod, endOfPeriod);
 
         return MonitoringDto.builder()
                 .stats(stats)
@@ -67,16 +94,19 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT, LocalDateTime endDT) {
+    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT, LocalDateTime endDT, boolean isQuarter) {
         long totalMembers = memberRepository.count();
 
         // 평균 스트레스
         Double avgStressVal = stressSummaryRepository.findAvgStressByDateRange(start, end);
         double currentStress = avgStressVal != null ? MonitoringDto.convertScore(avgStressVal) : 0.0;
 
-        // 추세 비교를 위한 전월 데이터
-        LocalDate prevStart = start.minusMonths(1);
-        LocalDate prevEnd = end.minusMonths(1);
+        // 추세 비교를 위한 이전 기간 데이터
+        // 분기면 3개월 전, 월간이면 1개월 전
+        long minusMonths = isQuarter ? 3 : 1;
+        LocalDate prevStart = start.minusMonths(minusMonths);
+        LocalDate prevEnd = end.minusMonths(minusMonths);
+
         Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRange(prevStart, prevEnd);
         double prevStress = prevAvrStressVal != null ? MonitoringDto.convertScore(prevAvrStressVal) : 0.0;
         double stressDiff = currentStress - prevStress;
@@ -104,7 +134,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
         double consultDiffPercent = prevConsultationCount > 0 ? ((double) (consultationCount - prevConsultationCount) / prevConsultationCount * 100) : 0;
 
-        // 직원 수 변동 추이 (가입 수락일 기준)
+        // 직원 수 변동 추이 (HR SaaS 가입 수락일 기준)
         long prevTotalMembers = memberRepository.countByRegisterDateBefore(start);
         long employeeDiff = totalMembers - prevTotalMembers;
 
@@ -122,26 +152,45 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private List<MonitoringDto.Trend> calculateTrends(LocalDate now) {
+    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, LocalDate endOfPeriod, boolean isQuarter) {
         List<MonitoringDto.Trend> list = new ArrayList<>();
 
-        // 최근 6개월 추세 (현재 월 제외, 데이터가 온전한 지난 6개월간의 데이터 사용)
-        // i=1 (지난달) ~ i=6 (6개월 전)
-        for (int i = 6; i >= 1; i--) {
-            LocalDate date = now.minusMonths(i);
-            LocalDate start = date.withDayOfMonth(1);
-            LocalDate end = date.withDayOfMonth(date.lengthOfMonth());
+        if (isQuarter) {
+            // 분기 보기: 대상 연도의 선택된 분기 3개월을 정확히 표시
+            for (int i = 0; i < 3; i++) {
+                LocalDate start = startOfPeriod.plusMonths(i).withDayOfMonth(1);
+                LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-            Double stress = stressSummaryRepository.findAvgStressByDateRange(start, end);
-            long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
-            long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+                Double stress = stressSummaryRepository.findAvgStressByDateRange(start, end);
+                long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+                long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
 
-            list.add(MonitoringDto.Trend.builder()
-                    .month(date.getMonthValue() + "월")
-                    .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
-                    .consultation((int) consult)
-                    .cooldown((int) cooldown)
-                    .build());
+                list.add(MonitoringDto.Trend.builder()
+                        .month(start.getMonthValue() + "월")
+                        .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
+                        .consultation((int) consult)
+                        .cooldown((int) cooldown)
+                        .build());
+            }
+
+        } else {
+            // 월간 보기 (기본값): 오늘을 기준으로 지난 6개월간의 추세를 표시
+            for (int i = 6; i >= 1; i--) {
+                LocalDate date = now.minusMonths(i);
+                LocalDate start = date.withDayOfMonth(1);
+                LocalDate end = date.withDayOfMonth(date.lengthOfMonth());
+
+                Double stress = stressSummaryRepository.findAvgStressByDateRange(start, end);
+                long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+                long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+
+                list.add(MonitoringDto.Trend.builder()
+                        .month(date.getMonthValue() + "월")
+                        .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
+                        .consultation((int) consult)
+                        .cooldown((int) cooldown)
+                        .build());
+            }
         }
         return list;
     }
@@ -156,15 +205,14 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             );
         }
 
-
         long risk = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70).count();
         long caution = summaries.stream().filter(s -> {
-                    int score = MonitoringDto.convertScore(s.getAvgStressLevel());
-                    return score >= 30 && score < 70;
-                }).count();
+            int score = MonitoringDto.convertScore(s.getAvgStressLevel());
+            return score >= 30 && score < 70;
+        }).count();
         long normal = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) < 30).count();
 
-        // 파이 차트용 데이터 반환 (라벨은 퍼센트 형식이지만 값은 카운트로 전달, 프론트엔드 차트 라이브러리에서 처리)
+        // 파이 차트용 데이터 반환
         return List.of(
                 new MonitoringDto.Distribution("위험 (70%+)", (int) risk, "#fb7185"),
                 new MonitoringDto.Distribution("주의 (30-70%)", (int) caution, "#fca5a5"),
@@ -195,8 +243,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         List<StressSummary> all = stressSummaryRepository.findBySummaryDateBetween(start, end);
         for (MonitoringDto.DeptComparison item : list) {
             long count = all.stream()
-                    .filter(s -> s.getDepartment().getDepartmentName().equals(item.getDept()) 
-                            && MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
+                    .filter(s -> s.getDepartment().getDepartmentName().equals(item.getDept())
+                    && MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
                     .count();
             item.setHighRisk((int) count);
         }
@@ -212,7 +260,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         return results.stream().limit(4).map(obj -> {
             String factor = (String) obj[0];
             Long count = (Long) obj[1];
-            // 전체 요인 대비 백분율 계산 (차트 표시는 %이지만 데이터는 정수로 전달)
+            // 전체 요인 대비 백분율 계산
             long total = results.stream().mapToLong(o -> (Long) o[1]).sum();
             int percent = total > 0 ? (int) ((count * 100) / total) : 0;
             return new MonitoringDto.Factor(factor, percent);
