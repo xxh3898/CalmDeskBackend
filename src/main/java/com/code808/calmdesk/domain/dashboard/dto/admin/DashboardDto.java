@@ -23,6 +23,7 @@ public class DashboardDto {
         private String departmentName;
         private Double avgStressLevel;
         private Long memberCount;
+        private Long cooldownCount;
 
         public static DepartmentStats of(DepartmentStatsProjection projection) {
             return DepartmentStats.builder()
@@ -30,6 +31,7 @@ public class DashboardDto {
                     .departmentName(projection.getDepartmentName())
                     .avgStressLevel(projection.getAvgStressLevel())
                     .memberCount(projection.getMemberCount())
+                    .cooldownCount(projection.getCooldownCount())
                     .build();
         }
     }
@@ -40,22 +42,33 @@ public class DashboardDto {
     @Builder
     public static class CompanyStats {
         private Double avgStressLevel;
-        private Double avgStreessPercentage;
+        private Double avgStressPercentage;
         private Double stressChange;
         private Long totalMembers;
+        private Double todayAttendance;
+        private Double attendanceChange;
+        private Long consultationCount;
+        private Long vacationCount;
         private Long highRiskCount;
 
         public static CompanyStats of(Double todayAvg, Double yesterdayAvg,
-                                      Long totalMembers, Long highRiskCount) {
+                                      Long totalMembers, Long highRiskCount,
+                                      Double todayAttendance, Double yesterdayAttendance,
+                                      Long consultationCount, Long vacationCount) {
+
             Double maxScore = 5.0;
-            Double todayAvgPct = (todayAvg != null) ? (todayAvg/maxScore) * 100 : 0.0;
-            Double yesterdayAvgPct = (yesterdayAvg != null) ? (yesterdayAvg/maxScore) * 100 : 0.0;
+            Double todayAvgPct = (todayAvg != null) ? (todayAvg / maxScore) * 100 : 0.0;
+            Double yesterdayAvgPct = (yesterdayAvg != null) ? (yesterdayAvg / maxScore) * 100 : 0.0;
 
             return CompanyStats.builder()
                     .avgStressLevel(todayAvg)
-                    .avgStreessPercentage(todayAvgPct)
-                    .stressChange(todayAvgPct != null && yesterdayAvgPct != null ? todayAvgPct - yesterdayAvgPct : null)
+                    .avgStressPercentage(todayAvgPct)
+                    .stressChange(todayAvgPct - yesterdayAvgPct)
                     .totalMembers(totalMembers)
+                    .todayAttendance(todayAttendance)
+                    .attendanceChange(todayAttendance - yesterdayAttendance)
+                    .consultationCount(consultationCount)
+                    .vacationCount(vacationCount)
                     .highRiskCount(highRiskCount)
                     .build();
         }

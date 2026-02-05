@@ -1,12 +1,14 @@
 package com.code808.calmdesk.domain.attendance.repository;
 
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
@@ -28,5 +30,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
                                    @Param("start") LocalDate start,
                                    @Param("end") LocalDate end);
 
+    @Query("SELECT MAX(a.workDate) FROM Attendance a WHERE a.member.company.companyId = :companyId")
+    Optional<LocalDate> findLatestWorkDate(@Param("companyId") Long companyId);
 
 }
