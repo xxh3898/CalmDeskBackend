@@ -39,6 +39,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     List<Member> findByDepartment(Department department);
 
+    @Query("SELECT m FROM MEMBER m " +
+           "LEFT JOIN FETCH m.department " +
+           "LEFT JOIN FETCH m.rank " +
+           "WHERE m.company.companyId = :companyId")
+    List<Member> findAllByCompanyIdWithDepartmentAndRank(@Param("companyId") Long companyId);
+
     long countByRegisterDateBefore(java.time.LocalDate date);
 
     @Query("SELECT m FROM MEMBER m LEFT JOIN FETCH m.department LEFT JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.status = :status")
