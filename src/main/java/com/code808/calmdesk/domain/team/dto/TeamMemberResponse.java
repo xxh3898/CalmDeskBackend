@@ -33,8 +33,8 @@ public class TeamMemberResponse {
                 ? member.getDepartment().getDepartmentName() : "";
         String rankName = member.getRank() != null && member.getRank().getRankName() != null
                 ? member.getRank().getRankName() : "";
-        String joinDateStr = member.getJoinDate() != null
-                ? member.getJoinDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+        String joinDateStr = member.getRegisterDate() != null
+                ? member.getRegisterDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                 : "";
         return TeamMemberResponse.builder()
                 .memberId(member.getMemberId())

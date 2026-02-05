@@ -15,4 +15,7 @@ public class ProfileUpdateRequest {
 
     @NotBlank(message = "연락처는 필수입니다.")
     private String phone;
+
+    /** 입사일 (yyyy-MM-dd 또는 yyyy.MM.dd, 선택) */
+    private String joinDate;
 }
