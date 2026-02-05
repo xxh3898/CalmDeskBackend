@@ -135,7 +135,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         // 상담 신청 건수
         long consultationCount = consultationRepository.countByCreatedDateBetween(startDT, endDT);
         long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
-        double consultDiffPercent = prevConsultationCount > 0 ? ((double) (consultationCount - prevConsultationCount) / prevConsultationCount * 100) : 0;
+        long consultDiff = consultationCount - prevConsultationCount;
 
         // 직원 수 변동 추이 (전월 말 대비 실시간 증감)
         LocalDate startOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
@@ -144,15 +144,15 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
 
         return MonitoringDto.Stats.builder()
                 .totalEmployees(totalMembers + "명")
-                .employeeTrend(String.format("%+d", employeeDiff))
+                .employeeTrend(String.format("%+d명", employeeDiff))
                 .avgStress(String.format("%.1f%%", currentStress))
                 .stressTrend(String.format("%+.1f%%", stressDiff))
                 .highRiskCount(highRiskCount + "명")
-                .riskTrend(String.format("%+d", riskDiff))
+                .riskTrend(String.format("%+d명", riskDiff))
                 .avgCooldown(String.format("%.1f회", avgCooldown))
                 .cooldownTrend(String.format("%+.1f회", cooldownDiff))
                 .consultationCount(consultationCount + "건")
-                .consultationTrend(String.format("%+.0f%%", consultDiffPercent))
+                .consultationTrend(String.format("%+d건", consultDiff))
                 .build();
     }
 
