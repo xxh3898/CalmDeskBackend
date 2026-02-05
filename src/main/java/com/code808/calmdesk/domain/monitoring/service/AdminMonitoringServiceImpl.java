@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.attendance.repository.StressFactorRepository;
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
@@ -111,15 +110,9 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         double prevStress = prevAvrStressVal != null ? MonitoringDto.convertScore(prevAvrStressVal) : 0.0;
         double stressDiff = currentStress - prevStress;
 
-        // 고위험군 수
-        List<StressSummary> summaries = stressSummaryRepository.findBySummaryDateBetween(start, end);
-        long highRiskCount = summaries.stream()
-                .filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
-                .count();
-        List<StressSummary> prevSummaries = stressSummaryRepository.findBySummaryDateBetween(prevStart, prevEnd);
-        long prevHighRiskCount = prevSummaries.stream()
-                .filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
-                .count();
+        // 고위험군 수 (최적화: COUNT 쿼리 직접 호출)
+        long highRiskCount = stressSummaryRepository.countHighRisk(start, end);
+        long prevHighRiskCount = stressSummaryRepository.countHighRisk(prevStart, prevEnd);
         long riskDiff = highRiskCount - prevHighRiskCount;
 
         // 쿨다운 횟수
@@ -196,21 +189,18 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private List<MonitoringDto.Distribution> calculateDistribution(LocalDate start, LocalDate end) {
-        List<StressSummary> summaries = stressSummaryRepository.findBySummaryDateBetween(start, end);
-        if (summaries.isEmpty()) {
+        // 최적화: 전체 리스트 조회 대신 COUNT 쿼리 사용
+        long risk = stressSummaryRepository.countHighRisk(start, end);
+        long caution = stressSummaryRepository.countCaution(start, end);
+        long normal = stressSummaryRepository.countNormal(start, end);
+
+        if (risk == 0 && caution == 0 && normal == 0) {
             return List.of(
                     new MonitoringDto.Distribution("위험 (70%+)", 0, "#fb7185"),
                     new MonitoringDto.Distribution("주의 (30-70%)", 0, "#fca5a5"),
                     new MonitoringDto.Distribution("정상 (0-30%)", 0, "#818cf8")
             );
         }
-
-        long risk = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70).count();
-        long caution = summaries.stream().filter(s -> {
-            int score = MonitoringDto.convertScore(s.getAvgStressLevel());
-            return score >= 30 && score < 70;
-        }).count();
-        long normal = summaries.stream().filter(s -> MonitoringDto.convertScore(s.getAvgStressLevel()) < 30).count();
 
         // 파이 차트용 데이터 반환
         return List.of(
@@ -221,28 +211,29 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private List<MonitoringDto.DeptComparison> calculateDeptComparison(LocalDate start, LocalDate end) {
-        List<Department> departments = departmentRepository.findAll();
+        // 1. 부서별 통계 데이터 한 번에 조회 (GROUP BY로 N+1 문제 해결)
+        List<Object[]> results = stressSummaryRepository.findDeptStats(start, end);
+
+        // 2. 모든 부서 목록 조회 (통계 데이터가 없는 부서도 목록에 표시하기 위함)
+        List<Department> allDepts = departmentRepository.findAll();
         List<MonitoringDto.DeptComparison> list = new ArrayList<>();
 
-        for (Department dept : departments) {
-            Double avg = stressSummaryRepository.findAvgStressByDepartmentAndDateRange(dept, start, end);
+        for (Department dept : allDepts) {
+            // 3. 전체 부서 목록에 통계 결과 매핑
+            Object[] stat = results.stream()
+                    .filter(r -> r[0].equals(dept.getDepartmentName()))
+                    .findFirst()
+                    .orElse(null);
 
-            // 고위험군 수는 아래에서 일괄 계산하여 채움 (0으로 초기화)
+            Double avg = stat != null ? (Double) stat[1] : 0.0;
+            Long highRiskObj = stat != null ? (Long) stat[2] : 0L;
+            int highRisk = highRiskObj.intValue();
+
             list.add(MonitoringDto.DeptComparison.of(
                     dept.getDepartmentName(),
                     avg,
-                    0
+                    highRisk
             ));
-        }
-
-        // 부서별 고위험군 수 계산 로직
-        List<StressSummary> all = stressSummaryRepository.findBySummaryDateBetween(start, end);
-        for (MonitoringDto.DeptComparison item : list) {
-            long count = all.stream()
-                    .filter(s -> s.getDepartment().getDepartmentName().equals(item.getDept())
-                    && MonitoringDto.convertScore(s.getAvgStressLevel()) >= 70)
-                    .count();
-            item.setHighRisk((int) count);
         }
 
         return list;
