@@ -165,12 +165,12 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
                 long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
 
-                list.add(MonitoringDto.Trend.builder()
-                        .month(start.getMonthValue() + "월")
-                        .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
-                        .consultation((int) consult)
-                        .cooldown((int) cooldown)
-                        .build());
+                list.add(MonitoringDto.Trend.of(
+                        start.getMonthValue() + "월",
+                        stress,
+                        (int) consult,
+                        (int) cooldown
+                ));
             }
 
         } else {
@@ -184,12 +184,12 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
                 long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
 
-                list.add(MonitoringDto.Trend.builder()
-                        .month(date.getMonthValue() + "월")
-                        .stress(stress != null ? MonitoringDto.convertScore(stress) : 0)
-                        .consultation((int) consult)
-                        .cooldown((int) cooldown)
-                        .build());
+                list.add(MonitoringDto.Trend.of(
+                        date.getMonthValue() + "월",
+                        stress,
+                        (int) consult,
+                        (int) cooldown
+                ));
             }
         }
         return list;
@@ -227,16 +227,12 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         for (Department dept : departments) {
             Double avg = stressSummaryRepository.findAvgStressByDepartmentAndDateRange(dept, start, end);
 
-            if (avg == null) {
-                avg = 0.0;
-            }
-
             // 고위험군 수는 아래에서 일괄 계산하여 채움 (0으로 초기화)
-            list.add(MonitoringDto.DeptComparison.builder()
-                    .dept(dept.getDepartmentName())
-                    .avg(avg != 0.0 ? MonitoringDto.convertScore(avg) : 0.0)
-                    .highRisk(0)
-                    .build());
+            list.add(MonitoringDto.DeptComparison.of(
+                    dept.getDepartmentName(),
+                    avg,
+                    0
+            ));
         }
 
         // 부서별 고위험군 수 계산 로직
