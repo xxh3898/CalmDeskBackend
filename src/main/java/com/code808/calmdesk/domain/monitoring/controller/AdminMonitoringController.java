@@ -19,7 +19,10 @@ public class AdminMonitoringController {
     private final AdminMonitoringService adminMonitoringService;
 
     @GetMapping
-    public ResponseEntity<MonitoringDto> getMonitoringData(@RequestParam(required = false, defaultValue = "current") String period) {
-        return ResponseEntity.ok(adminMonitoringService.getMonitoringData(period));
+    public ResponseEntity<MonitoringDto> getMonitoringData(
+            @RequestParam(required = false, defaultValue = "current") String period,
+            @RequestParam(required = false) Integer year
+    ) {
+        return ResponseEntity.ok(adminMonitoringService.getMonitoringData(period, year));
     }
 }
