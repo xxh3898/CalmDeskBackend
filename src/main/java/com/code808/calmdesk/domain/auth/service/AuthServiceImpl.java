@@ -37,9 +37,11 @@ public class AuthServiceImpl implements AuthService {
 
         Member savedMember = memberRepository.save(member);
 
+        // signup 메소드 내부
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
-                "TEMP"
+                "TEMP",
+                null // 아직 회사가 없으므로 null 전달
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
@@ -64,9 +66,17 @@ public class AuthServiceImpl implements AuthService {
             ? member.getRole().name()
             : "TEMP";
 
+
+                // 소속된 회사가 없다면 null이 전달되도록 처리합니다.
+                Long companyId = (member.getCompany() != null)
+                ? member.getCompany().getCompanyId()
+                : null;
+
+        // ✨ JwtTokenProvider에 companyId를 함께 전달합니다.
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                role
+                role,
+                companyId
         );
 
         return LoginDto.LoginResponse.of(member, token);

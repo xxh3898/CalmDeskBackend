@@ -80,9 +80,11 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.Y
         );
 
+        // ✨ 수정: savedCompany에서 ID를 가져와 세 번째 인자로 전달
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "ADMIN"
+                "ADMIN",
+                savedCompany.getCompanyId()
         );
 
         return CompanyDto.RegisterResponse.of(savedCompany, member, token);
@@ -133,9 +135,11 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.N
         );
 
+        // ✨ 수정: 조회한 company에서 ID를 가져와 세 번째 인자로 전달
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "EMPLOYEE"
+                "EMPLOYEE",
+                company.getCompanyId()
         );
 
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);

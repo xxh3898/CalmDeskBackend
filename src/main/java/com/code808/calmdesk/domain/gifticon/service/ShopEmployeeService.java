@@ -235,7 +235,7 @@ public class ShopEmployeeService {
                     .itemName(history.getGifticon().getGifticonName())    // Gifticon 엔터티에서 상품명 추출
                     .itemPrice(history.getAmount().intValue())    // 결제 포인트 (Long -> Integer 변환)
                     .itemImg(history.getGifticon().getImage())   // 상품 이미지 URL
-                    .purchaseDate(history.getCreateDate())        // 구매 일시
+                    .purchaseDate(history.getCreateDate())// 구매 일시
                     .build()
             ).collect(Collectors.toList());
     }

@@ -26,13 +26,14 @@ public class JwtTokenProvider {
         this.expiration = expiration;
     }
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String email, String role, Long companyId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+                .claim("companyId", companyId)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
