@@ -169,7 +169,11 @@ public class AttendanceDto {
     }
 
     private static String mapLeaveStatus(CommonEnums.Status s) {
-        return s == CommonEnums.Status.Y ? "승인완료" : "승인대기";
+        return switch (s) {
+            case Y -> "승인완료";
+            case R -> "반려";
+            default -> "승인대기";
+        };
     }
 
     private static String formatPeriod(Vacation v) {
