@@ -30,61 +30,68 @@ public class ShopEmployeeService {
     private final MemberRepository memberRepository;
     private final MemberMissionRepository memberMissionRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final CompanyGifticonRepository companyGifticonRepository;
 
     // ⭐ 이벤트 발행을 위한 주입
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
-        // ... (기존 purchase 로직과 동일)
-
         Member member = memberRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("해당 회원을 찾을 수 없습니다."));
 
-        Gifticon gifticon = gifticonRepository.findById(request.getItemId())
-                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
+        // 💡 수정: itemId가 이제 CompanyGifticon의 PK이므로 findById로 조회합니다.
+        CompanyGifticon companyGifticon = companyGifticonRepository.findById(request.getItemId())
+                .orElseThrow(() -> new RuntimeException("상품 설정을 찾을 수 없습니다."));
 
-        if (gifticon.getStockQuantity() <= 0) {
+        // 💡 보안 검증: 현재 구매하려는 사용자의 회사와 상품의 소유 회사가 일치하는지 확인
+        if (!companyGifticon.getCompany().getCompanyId().equals(member.getCompany().getCompanyId())) {
+            throw new RuntimeException("해당 회사에서 판매하지 않는 상품입니다.");
+        }
+
+        // 활성화 여부 및 재고 체크 (기존 유지)
+        if (!companyGifticon.getIsActive()) {
+            throw new RuntimeException("현재 관리자에 의해 판매가 중지된 상품입니다.");
+        }
+
+        if (companyGifticon.getStockQuantity() <= 0) {
             throw new RuntimeException("상품 재고가 없습니다.");
         }
 
-        // findByMember_MemberId의 매개변수 타입을 확인하세요 (String vs Long)
+        // 계좌 조회 및 포인트 차감
         Account account = accountRepository.findByMember_MemberId(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("계좌 정보를 찾을 수 없습니다."));
 
-//        account.withdraw(request.getPrice().intValue());
-
         int price = request.getPrice().intValue();
-        account.withdraw(price); // 여기서 포인트가 차감됨
-        gifticon.setStockQuantity(gifticon.getStockQuantity() - 1); // 재고 감소
+        account.withdraw(price);
 
+        // 회사 전용 재고 감소
+        companyGifticon.setStockQuantity(companyGifticon.getStockQuantity() - 1);
+
+        // 주문(Order) 저장
         Order order = Order.builder()
-                .member(account.getMember())
-                .gifticon(gifticon)
+                .member(member)
+                .gifticon(companyGifticon.getGifticon()) // 마스터 정보 연결
                 .orderDate(LocalDate.now())
-                .approvalAmount(request.getPrice().intValue())
-                .spendPoint(request.getPrice().intValue())
+                .approvalAmount(price)
+                .spendPoint(price)
                 .earnPoint(0)
                 .type(Order.Type.SPEND)
-                .period(1)
+                .period(30)
                 .build();
 
-        orderRepository.save(order).getOrderId();
+        orderRepository.save(order);
 
-
+        // 포인트 히스토리 저장
         PointHistory history = new PointHistory(
-                "SPEND",                       // pointType
-                (long) price,                  // amount
-                (long) account.getAccountLeave(),     // balanceAfter (차감 후 잔액)
-                "GIFTICON",                    // sourceType
-                member,                              // 👈 memberId(Long) 대신 member(객체)
-                gifticon,     // gifticonId
-                null                           // missionId (구매이므로 미션ID는 null)
+                "SPEND", (long) price, (long) account.getAccountLeave(),
+                "GIFTICON", member, companyGifticon.getGifticon(), null
         );
         pointHistoryRepository.save(history);
-        return order.getOrderId();
 
+        return order.getOrderId();
     }
+
 
     @Transactional(readOnly = true)
     public PointMallResponse getPointMallData(Long userId, Long companyId) { // userId 타입을 String으로 통일 권장
@@ -92,9 +99,11 @@ public class ShopEmployeeService {
         Account account = accountRepository.findByMember_MemberId(userId)
                 .orElseThrow(() -> new RuntimeException("계좌 정보 없음"));
 
+        List<CompanyGifticon> companyItems = companyGifticonRepository.findAllByCompany_CompanyIdAndIsActiveTrue(companyId);
+
         // 2. ⭐ 수정: 해당 회사의 기프티콘만 조회
-        List<ItemResponse> items = gifticonRepository.findByCompany_CompanyId(companyId).stream()
-                .map(ItemResponse::fromEntity)
+        List<ItemResponse> items = companyItems.stream()
+                .map(ItemResponse::fromCompanyEntity) // 👈 builder 대신 이 메서드 사용!
                 .collect(Collectors.toList());
 
         // 3. ⭐ 중요: 사용자별 미션 상태(Y/N)가 반영된 리스트를 가져오도록 수정

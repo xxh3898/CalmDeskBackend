@@ -36,15 +36,15 @@ public class ShopAdminController {
 
     // 아이템 전체 활성화
     @PostMapping("/items/activate-all")
-    public ResponseEntity<Void> activateAll() {
-        shopAdminService.activateAll();
+    public ResponseEntity<Void> activateAll(@RequestParam Long companyId) {
+        shopAdminService.activateAll(companyId);
         return ResponseEntity.ok().build();
     }
 
     // 아이템 전체 비활성화
     @PostMapping("/items/deactivate-all")
-    public ResponseEntity<Void> deactivateAll() {
-        shopAdminService.deactivateAll();
+    public ResponseEntity<Void> deactivateAll(@RequestParam Long companyId) {
+        shopAdminService.deactivateAll(companyId);
         return ResponseEntity.ok().build();
     }
 
