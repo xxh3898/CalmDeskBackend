@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.code808.calmdesk.domain.common.converter.CommonStatusConverter;
 
 @Builder
 @AllArgsConstructor
@@ -48,9 +49,9 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    /** Y=승인, N=대기, R=반려 (DB에 문자열 저장, 여유 길이로 truncate 방지) */
+    /** Y=승인, N=대기, R=반려 (DB: Y/N/R 또는 APPROVED/PENDING/REJECTED 호환) */
     @Column(length = 10, nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CommonStatusConverter.class)
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
 

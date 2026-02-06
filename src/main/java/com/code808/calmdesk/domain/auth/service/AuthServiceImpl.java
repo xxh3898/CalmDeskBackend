@@ -3,8 +3,9 @@ package com.code808.calmdesk.domain.auth.service;
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
-
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import com.code808.calmdesk.global.security.JwtTokenProvider;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
+    private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -37,11 +39,18 @@ public class AuthServiceImpl implements AuthService {
 
         Member savedMember = memberRepository.save(member);
 
-        // signup 메소드 내부
+        // 포인트몰 이용을 위해 회원당 계좌(Account) 1건 생성 (잔액 0)
+        Account account = Account.builder()
+                .member(savedMember)
+                .accountLeave(0)
+                .totalEarnedPoint(0)
+                .totalSpentPoint(0)
+                .build();
+        accountRepository.save(account);
+
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
-                "TEMP",
-                null // 아직 회사가 없으므로 null 전달
+                "TEMP"
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
@@ -66,17 +75,9 @@ public class AuthServiceImpl implements AuthService {
             ? member.getRole().name()
             : "TEMP";
 
-
-                // 소속된 회사가 없다면 null이 전달되도록 처리합니다.
-                Long companyId = (member.getCompany() != null)
-                ? member.getCompany().getCompanyId()
-                : null;
-
-        // ✨ JwtTokenProvider에 companyId를 함께 전달합니다.
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                role,
-                companyId
+                role
         );
 
         return LoginDto.LoginResponse.of(member, token);
