@@ -87,13 +87,13 @@ public class ShopEmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public PointMallResponse getPointMallData(Long userId) { // userId 타입을 String으로 통일 권장
+    public PointMallResponse getPointMallData(Long userId, Long companyId) { // userId 타입을 String으로 통일 권장
         // 1. 포인트 조회
         Account account = accountRepository.findByMember_MemberId(userId)
                 .orElseThrow(() -> new RuntimeException("계좌 정보 없음"));
 
-        // 2. 상점 아이템 조회
-        List<ItemResponse> items = gifticonRepository.findAll().stream()
+        // 2. ⭐ 수정: 해당 회사의 기프티콘만 조회
+        List<ItemResponse> items = gifticonRepository.findByCompany_CompanyId(companyId).stream()
                 .map(ItemResponse::fromEntity)
                 .collect(Collectors.toList());
 
@@ -223,20 +223,21 @@ public class ShopEmployeeService {
         memberMissionRepository.save(memberMission);
     }
 
-        @Transactional(readOnly = true)
-        public List<PurchaseHistoryResponse> getAllPurchaseHistory() {
-            // 1. DB에서 기프티콘 구매 내역('GIFTICON')만 최신순으로 조회
-            List<PointHistory> historyList = pointHistoryRepository.findBySourceTypeOrderByCreateDateDesc("GIFTICON");
+    @Transactional(readOnly = true)
+    public List<PurchaseHistoryResponse> getAllPurchaseHistory(Long companyId) {
+        // 1. 해당 회사(companyId)의 기프티콘 구매 내역('GIFTICON')만 최신순으로 조회
+        List<PointHistory> historyList = pointHistoryRepository
+                .findByMember_Company_CompanyIdAndSourceTypeOrderByCreateDateDesc(companyId, "GIFTICON");
 
-            // 2. Entity -> DTO 변환
-            return historyList.stream().map(history -> PurchaseHistoryResponse.builder()
-                    .id(history.getId())
-                    .userName(history.getMember().getName())      // Member 엔터티에서 이름 추출
-                    .itemName(history.getGifticon().getGifticonName())    // Gifticon 엔터티에서 상품명 추출
-                    .itemPrice(history.getAmount().intValue())    // 결제 포인트 (Long -> Integer 변환)
-                    .itemImg(history.getGifticon().getImage())   // 상품 이미지 URL
-                    .purchaseDate(history.getCreateDate())// 구매 일시
-                    .build()
-            ).collect(Collectors.toList());
+        // 2. Entity -> DTO 변환
+        return historyList.stream().map(history -> PurchaseHistoryResponse.builder()
+                .id(history.getId())
+                .userName(history.getMember().getName())
+                .itemName(history.getGifticon().getGifticonName())
+                .itemPrice(history.getAmount().intValue())
+                .itemImg(history.getGifticon().getImage())
+                .purchaseDate(history.getCreateDate())
+                .build()
+        ).collect(Collectors.toList());
     }
 }

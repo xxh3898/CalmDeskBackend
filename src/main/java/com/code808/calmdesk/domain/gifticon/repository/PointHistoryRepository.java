@@ -11,5 +11,8 @@ public interface PointHistoryRepository extends JpaRepository<PointHistory, Long
 
     List<PointHistory> findByMemberIdOrderByCreateDateDescIdDesc(Long memberId);
 
-    List<PointHistory> findBySourceTypeOrderByCreateDateDesc(String sourceType);
+    List<PointHistory> findByMember_Company_CompanyIdAndSourceTypeOrderByCreateDateDesc(
+            Long companyId,
+            String sourceType
+    );
 }
