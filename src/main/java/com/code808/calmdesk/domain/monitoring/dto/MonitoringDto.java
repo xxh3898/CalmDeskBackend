@@ -49,6 +49,15 @@ public class MonitoringDto {
         private double stress;      // 34
         private int consultation;   // 172
         private int cooldown;       // 48
+
+        public static Trend of(String month, Double rawStress, int consultation, int cooldown) {
+            return Trend.builder()
+                    .month(month)
+                    .stress(rawStress != null ? convertScore(rawStress) : 0)
+                    .consultation(consultation)
+                    .cooldown(cooldown)
+                    .build();
+        }
     }
 
     @Data
@@ -71,6 +80,14 @@ public class MonitoringDto {
         private String dept;    // "상담 1팀"
         private double avg;     // 42
         private int highRisk;   // 4
+
+        public static DeptComparison of(String dept, Double rawAvg, int highRisk) {
+            return DeptComparison.builder()
+                    .dept(dept)
+                    .avg(rawAvg != null ? convertScore(rawAvg) : 0)
+                    .highRisk(highRisk)
+                    .build();
+        }
     }
 
     @Data

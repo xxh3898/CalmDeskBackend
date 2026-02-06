@@ -2,6 +2,7 @@ package com.code808.calmdesk.domain.auth.service;
 
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -47,10 +48,16 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public LoginDto.LoginResponse login(LoginDto.LoginRequest request){
         Member member = memberRepository.findEmailWithDetails(request.getEmail())
-                .orElseThrow(()-> new RuntimeException("존재하지 않는 사용자입니다."));
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (member.getCompany() != null) {
+            if (member.getStatus() == CommonEnums.Status.N) {
+                throw new IllegalArgumentException("입사 승인 대기 중입니다. 관리자 승인 후 로그인할 수 있습니다.");
+            }
         }
 
         String role = (member.getRole() != null)

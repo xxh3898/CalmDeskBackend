@@ -55,18 +55,19 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/consultations/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/admin/shop/items/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/employee/dashboard/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/employee/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/dashboard/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/employee/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.PATCH, "/api/admin/shop/**").authenticated() // 👈 PATCH 추가
                                 .requestMatchers(HttpMethod.PUT, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/employee/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/mypage/**").authenticated()
                                 .requestMatchers("/api/admin/mypage/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/admin/monitoring").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/admin/team/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/admin/team/**").authenticated()
                         //                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         //                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
