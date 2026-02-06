@@ -11,6 +11,12 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Entity(name = "DEPARTMENT")
+@Table(uniqueConstraints = {
+    @UniqueConstraint(
+            name = "UK_DEPARTMENT_NAME_COMPANY",
+            columnNames = {"department_name", "COMPANY_ID"}
+    )
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Department {
 

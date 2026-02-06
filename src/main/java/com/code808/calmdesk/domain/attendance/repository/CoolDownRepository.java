@@ -8,5 +8,5 @@ public interface CoolDownRepository extends JpaRepository<CoolDown, Long> {
 
     long countByMember_MemberId(Long memberId);
 
-    long countByCreatedDateBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+    long countByCreatedDateBetweenAndMember_Company_CompanyId(java.time.LocalDateTime start, java.time.LocalDateTime end, Long companyId);
 }
