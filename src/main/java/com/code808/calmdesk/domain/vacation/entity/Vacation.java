@@ -5,6 +5,7 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import com.code808.calmdesk.domain.common.converter.CommonStatusConverter;
 
 import java.time.LocalDateTime;
 @Entity
@@ -33,9 +34,9 @@ public class Vacation extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String reason;
 
-    /** Y=승인완료, N=승인대기, R=반려 (DB에 문자열로 저장, 여유 길이로 truncate 방지) */
+    /** Y=승인완료, N=승인대기, R=반려 (DB: Y/N/R 또는 APPROVED/PENDING/REJECTED 호환) */
     @Column(length = 10, nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CommonStatusConverter.class)
     @Builder.Default
     private CommonEnums.Status status = CommonEnums.Status.N;
 
