@@ -32,6 +32,13 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    public DepartmentDto.DetailResponse getDepartmentDetailsByCompany(Long departmentId, Long companyId) {
+        Department department = departmentRepository.findByDepartmentIdAndCompany_CompanyId(departmentId, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없거나 접근 권한이 없습니다. (부서 ID: " + departmentId + ")"));
+        return DepartmentDto.DetailResponse.from(department);
+    }
+
+    @Override
     public List<DepartmentDto.MemberResponse> getDepartmentMembers(Long departmentId) {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없습니다. (부서 ID: " + departmentId + ")"));
@@ -48,6 +55,24 @@ public class DepartmentServiceImpl implements DepartmentService {
                         ws -> ws.getMember().getMemberId(),
                         ws -> ws.getStatus().getDescription()
                 ));
+
+        return members.stream()
+                .map(member -> {
+                    String status = statusMap.getOrDefault(member.getMemberId(), "출근 전");
+                    return DepartmentDto.MemberResponse.from(member, status);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DepartmentDto.MemberResponse> getDepartmentMembersByCompany(Long departmentId, Long companyId) {
+        Department department = departmentRepository.findByDepartmentIdAndCompany_CompanyId(departmentId, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없거나 접근 권한이 없습니다. (부서 ID: " + departmentId + ")"));
+
+        List<Member> members = memberRepository.findByDepartment(department);
+        List<com.code808.calmdesk.domain.attendance.entity.WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
+        Map<Long, String> statusMap = statuses.stream()
+                .collect(Collectors.toMap(ws -> ws.getMember().getMemberId(), ws -> ws.getStatus().getDescription()));
 
         return members.stream()
                 .map(member -> {
