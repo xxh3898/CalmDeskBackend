@@ -3,8 +3,9 @@ package com.code808.calmdesk.domain.auth.service;
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
-
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import com.code808.calmdesk.global.security.JwtTokenProvider;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
+    private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -36,6 +38,15 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         Member savedMember = memberRepository.save(member);
+
+        // 포인트몰 이용을 위해 회원당 계좌(Account) 1건 생성 (잔액 0)
+        Account account = Account.builder()
+                .member(savedMember)
+                .accountLeave(0)
+                .totalEarnedPoint(0)
+                .totalSpentPoint(0)
+                .build();
+        accountRepository.save(account);
 
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
