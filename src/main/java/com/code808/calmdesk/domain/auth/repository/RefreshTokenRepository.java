@@ -14,9 +14,4 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     Optional<RefreshToken> findByToken(String token);
 
     void deleteByToken(String token);
-
-//    void deleteByMember(Member member);
-
-    // 만료된 토큰 삭제 (배치 작업용, 선택)
-    void deleteByExpiryDateBefore(LocalDateTime date);
 }

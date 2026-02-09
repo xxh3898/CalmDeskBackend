@@ -15,7 +15,6 @@ import com.code808.calmdesk.global.exception.token.TokenNotFoundException;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,14 +110,6 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(refreshToken);
     }
-
-//    @Transactional
-//    public void logout(String refreshToken){
-//        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
-//                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
-//
-//        refreshTokenRepository.delete(token);
-//    }
 
     @Override
     @Transactional
