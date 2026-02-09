@@ -32,6 +32,9 @@ public class Notification {
     @Column(name = "STATUS", length = 1)
     private String status = "N";
 
+    @Column(name = "TARGETROLE", length = 50, nullable = false)
+    private String targetRole;
+
     @CreatedDate
     @Column(name = "CREATE_DATE", updatable = false)
     private LocalDateTime createDate;

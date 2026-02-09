@@ -56,4 +56,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT m.company.companyId FROM MEMBER m WHERE m.email = :email")
     Optional<Long> findCompanyIdByEmail(@Param("email") String email);
+
+    // MemberRepository.java
+    List<Member> findAllByCompany_CompanyIdAndRole(Long companyId, Member.Role role);
+
 }

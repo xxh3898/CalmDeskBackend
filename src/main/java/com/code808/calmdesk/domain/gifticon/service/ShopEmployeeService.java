@@ -89,6 +89,35 @@ public class ShopEmployeeService {
         );
         pointHistoryRepository.save(history);
 
+        eventPublisher.publishEvent(new NotificationEvent(
+                member.getMemberId(),
+                "상품 구매 완료",
+                "'" + companyGifticon.getGifticon().getGifticonName() + "' 구매가 완료되었습니다. 마이페이지에서 확인하세요!",
+                "USER"
+        ));
+
+
+
+        // 3. ⭐ 해당 회사의 관리자(ADMIN)를 찾아 알림 발행
+        // MemberRepository에 findByCompany_CompanyIdAndRole(companyId, role) 같은 메서드가 있다고 가정합니다.
+        Long companyId = member.getCompany().getCompanyId();
+// DB 저장값이 "ADMIN"이므로 문자열로 넘겨줍니다.
+// 만약 Role이 Enum이라면 MemberRole.ADMIN을 넘겨주세요.
+        List<Member> admins = memberRepository.findAllByCompany_CompanyIdAndRole(companyId, Member.Role.ADMIN);
+
+
+        System.out.println("발견된 관리자 수: " + admins.size());
+
+        admins.forEach(admin -> {
+            eventPublisher.publishEvent(new NotificationEvent(
+                    admin.getMemberId(),
+                    "신규 구매",
+                    member.getName() + "님이 구매했습니다.",
+                    "ADMIN"
+            ));
+
+        });
+
         return order.getOrderId();
     }
 
@@ -196,7 +225,7 @@ public class ShopEmployeeService {
                 memberId,
                 "미션 완료 및 보상 지급",
                 "'" + memberMission.getMissionList().getRewardName() + "' 미션을 완료하여 "
-                        + rewardPoint + "포인트가 지급되었습니다!"
+                        + rewardPoint + "포인트가 지급되었습니다!","USER"
         ));
     }
 

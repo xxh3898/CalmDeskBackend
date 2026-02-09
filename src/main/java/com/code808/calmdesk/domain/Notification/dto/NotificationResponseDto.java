@@ -17,6 +17,7 @@ public class NotificationResponseDto {
     private String title;
     private String content;
     private String status;
+    private String targetRole;
     private LocalDateTime createDate;
 
     // 엔티티를 DTO로 변환하는 생성자
@@ -25,6 +26,7 @@ public class NotificationResponseDto {
         this.title = notification.getTitle();
         this.content = notification.getContent();
         this.status = notification.getStatus();
+        this.targetRole = notification.getTargetRole();
         this.createDate = notification.getCreateDate();
     }
 }

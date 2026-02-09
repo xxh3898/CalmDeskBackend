@@ -19,21 +19,22 @@ public class NotificationEventListener {
 
     @EventListener
     public void handleNotification(NotificationEvent event) {
-        // 1. DB 저장
+        // 1. DB 저장 (targetRole 필드 저장)
         Notification notification = Notification.builder()
                 .memberId(event.memberId())
                 .title(event.title())
                 .content(event.content())
-                .status("N") // DTO의 status 필드 대응
+                .targetRole(event.targetRole()) // ⭐ 추가
+                .status("N")
                 .build();
         notificationRepository.save(notification);
 
-        // 2. SSE 전송 (DTO 직접 생성)
-        // 리액트에서 'message'로 쓸 데이터를 'content' 필드에 담아 보냅니다.
+        // 2. SSE 전송 (프론트엔드에서 구분할 수 있게 targetRole 포함)
         NotificationResponseDto response = NotificationResponseDto.builder()
                 .id(notification.getId())
                 .title(notification.getTitle())
                 .content(notification.getContent())
+                .targetRole(notification.getTargetRole()) // ⭐ 추가
                 .status("N")
                 .createDate(LocalDateTime.now())
                 .build();
