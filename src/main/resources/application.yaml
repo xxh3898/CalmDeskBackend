@@ -1,6 +1,9 @@
 spring:
   application:
     name: calmDesk
+  ai:
+    google:
+      api-key: ${AIzaSyBbtJIUk_yz4rHKHs7IRlHQNljAkule1O0}
 
   config:
     import: optional:classpath:application-secret.yaml
