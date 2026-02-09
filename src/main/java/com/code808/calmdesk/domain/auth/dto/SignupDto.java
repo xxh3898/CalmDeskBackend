@@ -53,9 +53,11 @@ public class SignupDto {
         private Department department;
         private Rank rank;
         private boolean requiresCompanySetup;
-        private String token;
+        private String accessToken;
+        @Builder.Default
+        private String tokenType = "Bearer";
 
-        public static SignupResponse of(Member member, String token){
+        public static SignupResponse of(Member member, String accessToken){
             return SignupResponse.builder()
                     .memberId(member.getMemberId())
                     .email(member.getEmail())
@@ -65,7 +67,7 @@ public class SignupDto {
                     .active(member.getStatus())
 //                    .hireDate(member.getHireDate())
                     .requiresCompanySetup(true)
-                    .token(token)
+                    .accessToken(accessToken)
                     .build();
         }
     }

@@ -37,9 +37,11 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                                // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/companies/by-code/{company_code}").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/companies/genderate-code").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/companies/register").authenticated()
@@ -55,7 +57,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/admin/shop/items/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/dashboard/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/employee/dashboard/**").authenticated()
-                                .requestMatchers(HttpMethod.PATCH, "/api/admin/shop/**").authenticated() // 👈 PATCH 추가
+                                .requestMatchers(HttpMethod.PATCH, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/api/admin/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/employee/shop/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
@@ -63,9 +65,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/admin/mypage/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/admin/team/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/admin/team/**").authenticated()
-                        //                        .requestMatchers(HttpMethod.POST, "/**").permitAll()
-                        //                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
-                        .anyRequest().authenticated()
+//                                .requestMatchers(HttpMethod.POST, "/**").permitAll()
+//                                .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
