@@ -25,6 +25,7 @@ public class NotificationEventListener {
                 .title(event.title())
                 .content(event.content())
                 .targetRole(event.targetRole()) // ⭐ 추가
+                .redirectUrl(event.redirectUrl())
                 .status("N")
                 .build();
         notificationRepository.save(notification);
@@ -35,6 +36,7 @@ public class NotificationEventListener {
                 .title(notification.getTitle())
                 .content(notification.getContent())
                 .targetRole(notification.getTargetRole()) // ⭐ 추가
+                .redirectUrl(event.redirectUrl())
                 .status("N")
                 .createDate(LocalDateTime.now())
                 .build();

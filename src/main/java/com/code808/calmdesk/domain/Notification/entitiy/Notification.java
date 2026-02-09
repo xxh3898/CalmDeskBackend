@@ -28,6 +28,9 @@ public class Notification {
     @Column(name = "NOTIFICATION_CONTENT", length = 100, nullable = false)
     private String content;
 
+    @Column(name = "REDIRECTURL", length = 200)
+    private String redirectUrl;
+
     @Builder.Default // ⬅️ 빌더 사용 시에도 기본값 "N"이 유지되도록 설정
     @Column(name = "STATUS", length = 1)
     private String status = "N";

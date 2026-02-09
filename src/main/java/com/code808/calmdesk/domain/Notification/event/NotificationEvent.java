@@ -5,5 +5,6 @@ public record NotificationEvent(
         Long memberId,
         String title,
         String content,
-        String targetRole
-                                ) {}
+        String targetRole,
+        String redirectUrl
+            ) {}

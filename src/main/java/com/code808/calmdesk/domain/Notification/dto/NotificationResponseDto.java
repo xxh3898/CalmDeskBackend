@@ -16,6 +16,7 @@ public class NotificationResponseDto {
     private Long id;
     private String title;
     private String content;
+    private String redirectUrl;
     private String status;
     private String targetRole;
     private LocalDateTime createDate;
@@ -25,6 +26,7 @@ public class NotificationResponseDto {
         this.id = notification.getId();
         this.title = notification.getTitle();
         this.content = notification.getContent();
+        this.redirectUrl = notification.getRedirectUrl();
         this.status = notification.getStatus();
         this.targetRole = notification.getTargetRole();
         this.createDate = notification.getCreateDate();
