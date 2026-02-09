@@ -1,9 +1,15 @@
 spring:
   application:
     name: calmDesk
+
+  # Gemini API 키는 application-secret.yaml 에서만 설정
   ai:
     google:
-      api-key: ${AIzaSyBbtJIUk_yz4rHKHs7IRlHQNljAkule1O0}
+      genai:
+        chat:
+          options:
+            model: gemini-2.5-flash
+            temperature: 0.7
 
   config:
     import: optional:classpath:application-secret.yaml
