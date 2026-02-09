@@ -2,18 +2,27 @@ package com.code808.calmdesk.domain.auth.service;
 
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
+import com.code808.calmdesk.domain.auth.entity.RefreshToken;
+import com.code808.calmdesk.domain.auth.repository.RefreshTokenRepository;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
+import com.code808.calmdesk.global.exception.token.ExpiredTokenException;
+import com.code808.calmdesk.global.exception.token.TokenNotFoundException;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final AccountRepository accountRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -57,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public LoginDto.LoginResponse login(LoginDto.LoginRequest request){
+    public LoginDto.AuthContext login(LoginDto.LoginRequest request){
         Member member = memberRepository.findEmailWithDetails(request.getEmail())
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
@@ -75,12 +85,72 @@ public class AuthServiceImpl implements AuthService {
             ? member.getRole().name()
             : "TEMP";
 
-        String token = jwtTokenProvider.generateToken(
+        String accessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
                 role
         );
 
-        return LoginDto.LoginResponse.of(member, token);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(
+                member.getEmail()
+        );
+
+        createRefreshToken(member, refreshToken);
+
+        return new LoginDto.AuthContext(member, accessToken, refreshToken);
     }
 
+    private void createRefreshToken(Member member, String token ){
+        refreshTokenRepository.findByMember(member)
+                .ifPresent(refreshTokenRepository::delete);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(token)
+                .expiryDate(jwtTokenProvider.getRefreshTokenExpiryDate())
+                .member(member)
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
+    }
+
+//    @Transactional
+//    public void logout(String refreshToken){
+//        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+//                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
+//
+//        refreshTokenRepository.delete(token);
+//    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
+    }
+
+    public LoginDto.AuthContext refreshAccessToken(String refreshToken) {
+
+        Optional<Claims> claimsOpt = jwtTokenProvider.validateToken(refreshToken);
+        if(claimsOpt.isEmpty()){
+            throw new IllegalArgumentException("유효하지 않은 RefreshToken입니다.");
+        }
+
+        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(()-> new TokenNotFoundException("RefreshToken을 찾을 수 없습니다."));
+
+        if(storedToken.isExpired()){
+            refreshTokenRepository.delete(storedToken);
+            throw new ExpiredTokenException("만료된 RefreshToken입니다.");
+        }
+
+        Member member = memberRepository.findByEmail(storedToken.getMember().getEmail())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없는니다."));
+
+        String newAccessToken = jwtTokenProvider.generateToken(
+                member.getEmail(),
+                member.getRole().name()
+        );
+
+        return LoginDto.AuthContext.builder()
+                .accessToken(newAccessToken)
+                .build();
+    }
 }
