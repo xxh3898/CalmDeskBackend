@@ -1,9 +1,14 @@
 package com.code808.calmdesk.domain.chat.service;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
 import com.code808.calmdesk.domain.chat.dto.ChatResponse;
@@ -20,17 +25,27 @@ public class ChatServiceImpl implements ChatService {
             "Gemini API 무료 할당량을 초과했습니다. 잠시(약 1분) 후 다시 시도해 주세요. "
             + "지속되면 Google AI Studio(https://aistudio.google.com)에서 할당량·결제 설정을 확인해 주세요.";
 
-    private final GoogleGenAiChatModel chatModel;
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy년 M월 d일").withZone(ZoneId.of("Asia/Seoul"));
+
+    private final ChatModel chatModel;
 
     @Override
     public ChatResponse chat(String userMessage) {
         try {
-            // 모델이 오늘 날짜를 알 수 있도록 현재 시각(한국)을 프롬프트에 포함
-            String nowKorea = ZonedDateTime.now(java.time.ZoneId.of("Asia/Seoul"))
-                    .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 (E) HH:mm"));
-            String promptWithContext = "[참고: 현재 시각은 " + nowKorea + " 한국 시간입니다. 날짜·시간 관련 질문에는 이 시각을 기준으로 답변해 주세요.]\n\n" + userMessage;
+            String today = ZonedDateTime.now().format(DATE_FORMAT);
+            String systemPrompt = String.format("""
+                당신은 Calm Desk 업무용 챗봇입니다. 친절하고 간결하게 응답하세요.
+                오늘 날짜는 %s입니다. 이 정보는 참고용이며, 사용자가 날짜를 직접 물어보거나 스케줄·일정 관련 질문을 할 때만 답변에 날짜를 포함하세요.
+                일반적인 인사(예: 안녕, 안녕하세요, 하이 등)에는 날짜를 말하지 마세요.
+                """, today);
 
-            String reply = chatModel.call(promptWithContext);
+            Prompt prompt = new Prompt(List.of(
+                    new SystemMessage(systemPrompt),
+                    new UserMessage(userMessage)
+            ));
+            org.springframework.ai.chat.model.ChatResponse springResponse = chatModel.call(prompt);
+            String reply = springResponse.getResult().getOutput().getText();
             return ChatResponse.builder()
                     .reply(reply != null ? reply : "")
                     .build();

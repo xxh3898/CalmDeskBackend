@@ -1,0 +1,13 @@
+# 로컬 테스트용 - Ollama (Gemma 3 4B) 사용
+# 실행: ./gradlew bootRun --args='--spring.profiles.active=dev'
+# 또는 IDE에서 Active profiles: dev 설정
+spring:
+  ai:
+    model:
+      chat: ollama
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: gemma3:4b
+          temperature: 0.7
