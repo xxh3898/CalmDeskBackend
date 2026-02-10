@@ -3,10 +3,7 @@ package com.code808.calmdesk.domain.auth.controller;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.service.AuthService;
-import com.code808.calmdesk.domain.member.entity.Member;
-
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import jakarta.servlet.http.Cookie;
+import com.code808.calmdesk.global.security.JwtTokenProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
     private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/signup")
     public ResponseEntity<SignupDto.SignupResponse> signup(
@@ -52,7 +50,8 @@ public class AuthController {
     public ResponseEntity logout(
             @CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if(refreshToken != null) {
-            authService.logout(refreshToken);
+            String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+            authService.logout(email);
         }
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
