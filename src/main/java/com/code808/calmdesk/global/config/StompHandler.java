@@ -1,5 +1,7 @@
 package com.code808.calmdesk.global.config;
 
+import java.util.Collections;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
@@ -8,6 +10,8 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.code808.calmdesk.global.security.JwtTokenProvider;
@@ -45,6 +49,17 @@ public class StompHandler implements ChannelInterceptor {
             }
 
             log.info("STOMP 연결 승인: {}", token);
+
+            // Authentication 객체 생성 및 저장
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            String role = jwtTokenProvider.getRoleFromToken(token);
+
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+            UsernamePasswordAuthenticationToken authentication
+                    = new UsernamePasswordAuthenticationToken(email, null, Collections.singletonList(authority));
+
+            accessor.setUser(authentication);
         }
         return message;
     }

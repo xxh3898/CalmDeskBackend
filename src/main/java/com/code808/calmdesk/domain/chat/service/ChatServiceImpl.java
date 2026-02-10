@@ -1,5 +1,12 @@
 package com.code808.calmdesk.domain.chat.service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.chat.dto.ChatDto;
 import com.code808.calmdesk.domain.chat.entity.ChatMessage;
 import com.code808.calmdesk.domain.chat.entity.ChatRoom;
@@ -9,13 +16,8 @@ import com.code808.calmdesk.domain.chat.repository.ChatRoomMemberRepository;
 import com.code808.calmdesk.domain.chat.repository.ChatRoomRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -29,14 +31,15 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public String createOrGetChatRoom(Long myMemberId, Long targetMemberId) {
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findChatRoomByMemberIds(myMemberId, targetMemberId);
+    public String createOrGetChatRoom(String myEmail, Long targetMemberId) {
+        Member me = memberRepository.findByEmail(myEmail)
+                .orElseThrow(() -> new IllegalArgumentException("내 정보를 찾을 수 없습니다."));
+
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findChatRoomByMemberIds(me.getMemberId(), targetMemberId);
         if (existingRoom.isPresent()) {
             return existingRoom.get().getRoomId();
         }
 
-        Member me = memberRepository.findById(myMemberId)
-                .orElseThrow(() -> new IllegalArgumentException("내 정보를 찾을 수 없습니다."));
         Member target = memberRepository.findById(targetMemberId)
                 .orElseThrow(() -> new IllegalArgumentException("상대방 정보를 찾을 수 없습니다."));
 

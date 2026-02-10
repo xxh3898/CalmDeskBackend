@@ -7,7 +7,7 @@ import com.code808.calmdesk.domain.chat.entity.ChatMessage;
 
 public interface ChatService {
 
-    String createOrGetChatRoom(Long myMemberId, Long targetMemberId);
+    String createOrGetChatRoom(String myEmail, Long targetMemberId);
 
     List<ChatDto.ChatRoomRes> getMyChatRooms(String email);
 
