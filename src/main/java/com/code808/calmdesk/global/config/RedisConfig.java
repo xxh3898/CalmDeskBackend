@@ -31,7 +31,6 @@ public class RedisConfig {
 
     @Bean
     public StringRedisTemplate redisTemplate(RedisConnectionFactory connectionFactory) {
-        // StringRedisTemplate은 내부적으로 StringSerializer가 이미 설정되어 있습니다.
         return new StringRedisTemplate(connectionFactory);
     }
 }
