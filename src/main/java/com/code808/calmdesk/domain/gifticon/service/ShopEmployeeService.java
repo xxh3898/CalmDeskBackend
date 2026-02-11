@@ -12,8 +12,11 @@ import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
+
 
 import java.time.LocalDate;
 import java.util.List; // 추가 필수
@@ -265,13 +268,14 @@ public class ShopEmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<PurchaseHistoryResponse> getAllPurchaseHistory(Long companyId) {
-        // 1. 해당 회사(companyId)의 기프티콘 구매 내역('GIFTICON')만 최신순으로 조회
-        List<PointHistory> historyList = pointHistoryRepository
-                .findByMember_Company_CompanyIdAndSourceTypeOrderByCreateDateDesc(companyId, "GIFTICON");
+    public Page<PurchaseHistoryResponse> getAllPurchaseHistory(Long companyId, Pageable pageable) {
+        // 1. 해당 회사의 기프티콘 구매 내역을 페이징하여 조회
+        // (정렬은 컨트롤러에서 넘어온 pageable 설정을 따르거나 Repository 메서드명에서 처리 가능합니다)
+        Page<PointHistory> historyPage = pointHistoryRepository
+                .findByMember_Company_CompanyIdAndSourceType(companyId, "GIFTICON", pageable);
 
-        // 2. Entity -> DTO 변환
-        return historyList.stream().map(history -> PurchaseHistoryResponse.builder()
+        // 2. Entity -> DTO 변환 (Page 객체 내부의 데이터를 변환)
+        return historyPage.map(history -> PurchaseHistoryResponse.builder()
                 .id(history.getId())
                 .userName(history.getMember().getName())
                 .itemName(history.getGifticon().getGifticonName())
@@ -279,6 +283,6 @@ public class ShopEmployeeService {
                 .itemImg(history.getGifticon().getImage())
                 .purchaseDate(history.getCreateDate())
                 .build()
-        ).collect(Collectors.toList());
+        );
     }
 }
