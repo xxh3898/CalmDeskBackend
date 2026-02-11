@@ -29,10 +29,11 @@ public class StompHandler implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        StompHeaderAccessor accessor = org.springframework.messaging.support.MessageHeaderAccessor
+                .getAccessor(message, StompHeaderAccessor.class);
 
         // CONNECT 명령일 때만 토큰 검증
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
 
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {

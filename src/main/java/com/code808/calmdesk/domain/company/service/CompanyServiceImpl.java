@@ -1,24 +1,25 @@
 package com.code808.calmdesk.domain.company.service;
 
-import com.code808.calmdesk.domain.company.dto.CompanyDto;
-import com.code808.calmdesk.domain.company.repository.CompanyRepository;
-import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
-import com.code808.calmdesk.domain.member.entity.Rank;
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import com.code808.calmdesk.domain.company.repository.RankRepository;
-import com.code808.calmdesk.domain.company.entity.Company;
-import com.code808.calmdesk.domain.company.entity.Department;
-import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.common.enums.CommonEnums;
-import com.code808.calmdesk.global.security.JwtTokenProvider;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Arrays;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.company.dto.CompanyDto;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.company.repository.CompanyRepository;
+import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
+import com.code808.calmdesk.domain.company.repository.RankRepository;
+import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.entity.Rank;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.global.security.JwtTokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public CompanyDto.CodeResponse generateCode(){
+    public CompanyDto.CodeResponse generateCode() {
         String code = codeGenerator.generateUniqueCode();
         return CompanyDto.CodeResponse.of(code);
     }
@@ -42,12 +43,12 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public CompanyDto.RegisterResponse register(
             CompanyDto.RegisterRequest request,
-            String email){
+            String email) {
 
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));
 
-        if(member.getCompany() != null){
+        if (member.getCompany() != null) {
             throw new RuntimeException("이미 회사에 속해있습니다.");
         }
 
@@ -82,16 +83,19 @@ public class CompanyServiceImpl implements CompanyService {
 
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "ADMIN"
+                "ADMIN",
+                member.getMemberId(),
+                member.getName(),
+                savedDept.getDepartmentName()
         );
 
         return CompanyDto.RegisterResponse.of(savedCompany, member, token);
     }
 
     @Override
-    public CompanyDto.CheckResponse getByCode(String CompanyCode){
+    public CompanyDto.CheckResponse getByCode(String CompanyCode) {
         Company company = companyRepository.findByCompanyCode(CompanyCode)
-                .orElseThrow(()-> new RuntimeException("존재하지 않는 회사 코드입니다."));
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 회사 코드입니다."));
 
         List<Department> departments = departmentRepository.findByCompany(company);
         List<Rank> ranks = rankRepository.findAll();
@@ -103,11 +107,11 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public CompanyDto.JoinResponse join(
             CompanyDto.JoinRequest request,
-            String email){
+            String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(()-> new RuntimeException("회원을 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
 
-        if(member.getCompany() != null){
+        if (member.getCompany() != null) {
             throw new RuntimeException("이미 회사에 속해있습니다");
         }
 
@@ -135,7 +139,10 @@ public class CompanyServiceImpl implements CompanyService {
 
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "EMPLOYEE"
+                "EMPLOYEE",
+                member.getMemberId(),
+                member.getName(),
+                department.getDepartmentName()
         );
 
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
@@ -146,9 +153,9 @@ public class CompanyServiceImpl implements CompanyService {
         companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다."));
         return memberRepository.findByCompany_CompanyIdAndStatusInWithDetails(
-                        companyId,
-                        Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R)
-                ).stream()
+                companyId,
+                Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R)
+        ).stream()
                 .map(CompanyDto.JoinListItemRes::of)
                 .toList();
     }
@@ -169,7 +176,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (member.getStatus() != CommonEnums.Status.N) {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
-        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(),  LocalDate.now(), CommonEnums.Status.Y);
+        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(), LocalDate.now(), CommonEnums.Status.Y);
         memberRepository.save(member);
     }
 

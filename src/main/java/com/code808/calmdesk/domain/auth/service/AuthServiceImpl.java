@@ -1,5 +1,11 @@
 package com.code808.calmdesk.domain.auth.service;
 
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
 import com.code808.calmdesk.domain.auth.entity.RefreshToken;
@@ -9,19 +15,12 @@ import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
-
 import com.code808.calmdesk.global.exception.token.ExpiredTokenException;
 import com.code808.calmdesk.global.exception.token.TokenNotFoundException;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
+
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +58,10 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
-                "TEMP"
+                "TEMP",
+                savedMember.getMemberId(),
+                savedMember.getName(),
+                null
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
@@ -86,7 +88,10 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                role
+                role,
+                member.getMemberId(),
+                member.getName(),
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(
@@ -137,7 +142,10 @@ public class AuthServiceImpl implements AuthService {
 
         String newAccessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                member.getRole().name()
+                member.getRole().name(),
+                member.getMemberId(),
+                member.getName(),
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
         );
 
         return LoginDto.AuthContext.builder()
