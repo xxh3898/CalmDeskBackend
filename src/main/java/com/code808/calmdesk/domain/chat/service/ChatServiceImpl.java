@@ -29,16 +29,27 @@ public class ChatServiceImpl implements ChatService {
             DateTimeFormatter.ofPattern("yyyy년 M월 d일").withZone(ZoneId.of("Asia/Seoul"));
 
     private final ChatModel chatModel;
+    private final ChatContextService chatContextService;
 
     @Override
-    public ChatResponse chat(String userMessage) {
+    public ChatResponse chat(String userMessage, Long memberId) {
         try {
             String today = ZonedDateTime.now().format(DATE_FORMAT);
-            String systemPrompt = String.format("""
+            StringBuilder systemPromptBuilder = new StringBuilder();
+            systemPromptBuilder.append(String.format("""
                 당신은 Calm Desk 업무용 챗봇입니다. 친절하고 간결하게 응답하세요.
                 오늘 날짜는 %s입니다. 이 정보는 참고용이며, 사용자가 날짜를 직접 물어보거나 스케줄·일정 관련 질문을 할 때만 답변에 날짜를 포함하세요.
                 일반적인 인사(예: 안녕, 안녕하세요, 하이 등)에는 날짜를 말하지 마세요.
-                """, today);
+                """, today));
+
+            if (memberId != null) {
+                String dbContext = chatContextService.buildContextForMember(memberId);
+                if (!dbContext.isEmpty()) {
+                    systemPromptBuilder.append(dbContext);
+                }
+            }
+
+            String systemPrompt = systemPromptBuilder.toString();
 
             Prompt prompt = new Prompt(List.of(
                     new SystemMessage(systemPrompt),

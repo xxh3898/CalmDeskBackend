@@ -1,16 +1,17 @@
 package com.code808.calmdesk.domain.chat.controller;
 
+import java.security.Principal;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.code808.calmdesk.domain.chat.dto.ChatRequest;
 import com.code808.calmdesk.domain.chat.dto.ChatResponse;
 import com.code808.calmdesk.domain.chat.service.ChatService;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.dto.ApiResponse;
 
 import jakarta.validation.Valid;
@@ -22,25 +23,31 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
 
     private final ChatService chatService;
-
-    /**
-     * GET 테스트용: 브라우저/Postman에서 ?message=안녕 으로 호출
-     * 예: GET http://localhost:8080/api/chat?message=안녕
-     */
-    @GetMapping
-    public ResponseEntity<ApiResponse<ChatResponse>> chat(
-            @RequestParam(value = "message", defaultValue = "Hello") String message) {
-        ChatResponse response = chatService.chat(message);
-        return ResponseEntity.ok(ApiResponse.success("챗봇 응답", response));
-    }
+    private final MemberRepository memberRepository;
 
     /**
      * POST: 프론트 챗봇 창에서 사용
      * Body: { "message": "사용자 입력" }
+     * 로그인한 상태에서 호출 시 연차, 출근, 스트레스, 포인트 등 내 DB 데이터를 반영한 답변을 받습니다.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<ChatResponse>> chatPost(@Valid @RequestBody ChatRequest request) {
-        ChatResponse response = chatService.chat(request.getMessage());
+    public ResponseEntity<ApiResponse<ChatResponse>> chatPost(
+            @Valid @RequestBody ChatRequest request,
+            Principal principal) {
+        Long memberId = resolveMemberId(principal);
+        ChatResponse response = chatService.chat(request.getMessage(), memberId);
         return ResponseEntity.ok(ApiResponse.success("챗봇 응답", response));
+    }
+
+    /**
+     * 로그인한 사용자면 memberId, 아니면 null 반환 (채팅은 permitAll이므로 비로그인도 가능)
+     */
+    private Long resolveMemberId(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            return null;
+        }
+        return memberRepository.findByEmail(principal.getName())
+                .map(m -> m.getMemberId())
+                .orElse(null);
     }
 }
