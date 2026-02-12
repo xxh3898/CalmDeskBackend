@@ -36,6 +36,13 @@ public class ChatRoomMember extends BaseTimeEntity {
     @Column(name = "room_name_alias")
     private String roomNameAlias; // 개인별 채팅방 이름 설정
 
+    @Column(name = "last_read_message_id")
+    private Long lastReadMessageId;
+
+    public void updateLastReadMessageId(Long lastReadMessageId) {
+        this.lastReadMessageId = lastReadMessageId;
+    }
+
     @Builder
     public ChatRoomMember(ChatRoom chatRoom, Member member, String roomNameAlias) {
         this.chatRoom = chatRoom;

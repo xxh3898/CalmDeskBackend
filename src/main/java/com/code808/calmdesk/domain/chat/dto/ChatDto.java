@@ -58,6 +58,22 @@ public class ChatDto {
     }
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatMessageEditReq {
+
+        private String content;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatReadReq {
+
+        private Long lastReadMessageId;
+    }
+
+    @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -68,14 +84,30 @@ public class ChatDto {
         private Long senderId;
         private String content;
         private LocalDateTime createdDate;
+        private boolean isDeleted;
+        private int unreadCount;
 
         public static ChatMessageRes from(ChatMessage message) {
             return ChatMessageRes.builder()
                     .id(message.getId())
                     .senderName(message.getSender().getName())
                     .senderId(message.getSender().getMemberId())
-                    .content(message.getContent())
+                    .content(message.isDeleted() ? "삭제된 메시지입니다." : message.getContent())
                     .createdDate(message.getCreatedDate())
+                    .isDeleted(message.isDeleted())
+                    .unreadCount(0) // 기본값 0, 서비스에서 별도 계산 필요 시 설정
+                    .build();
+        }
+
+        public static ChatMessageRes from(ChatMessage message, int unreadCount) {
+            return ChatMessageRes.builder()
+                    .id(message.getId())
+                    .senderName(message.getSender().getName())
+                    .senderId(message.getSender().getMemberId())
+                    .content(message.isDeleted() ? "삭제된 메시지입니다." : message.getContent())
+                    .createdDate(message.getCreatedDate())
+                    .isDeleted(message.isDeleted())
+                    .unreadCount(unreadCount)
                     .build();
         }
     }

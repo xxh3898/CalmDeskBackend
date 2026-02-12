@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.code808.calmdesk.domain.chat.dto.ChatDto;
-import com.code808.calmdesk.domain.chat.entity.ChatMessage;
 import com.code808.calmdesk.domain.chat.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,11 +33,9 @@ public class ChatController {
     public void sendMessage(ChatDto.ChatMessageReq message, Principal principal) {
         // 메시지 저장
         String senderEmail = principal.getName();
-        ChatMessage savedMessage = chatService.saveMessage(message, senderEmail);
+        ChatDto.ChatMessageRes response = chatService.saveMessage(message, senderEmail);
 
-        // 응답 DTO 변환
-        ChatDto.ChatMessageRes response = ChatDto.ChatMessageRes.from(savedMessage);
-
+        // 응답 DTO 변환 (이미 서비스에서 변환됨)
         // 구독자에게 전송 (/sub/chat/room/{roomId})
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), response);
     }
@@ -68,5 +65,35 @@ public class ChatController {
     @GetMapping("/api/chat/history/{roomId}")
     public ResponseEntity<List<ChatDto.ChatMessageRes>> getChatHistory(@PathVariable("roomId") String roomId) {
         return ResponseEntity.ok(chatService.getChatHistory(roomId));
+    }
+
+    /**
+     * 메시지 수정
+     */
+    @PostMapping("/api/chat/message/{messageId}/edit") // PUT method equivalent or explicit PUT
+    public ResponseEntity<ChatDto.ChatMessageRes> editMessage(@PathVariable("messageId") Long messageId,
+            @RequestBody ChatDto.ChatMessageEditReq request,
+            Principal principal) {
+        return ResponseEntity.ok(ChatDto.ChatMessageRes.from(chatService.editMessage(messageId, request, principal.getName())));
+    }
+
+    /**
+     * 메시지 삭제
+     */
+    @PostMapping("/api/chat/message/{messageId}/delete") // Using POST for delete if needed, or DELETE
+    public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") Long messageId, Principal principal) {
+        chatService.deleteMessage(messageId, principal.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 읽음 처리
+     */
+    @PostMapping("/api/chat/room/{roomId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable("roomId") String roomId,
+            @RequestBody ChatDto.ChatReadReq request,
+            Principal principal) {
+        chatService.markAsRead(roomId, principal.getName(), request.getLastReadMessageId());
+        return ResponseEntity.ok().build();
     }
 }

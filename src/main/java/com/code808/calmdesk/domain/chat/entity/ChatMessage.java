@@ -1,5 +1,7 @@
 package com.code808.calmdesk.domain.chat.entity;
 
+import java.time.LocalDateTime;
+
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.member.entity.Member;
 
@@ -35,6 +37,20 @@ public class ChatMessage extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    private boolean isDeleted;
+
+    private LocalDateTime deletedDate;
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
+        this.deletedDate = LocalDateTime.now();
+    }
 
     @Builder
     public ChatMessage(ChatRoom chatRoom, Member sender, String content) {

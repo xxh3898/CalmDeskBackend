@@ -11,7 +11,13 @@ public interface ChatService {
 
     List<ChatDto.ChatRoomRes> getMyChatRooms(String email);
 
-    ChatMessage saveMessage(ChatDto.ChatMessageReq request, String senderEmail);
+    ChatDto.ChatMessageRes saveMessage(ChatDto.ChatMessageReq request, String senderEmail);
 
     List<ChatDto.ChatMessageRes> getChatHistory(String roomId);
+
+    ChatMessage editMessage(Long messageId, ChatDto.ChatMessageEditReq request, String email);
+
+    void deleteMessage(Long messageId, String email);
+
+    void markAsRead(String roomId, String email, Long lastReadMessageId);
 }
