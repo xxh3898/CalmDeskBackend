@@ -9,4 +9,6 @@ import com.code808.calmdesk.domain.chat.entity.ChatMessage;
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
     List<ChatMessage> findByChatRoomIdOrderByCreatedDateAsc(Long chatRoomId);
+
+    int countByChatRoomIdAndIdGreaterThan(Long chatRoomId, Long id);
 }

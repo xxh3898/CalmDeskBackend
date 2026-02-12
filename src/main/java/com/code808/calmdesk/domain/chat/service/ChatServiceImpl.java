@@ -87,8 +87,15 @@ public class ChatServiceImpl implements ChatService {
                 lastMsg = last.isDeleted() ? "삭제된 메시지입니다." : last.getContent();
             }
 
+            int unreadCount = 0;
+            if (myRoomMember.getLastReadMessageId() != null) {
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), myRoomMember.getLastReadMessageId());
+            } else {
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), 0L);
+            }
+
             return ChatDto.ChatRoomRes.from(room, myRoomMember.getRoomNameAlias(), lastMsg,
-                    messages.isEmpty() ? room.getCreatedDate() : messages.get(messages.size() - 1).getCreatedDate());
+                    messages.isEmpty() ? room.getCreatedDate() : messages.get(messages.size() - 1).getCreatedDate(), unreadCount);
         }).collect(Collectors.toList());
     }
 
@@ -118,11 +125,17 @@ public class ChatServiceImpl implements ChatService {
 
         myMember.updateLastReadMessageId(savedMessage.getId());
 
-        // 안 읽은 사람 수 계산: 전체 인원 - 1 (보낸 사람은 읽었으므로)
-        // 1:1 채팅방이면 2 - 1 = 1
         int unreadCount = members.size() - 1;
 
-        return ChatDto.ChatMessageRes.from(savedMessage, unreadCount);
+        ChatDto.ChatMessageRes response = ChatDto.ChatMessageRes.from(savedMessage, unreadCount);
+
+        messagingTemplate.convertAndSend("/sub/chat/room/" + room.getRoomId(), response);
+
+        for (ChatRoomMember member : members) {
+            messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
+        }
+
+        return response;
     }
 
     @Override

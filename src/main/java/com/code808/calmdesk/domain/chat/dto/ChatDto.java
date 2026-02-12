@@ -34,9 +34,10 @@ public class ChatDto {
         private String targetMemberName; // 상대방 이름 (1:1 채팅인 경우)
         private LocalDateTime lastMessageTime;
         private String lastMessageContent;
+        private int unreadCount;
 
         // Entity -> DTO 변환
-        public static ChatRoomRes from(ChatRoom chatRoom, String targetMemberName, String lastMessageContent, LocalDateTime lastMessageTime) {
+        public static ChatRoomRes from(ChatRoom chatRoom, String targetMemberName, String lastMessageContent, LocalDateTime lastMessageTime, int unreadCount) {
             return ChatRoomRes.builder()
                     .id(chatRoom.getId())
                     .roomId(chatRoom.getRoomId())
@@ -44,6 +45,7 @@ public class ChatDto {
                     .targetMemberName(targetMemberName)
                     .lastMessageContent(lastMessageContent)
                     .lastMessageTime(lastMessageTime)
+                    .unreadCount(unreadCount)
                     .build();
         }
     }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatController {
 
     private final ChatService chatService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * WebSocket 메시지 전송 클라이언트가 /pub/chat/message 로 보내면 동작
@@ -34,10 +32,6 @@ public class ChatController {
         // 메시지 저장
         String senderEmail = principal.getName();
         ChatDto.ChatMessageRes response = chatService.saveMessage(message, senderEmail);
-
-        // 응답 DTO 변환 (이미 서비스에서 변환됨)
-        // 구독자에게 전송 (/sub/chat/room/{roomId})
-        messagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), response);
     }
 
     /**
