@@ -30,11 +30,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = getJwtFromRequest(request);
 
             if (StringUtils.hasText(token)) {
                 Optional<Claims> claimsOpt = jwtTokenProvider.validateToken(token);
+
+                if (claimsOpt.isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401!
+                    response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                    return;
+                }
 
                 if (claimsOpt.isPresent()) {
                     String email = jwtTokenProvider.getEmailFromToken(token);
@@ -73,4 +84,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         return null;
     }
+
 }
