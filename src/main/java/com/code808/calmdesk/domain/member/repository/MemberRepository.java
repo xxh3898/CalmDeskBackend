@@ -57,6 +57,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT m.company.companyId FROM MEMBER m WHERE m.email = :email")
     Optional<Long> findCompanyIdByEmail(@Param("email") String email);
 
+    long countByCompany_CompanyId(Long companyId);
+
+    long countByCompany_CompanyIdAndJoinDateBefore(Long companyId, java.time.LocalDate date);
+
     // MemberRepository.java
     List<Member> findAllByCompany_CompanyIdAndRole(Long companyId, Member.Role role);
 

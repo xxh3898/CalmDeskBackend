@@ -37,29 +37,45 @@ public class LoginDto {
         private String name;
         private String phone;
         private Member.Role role;
+        private Long companyId;
         private CommonEnums.Status joinStatus;
         private String companyName;
         private String departmentName;
         private String rankName;
         private String companyCode;
-        private String token;
         private Long departmentId;
+        private String accessToken;
+//        private String refreshToken;
+        @Builder.Default
+        private String tokenType = "Bearer";
 
-        public static LoginResponse of(Member member, String token) {
+        public static LoginResponse of(Member member, String accessToken) {
             return LoginResponse.builder()
                     .memberId(member.getMemberId())
                     .email(member.getEmail())
                     .name(member.getName())
                     .phone(member.getPhone())
                     .role(member.getRole())
+                    .companyId(member.getCompany() != null ? member.getCompany().getCompanyId() : null) // ✨ 핵심!
                     .joinStatus(member.getStatus())
                     .companyCode(member.getCompany().getCompanyCode())
                     .companyName(member.getCompany().getCompanyName())
                     .departmentName(member.getDepartment().getDepartmentName())
                     .departmentId(member.getDepartment().getDepartmentId())
                     .rankName(member.getRank().getRankName())
-                    .token(token)
+                    .accessToken(accessToken)
                     .build();
         }
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class AuthContext{
+        private Member member;
+        private String accessToken;
+        private String refreshToken;
+    }
+
 }

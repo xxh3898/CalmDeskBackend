@@ -16,13 +16,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminMonitoringController {
 
+    private final com.code808.calmdesk.domain.member.repository.MemberRepository memberRepository;
     private final AdminMonitoringService adminMonitoringService;
 
     @GetMapping
     public ResponseEntity<MonitoringDto> getMonitoringData(
             @RequestParam(required = false, defaultValue = "current") String period,
-            @RequestParam(required = false) Integer year
+            @RequestParam(required = false) Integer year,
+            java.security.Principal principal
     ) {
-        return ResponseEntity.ok(adminMonitoringService.getMonitoringData(period, year));
+        Long companyId = memberRepository.findCompanyIdByEmail(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+        return ResponseEntity.ok(adminMonitoringService.getMonitoringData(period, year, companyId));
     }
 }

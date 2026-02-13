@@ -34,7 +34,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     private final StressFactorRepository stressFactorRepository;
 
     @Override
-    public MonitoringDto getMonitoringData(String period, Integer year) {
+    public MonitoringDto getMonitoringData(String period, Integer year, Long companyId) {
         // 1. 기준 연도 설정
         int targetYear = (year != null) ? year : LocalDate.now().getYear();
         LocalDate now = LocalDate.now();
@@ -81,19 +81,19 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         LocalDateTime endDateTime = endOfPeriod.atTime(LocalTime.MAX);
 
         // 1. 통계
-        MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter);
+        MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter, companyId);
 
         // 2. 추세
-        List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, isQuarter);
+        List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, isQuarter, companyId);
 
         // 3. 분포
-        List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfPeriod, endOfPeriod);
+        List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfPeriod, endOfPeriod, companyId);
 
         // 4. 부서별 비교
-        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfPeriod, endOfPeriod);
+        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfPeriod, endOfPeriod, companyId);
 
         // 5. 주요 요인
-        List<MonitoringDto.Factor> factors = calculateFactors(startOfPeriod, endOfPeriod);
+        List<MonitoringDto.Factor> factors = calculateFactors(startOfPeriod, endOfPeriod, companyId);
 
         return MonitoringDto.builder()
                 .stats(stats)
@@ -104,11 +104,11 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT, LocalDateTime endDT, boolean isQuarter) {
-        long totalMembers = memberRepository.count();
+    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT, LocalDateTime endDT, boolean isQuarter, Long companyId) {
+        long totalMembers = memberRepository.countByCompany_CompanyId(companyId);
 
         // 평균 스트레스
-        Double avgStressVal = stressSummaryRepository.findAvgStressByDateRange(start, end);
+        Double avgStressVal = stressSummaryRepository.findAvgStressByDateRangeAndCompany(start, end, companyId);
         double currentStress = avgStressVal != null ? MonitoringDto.convertScore(avgStressVal) : 0.0;
 
         // 추세 비교를 위한 이전 기간 데이터
@@ -117,29 +117,29 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         LocalDate prevStart = start.minusMonths(minusMonths);
         LocalDate prevEnd = end.minusMonths(minusMonths);
 
-        Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRange(prevStart, prevEnd);
+        Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRangeAndCompany(prevStart, prevEnd, companyId);
         double prevStress = prevAvrStressVal != null ? MonitoringDto.convertScore(prevAvrStressVal) : 0.0;
         double stressDiff = currentStress - prevStress;
 
         // 고위험군 수 (최적화: COUNT 쿼리 직접 호출)
-        long highRiskCount = stressSummaryRepository.countHighRisk(start, end);
-        long prevHighRiskCount = stressSummaryRepository.countHighRisk(prevStart, prevEnd);
+        long highRiskCount = stressSummaryRepository.countHighRiskByCompany(start, end, companyId);
+        long prevHighRiskCount = stressSummaryRepository.countHighRiskByCompany(prevStart, prevEnd, companyId);
         long riskDiff = highRiskCount - prevHighRiskCount;
 
         // 쿨다운 횟수
-        long cooldownCount = coolDownRepository.countByCreatedDateBetween(startDT, endDT);
+        long cooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT, endDT, companyId);
         double avgCooldown = totalMembers > 0 ? (double) cooldownCount / totalMembers : 0;
-        long prevCooldownCount = coolDownRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
+        long prevCooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
         double prevAvgCooldown = totalMembers > 0 ? (double) prevCooldownCount / totalMembers : 0;
         double cooldownDiff = avgCooldown - prevAvgCooldown;
         // 상담 신청 건수
-        long consultationCount = consultationRepository.countByCreatedDateBetween(startDT, endDT);
-        long prevConsultationCount = consultationRepository.countByCreatedDateBetween(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX));
+        long consultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT, endDT, companyId);
+        long prevConsultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
         long consultDiff = consultationCount - prevConsultationCount;
 
         // 직원 수 변동 추이 (전월 말 대비 실시간 증감)
         LocalDate startOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
-        long membersAtStartOfCurrentMonth = memberRepository.countByJoinDateBefore(startOfCurrentMonth);
+        long membersAtStartOfCurrentMonth = memberRepository.countByCompany_CompanyIdAndJoinDateBefore(companyId, startOfCurrentMonth);
         long employeeDiff = totalMembers - membersAtStartOfCurrentMonth;
 
         return MonitoringDto.Stats.builder()
@@ -156,7 +156,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, boolean isQuarter) {
+    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, boolean isQuarter, Long companyId) {
         List<MonitoringDto.Trend> list = new ArrayList<>();
 
         if (isQuarter) {
@@ -165,9 +165,9 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 LocalDate start = startOfPeriod.plusMonths(i).withDayOfMonth(1);
                 LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-                Double stress = stressSummaryRepository.findAvgStressByDateRange(start, end);
-                long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
-                long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+                Double stress = stressSummaryRepository.findAvgStressByDateRangeAndCompany(start, end, companyId);
+                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
 
                 list.add(MonitoringDto.Trend.of(
                         start.getMonthValue() + "월",
@@ -184,9 +184,9 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 LocalDate start = date.withDayOfMonth(1);
                 LocalDate end = date.withDayOfMonth(date.lengthOfMonth());
 
-                Double stress = stressSummaryRepository.findAvgStressByDateRange(start, end);
-                long consult = consultationRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
-                long cooldown = coolDownRepository.countByCreatedDateBetween(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+                Double stress = stressSummaryRepository.findAvgStressByDateRangeAndCompany(start, end, companyId);
+                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
 
                 list.add(MonitoringDto.Trend.of(
                         date.getMonthValue() + "월",
@@ -199,11 +199,11 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         return list;
     }
 
-    private List<MonitoringDto.Distribution> calculateDistribution(LocalDate start, LocalDate end) {
+    private List<MonitoringDto.Distribution> calculateDistribution(LocalDate start, LocalDate end, Long companyId) {
         // 최적화: 전체 리스트 조회 대신 COUNT 쿼리 사용
-        long risk = stressSummaryRepository.countHighRisk(start, end);
-        long caution = stressSummaryRepository.countCaution(start, end);
-        long normal = stressSummaryRepository.countNormal(start, end);
+        long risk = stressSummaryRepository.countHighRiskByCompany(start, end, companyId);
+        long caution = stressSummaryRepository.countCautionByCompany(start, end, companyId);
+        long normal = stressSummaryRepository.countNormalByCompany(start, end, companyId);
 
         if (risk == 0 && caution == 0 && normal == 0) {
             return List.of(
@@ -221,12 +221,12 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         );
     }
 
-    private List<MonitoringDto.DeptComparison> calculateDeptComparison(LocalDate start, LocalDate end) {
+    private List<MonitoringDto.DeptComparison> calculateDeptComparison(LocalDate start, LocalDate end, Long companyId) {
         // 1. 부서별 통계 데이터 한 번에 조회 (GROUP BY로 N+1 문제 해결)
-        List<Object[]> results = stressSummaryRepository.findDeptStats(start, end);
+        List<Object[]> results = stressSummaryRepository.findDeptStatsByCompany(start, end, companyId);
 
         // 2. 모든 부서 목록 조회 (통계 데이터가 없는 부서도 목록에 표시하기 위함)
-        List<Department> allDepts = departmentRepository.findAll();
+        List<Department> allDepts = departmentRepository.findByCompany_CompanyId(companyId);
         List<MonitoringDto.DeptComparison> list = new ArrayList<>();
 
         for (Department dept : allDepts) {
@@ -236,8 +236,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                     .findFirst()
                     .orElse(null);
 
-            Double avg = stat != null ? (Double) stat[1] : 0.0;
-            Long highRiskObj = stat != null ? (Long) stat[2] : 0L;
+            Double avg = (stat != null && stat[1] != null) ? (Double) stat[1] : 0.0;
+            Long highRiskObj = (stat != null && stat[2] != null) ? (Long) stat[2] : 0L;
             int highRisk = highRiskObj.intValue();
 
             list.add(MonitoringDto.DeptComparison.of(
@@ -250,9 +250,9 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         return list;
     }
 
-    private List<MonitoringDto.Factor> calculateFactors(LocalDate start, LocalDate end) {
+    private List<MonitoringDto.Factor> calculateFactors(LocalDate start, LocalDate end, Long companyId) {
         // StressFactorRepository는 LocalDateTime을 사용하므로 변환 필요
-        List<Object[]> results = stressFactorRepository.findTopStressFactors(start.atStartOfDay(), end.atTime(LocalTime.MAX));
+        List<Object[]> results = stressFactorRepository.findTopStressFactorsByCompany(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
 
         // 상위 4개 요인 추출
         return results.stream().limit(4).map(obj -> {

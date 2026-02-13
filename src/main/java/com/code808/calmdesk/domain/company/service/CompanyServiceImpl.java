@@ -83,8 +83,8 @@ public class CompanyServiceImpl implements CompanyService {
         // ✨ 수정: savedCompany에서 ID를 가져와 세 번째 인자로 전달
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "ADMIN",
-                savedCompany.getCompanyId()
+                "ADMIN"
+
         );
 
         return CompanyDto.RegisterResponse.of(savedCompany, member, token);
@@ -138,8 +138,8 @@ public class CompanyServiceImpl implements CompanyService {
         // ✨ 수정: 조회한 company에서 ID를 가져와 세 번째 인자로 전달
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                "EMPLOYEE",
-                company.getCompanyId()
+                "EMPLOYEE"
+
         );
 
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
