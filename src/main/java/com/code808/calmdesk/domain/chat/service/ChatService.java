@@ -20,4 +20,8 @@ public interface ChatService {
     void deleteMessage(Long messageId, String email);
 
     void markAsRead(String roomId, String email, Long lastReadMessageId);
+
+    List<ChatDto.ChatMemberRes> getCompanyMembers(String email);
+
+    String createChatRoom(String myEmail, List<Long> targetMemberIds);
 }

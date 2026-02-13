@@ -19,7 +19,9 @@ import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -87,7 +89,7 @@ public class ChatServiceImpl implements ChatService {
                 lastMsg = last.isDeleted() ? "삭제된 메시지입니다." : last.getContent();
             }
 
-            int unreadCount = 0;
+            int unreadCount;
             if (myRoomMember.getLastReadMessageId() != null) {
                 unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), myRoomMember.getLastReadMessageId());
             } else {
@@ -183,21 +185,31 @@ public class ChatServiceImpl implements ChatService {
         Member me = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
 
-        ChatRoomMember myMember = chatRoomMemberRepository.findByChatRoomIdAndMemberMemberId(room.getId(), me.getMemberId())
+        ChatRoomMember myMember = chatRoomMemberRepository.findByChatRoomIdAndMemberMemberIdWithLock(room.getId(), me.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("참여자 정보를 찾을 수 없습니다."));
 
-        // 기존 읽은 ID보다 작으면 업데이트 안 함
-        if (myMember.getLastReadMessageId() != null && myMember.getLastReadMessageId() >= lastReadMessageId) {
+        if (lastReadMessageId == null) {
             return;
         }
 
+        // 기존 읽은 ID보다 작으면 업데이트 안 함
+        Long currentLastReadId = myMember.getLastReadMessageId();
+        Long previousId = currentLastReadId == null ? 0L : currentLastReadId;
+        if (previousId >= lastReadMessageId) {
+            return;
+        }
+
+        log.info("[markAsRead] User: {}, Room: {}, LastRead: {}, Prev: {}", email, roomId, lastReadMessageId, previousId);
+
         myMember.updateLastReadMessageId(lastReadMessageId);
 
+        chatRoomMemberRepository.saveAndFlush(myMember); // 강제 플러시
+
         // [실시간 읽음 처리]
-        // 클라이언트에게 읽음 이벤트를 전송하여, 해당 lastReadMessageId까지의 
+        // 클라이언트에게 읽음 이벤트를 전송하여, 해당 범위(previousId < id <= lastReadMessageId)의
         // 메시지 '안 읽은 사람 수'를 즉시 갱신하도록 유도합니다.
         messagingTemplate.convertAndSend("/sub/chat/room/" + roomId + "/read",
-                new ChatDto.ChatReadReq(lastReadMessageId));
+                new ChatDto.ChatReadEvent(previousId, lastReadMessageId));
     }
 
     @Override
@@ -208,6 +220,8 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderByCreatedDateAsc(room.getId());
         List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(room.getId());
 
+        // [DEBUG] History 조회 시 멤버들의 lastReadMessageId 로그
+        // members.forEach(m -> log.debug("[getChatHistory] Member: {}, LastRead: {}", m.getMember().getName(), m.getLastReadMessageId()));
         return messages.stream()
                 .map(msg -> {
                     int unreadCount = 0;
@@ -220,5 +234,115 @@ public class ChatServiceImpl implements ChatService {
                     return ChatDto.ChatMessageRes.from(msg, unreadCount);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+
+    public List<ChatDto.ChatMemberRes> getCompanyMembers(String email) {
+        Member me = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+
+        if (me.getCompany() == null) {
+            throw new IllegalArgumentException("소속된 회사가 없습니다.");
+        }
+
+        List<Member> companyMembers = memberRepository.findAllByCompanyIdWithDepartmentAndRank(me.getCompany().getCompanyId());
+
+        return companyMembers.stream()
+                .filter(member -> !member.getMemberId().equals(me.getMemberId())) // 본인 제외
+                .map(ChatDto.ChatMemberRes::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public String createChatRoom(String myEmail, List<Long> targetMemberIds) {
+        if (targetMemberIds == null || targetMemberIds.isEmpty()) {
+            throw new IllegalArgumentException("대화 상대를 선택해주세요.");
+        }
+
+        Member me = memberRepository.findByEmail(myEmail)
+                .orElseThrow(() -> new IllegalArgumentException("내 정보를 찾을 수 없습니다."));
+
+        // 1:1 채팅인 경우 기존 로직 재사용
+        if (targetMemberIds.size() == 1) {
+            return createOrGetChatRoom(myEmail, targetMemberIds.get(0));
+        }
+
+        // 그룹 채팅: 기존 방 존재 여부 확인 (멤버 구성이 완전히 같은 방)
+        // 1. 내가 참여 중인 방 목록 조회
+        List<ChatRoomMember> myRooms = chatRoomMemberRepository.findByMemberMemberId(me.getMemberId());
+
+        // 2. 검색 대상 멤버 ID 집합 (나 포함)
+        java.util.Set<Long> targetIdsSet = new java.util.HashSet<>(targetMemberIds);
+        targetIdsSet.add(me.getMemberId());
+
+        // 3. 각 방의 멤버 구성을 확인
+        for (ChatRoomMember myRoom : myRooms) {
+            Long currentRoomId = myRoom.getChatRoom().getId();
+            List<ChatRoomMember> roomMembers = chatRoomMemberRepository.findByChatRoomId(currentRoomId);
+
+            // 멤버 수가 다르면 패스
+            if (roomMembers.size() != targetIdsSet.size()) {
+                continue;
+            }
+
+            // 멤버 구성이 일치하는지 확인
+            boolean isSameMemberSet = roomMembers.stream()
+                    .allMatch(rm -> targetIdsSet.contains(rm.getMember().getMemberId()));
+
+            if (isSameMemberSet) {
+                // 이미 존재하는 방이면 해당 방 ID 반환
+                return myRoom.getChatRoom().getRoomId();
+            }
+        }
+
+        // 새 그룹 채팅 생성
+        List<Member> targets = memberRepository.findAllById(targetMemberIds);
+        if (targets.size() != targetMemberIds.size()) {
+            throw new IllegalArgumentException("일부 대화 상대를 찾을 수 없습니다.");
+        }
+
+        // 채팅방 이름 결정 (무조건 이름 조합)
+        List<String> names = new java.util.ArrayList<>();
+        names.add(me.getName());
+        targets.forEach(m -> names.add(m.getName()));
+        String finalRoomName = String.join(", ", names);
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .name(finalRoomName)
+                .build();
+        chatRoomRepository.save(chatRoom);
+
+        // 참여자 추가 (나)
+        ChatRoomMember myJoin = ChatRoomMember.builder()
+                .chatRoom(chatRoom)
+                .member(me)
+                .roomNameAlias(makeGroupAlias(targets))
+                .build();
+        chatRoomMemberRepository.save(myJoin);
+
+        // 참여자 추가 (상대방들)
+        for (Member target : targets) {
+            List<Member> others = new java.util.ArrayList<>(targets);
+            others.remove(target);
+            others.add(me);
+
+            ChatRoomMember join = ChatRoomMember.builder()
+                    .chatRoom(chatRoom)
+                    .member(target)
+                    .roomNameAlias(makeGroupAlias(others))
+                    .build();
+            chatRoomMemberRepository.save(join);
+        }
+
+        return chatRoom.getRoomId();
+    }
+
+    private String makeGroupAlias(List<Member> others) {
+        // roomName 파라미터 무시하고 항상 자동 생성
+        return others.stream()
+                .map(Member::getName)
+                .collect(Collectors.joining(", "));
     }
 }

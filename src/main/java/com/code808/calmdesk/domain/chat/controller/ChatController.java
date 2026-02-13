@@ -31,7 +31,7 @@ public class ChatController {
     public void sendMessage(ChatDto.ChatMessageReq message, Principal principal) {
         // 메시지 저장
         String senderEmail = principal.getName();
-        ChatDto.ChatMessageRes response = chatService.saveMessage(message, senderEmail);
+        chatService.saveMessage(message, senderEmail);
     }
 
     /**
@@ -89,5 +89,22 @@ public class ChatController {
             Principal principal) {
         chatService.markAsRead(roomId, principal.getName(), request.getLastReadMessageId());
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 회사 내 사용자 조회 (채팅 초대용)
+     */
+    @GetMapping("/api/chat/members")
+    public ResponseEntity<List<ChatDto.ChatMemberRes>> getCompanyMembers(Principal principal) {
+        return ResponseEntity.ok(chatService.getCompanyMembers(principal.getName()));
+    }
+
+    /**
+     * 채팅방 생성 (1:1 또는 그룹)
+     */
+    @PostMapping("/api/chat/create")
+    public ResponseEntity<String> createChatRoom(@RequestBody ChatDto.CreateRoomReq request, Principal principal) {
+        String roomId = chatService.createChatRoom(principal.getName(), request.getTargetMemberIds());
+        return ResponseEntity.ok(roomId);
     }
 }

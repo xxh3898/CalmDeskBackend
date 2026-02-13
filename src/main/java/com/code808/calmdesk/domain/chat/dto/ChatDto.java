@@ -1,9 +1,11 @@
 package com.code808.calmdesk.domain.chat.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.code808.calmdesk.domain.chat.entity.ChatMessage;
 import com.code808.calmdesk.domain.chat.entity.ChatRoom;
+import com.code808.calmdesk.domain.member.entity.Member;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -76,6 +78,15 @@ public class ChatDto {
     }
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatReadEvent {
+
+        private Long fromMessageId;
+        private Long toMessageId;
+    }
+
+    @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -110,6 +121,38 @@ public class ChatDto {
                     .createdDate(message.getCreatedDate())
                     .isDeleted(message.isDeleted())
                     .unreadCount(unreadCount)
+                    .build();
+        }
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class CreateRoomReq {
+
+        private List<Long> targetMemberIds;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ChatMemberRes {
+
+        private Long memberId;
+        private String name;
+        private String email;
+        private String departmentName;
+        private String rankName;
+
+        public static ChatMemberRes from(Member member) {
+            return ChatMemberRes.builder()
+                    .memberId(member.getMemberId())
+                    .name(member.getName())
+                    .email(member.getEmail())
+                    .departmentName(member.getDepartment() != null ? member.getDepartment().getDepartmentName() : "")
+                    .rankName(member.getRank() != null ? member.getRank().getRankName() : "")
                     .build();
         }
     }
