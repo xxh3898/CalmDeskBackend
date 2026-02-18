@@ -50,4 +50,14 @@ public class NotificationController {
     public void readNotification(@PathVariable Long id) {
         notificationService.markAsRead(id);
     }
+
+
+    @PatchMapping("/api/notifications/read-all/{memberId}")
+    public void readAllNotifications(@PathVariable Long memberId) {
+
+        notificationService.markAllAsRead(memberId);
+
+    }
+
+
 }

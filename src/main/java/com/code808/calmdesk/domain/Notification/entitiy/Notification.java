@@ -53,4 +53,6 @@ public class Notification {
     public void markAsRead() {
         this.status = "Y";
     }
+
+
 }
