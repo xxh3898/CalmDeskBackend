@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.code808.calmdesk.domain.chatting.entity.ChatRoomMember;
 
-public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
+public interface ChattingRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
 
     List<ChatRoomMember> findByMemberMemberId(Long memberId);
 

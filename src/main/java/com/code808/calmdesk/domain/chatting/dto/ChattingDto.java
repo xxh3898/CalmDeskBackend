@@ -13,7 +13,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class ChatDto {
+public class ChattingDto {
 
     @Getter
     @NoArgsConstructor
