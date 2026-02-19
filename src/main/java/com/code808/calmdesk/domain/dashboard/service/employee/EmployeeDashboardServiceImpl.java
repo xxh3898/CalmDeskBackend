@@ -212,13 +212,19 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .build();
 
         Attendance attendance = attendanceRepository.save(newAttendance);
-
         attendanceRepository.flush();
+
         // 2. 감정 체크인 저장
         saveEmotionCheckIn(attendance, request);
 
         // 3. WorkStatus 업데이트 -> WORKING
         updateWorkStatus(member, WorkStatusType.WORKING);
+
+        StressDto.SummaryRequest summaryRequest = StressDto.SummaryRequest.builder()
+                .memberId(memberId)
+                .summaryDate(today)
+                .build();
+        stressSummaryService.createDailySummary(summaryRequest);
     }
 
     @Override

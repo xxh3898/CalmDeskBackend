@@ -27,16 +27,12 @@ public class DashboardDto {
         }
         // 구간별 선형 보간 (Linear Interpolation)
         if (rawScore <= 2.0) {
-            // 1~2 구간 -> 0~10
             return (int) Math.round((rawScore - 1.0) * 10);
         } else if (rawScore <= 3.0) {
-            // 2~3 구간 -> 10~30 (차이 20)
             return (int) Math.round(10 + (rawScore - 2.0) * 20);
         } else if (rawScore <= 4.0) {
-            // 3~4 구간 -> 30~70 (차이 40)
             return (int) Math.round(30 + (rawScore - 3.0) * 40);
         } else {
-            // 4~5 구간 -> 70~100 (차이 30)
             return (int) Math.round(70 + (rawScore - 4.0) * 30);
         }
     }
@@ -143,6 +139,7 @@ public class DashboardDto {
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @Builder
     public static class DashboardRequest {
 
         private Long companyId;
@@ -150,6 +147,7 @@ public class DashboardDto {
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         private LocalDate date;
 
+        @Builder.Default
         @Min(value = 0, message = "임계값은 0 이상이어야 합니다.")
         private Integer threshold = 4;
     }

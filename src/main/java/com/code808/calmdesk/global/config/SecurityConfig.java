@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers("/subscribe/**").permitAll()
-                                .requestMatchers("/api/notifications/**").authenticated()
+                                .requestMatchers("/api/notifications/**").authenticated()ㅎ
                                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
