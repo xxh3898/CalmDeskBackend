@@ -13,7 +13,8 @@ public interface ChatService {
 
     ChatDto.ChatMessageRes saveMessage(ChatDto.ChatMessageReq request, String senderEmail);
 
-    List<ChatDto.ChatMessageRes> getChatHistory(String roomId);
+    // 채팅 기록 조회 (페이지네이션)
+    List<ChatDto.ChatMessageRes> getChatHistory(String roomId, Long lastMessageId, int size);
 
     ChatMessage editMessage(Long messageId, ChatDto.ChatMessageEditReq request, String email);
 

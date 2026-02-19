@@ -213,11 +213,24 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<ChatDto.ChatMessageRes> getChatHistory(String roomId) {
+    public List<ChatDto.ChatMessageRes> getChatHistory(String roomId, Long lastMessageId, int size) {
         ChatRoom room = chatRoomRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
 
-        List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderByCreatedDateAsc(room.getId());
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, size);
+        List<ChatMessage> messages;
+
+        if (lastMessageId == null) {
+            // 처음 로딩 시: 가장 최신 메시지 N개 가져오기
+            messages = chatMessageRepository.findByChatRoomIdOrderByCreatedDateDesc(room.getId(), pageable);
+        } else {
+            // 스크롤 올릴 시: 해당 ID보다 이전 메시지 N개 가져오기
+            messages = chatMessageRepository.findByChatRoomIdAndIdLessThanOrderByCreatedDateDesc(room.getId(), lastMessageId, pageable);
+        }
+
+        // 가져온 메시지를 시간순(과거->최신)으로 정렬
+        messages.sort(java.util.Comparator.comparing(ChatMessage::getCreatedDate));
+
         List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(room.getId());
 
         // [DEBUG] History 조회 시 멤버들의 lastReadMessageId 로그

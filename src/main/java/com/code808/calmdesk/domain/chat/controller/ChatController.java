@@ -57,8 +57,11 @@ public class ChatController {
      * 채팅 기록 조회
      */
     @GetMapping("/api/chat/history/{roomId}")
-    public ResponseEntity<List<ChatDto.ChatMessageRes>> getChatHistory(@PathVariable("roomId") String roomId) {
-        return ResponseEntity.ok(chatService.getChatHistory(roomId));
+    public ResponseEntity<List<ChatDto.ChatMessageRes>> getChatHistory(
+            @PathVariable("roomId") String roomId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "lastMessageId", required = false) Long lastMessageId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "size", defaultValue = "50") int size) {
+        return ResponseEntity.ok(chatService.getChatHistory(roomId, lastMessageId, size));
     }
 
     /**
