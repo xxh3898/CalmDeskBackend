@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface GifticonRepository extends JpaRepository<Gifticon, Long> {
 
+
+    List<Gifticon> findByCompany_CompanyId(Long companyId);
+
     @Query("SELECT g FROM GIFTICON g WHERE g.company.companyId = :companyId")
     List<Gifticon> findAllByCompanyId(@Param("companyId") Long companyId);
 

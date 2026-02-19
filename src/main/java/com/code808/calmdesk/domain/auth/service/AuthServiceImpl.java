@@ -12,6 +12,7 @@ import com.code808.calmdesk.global.exception.token.TokenNotFoundException;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -56,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
                 "TEMP"
+
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
@@ -80,9 +83,15 @@ public class AuthServiceImpl implements AuthService {
             ? member.getRole().name()
             : "TEMP";
 
+//        Long companyId = (member.getCompany() != null) ? member.getCompany().getCompanyId() : null;
+
+        log.info("회사 존재 여부: {}", member.getCompany() != null);
+//        log.info("추출된 CompanyId: {}", companyId);
+
         String accessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
                 role
+//                companyId // ✨ 추가: 세 번째 인자로 companyId 전달
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(
@@ -168,9 +177,13 @@ public class AuthServiceImpl implements AuthService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
+
+        Long companyId = (member.getCompany() != null) ? member.getCompany().getCompanyId() : null;
+
         String newAccessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
                 member.getRole().name()
+
         );
 
         return LoginDto.AuthContext.builder()

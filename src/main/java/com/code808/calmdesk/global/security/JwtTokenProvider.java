@@ -38,6 +38,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)
+//                .claim("companyId", companyId)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)

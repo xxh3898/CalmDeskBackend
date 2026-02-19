@@ -26,8 +26,11 @@ public class ShopEmployeeController {
 
     // 포인트 몰 메인 데이터 조회 (포인트 + 미션 + 상점아이템)
     @GetMapping("/{userId}")
-    public ResponseEntity<PointMallResponse> getPointMallMain(@PathVariable Long userId) {
-        PointMallResponse response = shopEmployeeService.getPointMallData(userId);
+    public ResponseEntity<PointMallResponse> getPointMallMain(
+            @PathVariable Long userId,
+            @RequestParam Long companyId  // 👈 프론트에서 보낸 companyId를 받음
+    ) {
+        PointMallResponse response = shopEmployeeService.getPointMallData(userId, companyId);
         return ResponseEntity.ok(response);
     }
 
@@ -70,14 +73,6 @@ public class ShopEmployeeController {
         }
     }
 
-
-    // 모든 사용자의 전체 구매 내역 조회
-    @GetMapping("/history/all")
-    public ResponseEntity<List<PurchaseHistoryResponse>> getAllPurchaseHistory() {
-        // 모든 직원의 기프티콘 구매 내역을 가져옵니다.
-        List<PurchaseHistoryResponse> history = shopEmployeeService.getAllPurchaseHistory();
-        return ResponseEntity.ok(history);
-    }
 
 
     @PostMapping("/attendance/check-in")

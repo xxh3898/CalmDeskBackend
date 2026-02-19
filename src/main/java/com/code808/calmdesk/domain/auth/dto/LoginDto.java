@@ -37,6 +37,7 @@ public class LoginDto {
         private String name;
         private String phone;
         private Member.Role role;
+        private Long companyId;
         private CommonEnums.Status joinStatus;
         private String companyName;
         private String departmentName;
@@ -55,6 +56,7 @@ public class LoginDto {
                     .name(member.getName())
                     .phone(member.getPhone())
                     .role(member.getRole())
+                    .companyId(member.getCompany() != null ? member.getCompany().getCompanyId() : null) // ✨ 핵심!
                     .joinStatus(member.getStatus())
                     .companyCode(member.getCompany().getCompanyCode())
                     .companyName(member.getCompany().getCompanyName())

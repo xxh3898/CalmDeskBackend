@@ -85,4 +85,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        // SSE 구독 요청은 토큰 검증 필터를 거치지 않음
+        return path.startsWith("/subscribe");
+    }
 }
