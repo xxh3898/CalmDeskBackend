@@ -1,9 +1,9 @@
-package com.code808.calmdesk.domain.chat.service;
+package com.code808.calmdesk.domain.chatting.service;
 
 import java.util.List;
 
-import com.code808.calmdesk.domain.chat.dto.ChatDto;
-import com.code808.calmdesk.domain.chat.entity.ChatMessage;
+import com.code808.calmdesk.domain.chatting.dto.ChatDto;
+import com.code808.calmdesk.domain.chatting.entity.ChatMessage;
 
 public interface ChatService {
 

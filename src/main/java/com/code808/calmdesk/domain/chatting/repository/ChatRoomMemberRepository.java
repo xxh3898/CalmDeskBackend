@@ -1,11 +1,11 @@
-package com.code808.calmdesk.domain.chat.repository;
+package com.code808.calmdesk.domain.chatting.repository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.code808.calmdesk.domain.chat.entity.ChatRoomMember;
+import com.code808.calmdesk.domain.chatting.entity.ChatRoomMember;
 
 public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, Long> {
 

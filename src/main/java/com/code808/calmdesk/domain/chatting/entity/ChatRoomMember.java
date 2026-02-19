@@ -1,6 +1,4 @@
-package com.code808.calmdesk.domain.chat.entity;
-
-import java.time.LocalDateTime;
+package com.code808.calmdesk.domain.chatting.entity;
 
 import com.code808.calmdesk.domain.common.BaseTimeEntity;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -21,41 +19,34 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage extends BaseTimeEntity {
+public class ChatRoomMember extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
+    @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private Member sender;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
-    @Column(nullable = false)
-    private String content;
+    @Column(name = "room_name_alias")
+    private String roomNameAlias; // 개인별 채팅방 이름 설정
 
-    @Column(nullable = false)
-    private boolean isDeleted;
+    @Column(name = "last_read_message_id")
+    private Long lastReadMessageId;
 
-    private LocalDateTime deletedDate;
-
-    public void updateContent(String content) {
-        this.content = content;
-    }
-
-    public void delete() {
-        this.isDeleted = true;
-        this.deletedDate = LocalDateTime.now();
+    public void updateLastReadMessageId(Long lastReadMessageId) {
+        this.lastReadMessageId = lastReadMessageId;
     }
 
     @Builder
-    public ChatMessage(ChatRoom chatRoom, Member sender, String content) {
+    public ChatRoomMember(ChatRoom chatRoom, Member member, String roomNameAlias) {
         this.chatRoom = chatRoom;
-        this.sender = sender;
-        this.content = content;
+        this.member = member;
+        this.roomNameAlias = roomNameAlias;
     }
 }

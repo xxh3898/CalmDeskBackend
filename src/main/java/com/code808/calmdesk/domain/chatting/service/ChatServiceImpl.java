@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.chat.service;
+package com.code808.calmdesk.domain.chatting.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,13 +8,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.code808.calmdesk.domain.chat.dto.ChatDto;
-import com.code808.calmdesk.domain.chat.entity.ChatMessage;
-import com.code808.calmdesk.domain.chat.entity.ChatRoom;
-import com.code808.calmdesk.domain.chat.entity.ChatRoomMember;
-import com.code808.calmdesk.domain.chat.repository.ChatMessageRepository;
-import com.code808.calmdesk.domain.chat.repository.ChatRoomMemberRepository;
-import com.code808.calmdesk.domain.chat.repository.ChatRoomRepository;
+import com.code808.calmdesk.domain.chatting.dto.ChatDto;
+import com.code808.calmdesk.domain.chatting.entity.ChatMessage;
+import com.code808.calmdesk.domain.chatting.entity.ChatRoom;
+import com.code808.calmdesk.domain.chatting.entity.ChatRoomMember;
+import com.code808.calmdesk.domain.chatting.repository.ChatMessageRepository;
+import com.code808.calmdesk.domain.chatting.repository.ChatRoomMemberRepository;
+import com.code808.calmdesk.domain.chatting.repository.ChatRoomRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 

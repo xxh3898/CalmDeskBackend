@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.chat.entity;
+package com.code808.calmdesk.domain.chatting.entity;
 
 import java.util.ArrayList;
 import java.util.List;

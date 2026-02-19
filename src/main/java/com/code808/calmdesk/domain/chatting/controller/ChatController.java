@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.chat.controller;
+package com.code808.calmdesk.domain.chatting.controller;
 
 import java.security.Principal;
 import java.util.List;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.code808.calmdesk.domain.chat.dto.ChatDto;
-import com.code808.calmdesk.domain.chat.service.ChatService;
+import com.code808.calmdesk.domain.chatting.dto.ChatDto;
+import com.code808.calmdesk.domain.chatting.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

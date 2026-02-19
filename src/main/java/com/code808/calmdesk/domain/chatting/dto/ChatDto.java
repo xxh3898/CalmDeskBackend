@@ -1,10 +1,10 @@
-package com.code808.calmdesk.domain.chat.dto;
+package com.code808.calmdesk.domain.chatting.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.code808.calmdesk.domain.chat.entity.ChatMessage;
-import com.code808.calmdesk.domain.chat.entity.ChatRoom;
+import com.code808.calmdesk.domain.chatting.entity.ChatMessage;
+import com.code808.calmdesk.domain.chatting.entity.ChatRoom;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

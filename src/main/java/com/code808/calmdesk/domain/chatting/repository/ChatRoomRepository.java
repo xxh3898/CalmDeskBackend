@@ -1,4 +1,4 @@
-package com.code808.calmdesk.domain.chat.repository;
+package com.code808.calmdesk.domain.chatting.repository;
 
 import java.util.Optional;
 
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.code808.calmdesk.domain.chat.entity.ChatRoom;
+import com.code808.calmdesk.domain.chatting.entity.ChatRoom;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
