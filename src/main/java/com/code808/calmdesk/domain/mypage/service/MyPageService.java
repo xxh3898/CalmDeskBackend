@@ -1,6 +1,8 @@
 package com.code808.calmdesk.domain.mypage.service;
 
 import com.code808.calmdesk.domain.mypage.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -15,7 +17,7 @@ public interface MyPageService {
     void changePassword(Long memberId, PasswordChangeRequest request);
 
     // 포인트 내역 조회
-    List<PointHistoryResponse> getPointHistory(Long memberId);
+    Page<PointHistoryResponse> getPointHistory(Long memberId, Pageable pageable);
 
     // 기프티콘 목록 조회
     List<CouponResponse> getCoupons(Long memberId);

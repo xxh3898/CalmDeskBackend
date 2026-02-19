@@ -5,6 +5,9 @@ import com.code808.calmdesk.domain.mypage.dto.*;
 import com.code808.calmdesk.domain.mypage.service.MyPageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,9 +62,13 @@ public class AdminMyPageController {
 
     // 포인트 내역 조회
     @GetMapping("/{memberId}/points")
-    public ResponseEntity<ApiResponse<List<PointHistoryResponse>>> getPointHistory(@PathVariable Long memberId) {
+    public ResponseEntity<ApiResponse<Page<PointHistoryResponse>>> getPointHistory(
+            @PathVariable Long memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<PointHistoryResponse> response = myPageService.getPointHistory(memberId);
+            Page<PointHistoryResponse> response = myPageService.getPointHistory(
+                    memberId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate", "id")));
             return ResponseEntity.ok(ApiResponse.success("포인트 내역 조회 성공", response));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
@@ -82,4 +89,3 @@ public class AdminMyPageController {
     }
 
 }
-
