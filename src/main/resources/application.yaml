@@ -2,6 +2,16 @@ spring:
   application:
     name: calmDesk
 
+  ai:
+    model:
+      chat: openai   # 운영: OpenAI gpt-4o-mini | 테스트: dev 프로필로 Ollama 사용
+    openai:
+
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
   config:
     import: optional:classpath:application-secret.yaml
 
@@ -22,5 +32,6 @@ spring:
 server:
   port: 8080
 
-jwt:
-  expiration: 86400000
+logging:
+  level:
+    org.springframework.ai: DEBUG

@@ -30,11 +30,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = getJwtFromRequest(request);
 
             if (StringUtils.hasText(token)) {
                 Optional<Claims> claimsOpt = jwtTokenProvider.validateToken(token);
+
+                if (claimsOpt.isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401!
+                    response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                    return;
+                }
 
                 if (claimsOpt.isPresent()) {
                     String email = jwtTokenProvider.getEmailFromToken(token);
@@ -72,5 +83,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        // SSE 구독 요청은 토큰 검증 필터를 거치지 않음
+        return path.startsWith("/subscribe");
     }
 }

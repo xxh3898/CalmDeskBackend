@@ -11,6 +11,8 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
 
+import javax.swing.text.html.Option;
+
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByEmail(String email);
@@ -58,4 +60,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     long countByCompany_CompanyId(Long companyId);
 
     long countByCompany_CompanyIdAndJoinDateBefore(Long companyId, java.time.LocalDate date);
+
+    // MemberRepository.java
+    List<Member> findAllByCompany_CompanyIdAndRole(Long companyId, Member.Role role);
+
 }

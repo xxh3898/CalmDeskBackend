@@ -96,4 +96,10 @@ public class JwtTokenProvider {
         return LocalDateTime.now()
                 .plus(this.refreshTokenExpiration, ChronoUnit.MILLIS);
     }
+
+    public boolean isTokenExpired(String token) {
+        return validateToken(token)
+                .map(claims -> claims.getExpiration().before(new Date()))
+                .orElse(true);
+    }
 }
