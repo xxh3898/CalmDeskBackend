@@ -1,5 +1,11 @@
 package com.code808.calmdesk.domain.auth.service;
 
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.auth.dto.LoginDto;
 import com.code808.calmdesk.domain.auth.dto.SignupDto;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
@@ -10,21 +16,17 @@ import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.exception.token.ExpiredTokenException;
 import com.code808.calmdesk.global.exception.token.TokenNotFoundException;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
+
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
+
     private final MemberRepository memberRepository;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
@@ -33,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public SignupDto.SignupResponse signup(SignupDto.SignupRequest request){
+    public SignupDto.SignupResponse signup(SignupDto.SignupRequest request) {
         //에외처리 아직
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
@@ -57,19 +59,21 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtTokenProvider.generateToken(
                 savedMember.getEmail(),
-                "TEMP"
-
+                "TEMP",
+                savedMember.getMemberId(),
+                savedMember.getName(),
+                null
         );
         return SignupDto.SignupResponse.of(savedMember, token);
     }
 
     @Override
     @Transactional
-    public LoginDto.AuthContext login(LoginDto.LoginRequest request){
+    public LoginDto.AuthContext login(LoginDto.LoginRequest request) {
         Member member = memberRepository.findEmailWithDetails(request.getEmail())
-                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){
+        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
@@ -80,18 +84,19 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String role = (member.getRole() != null)
-            ? member.getRole().name()
-            : "TEMP";
+                ? member.getRole().name()
+                : "TEMP";
 
 //        Long companyId = (member.getCompany() != null) ? member.getCompany().getCompanyId() : null;
-
         log.info("회사 존재 여부: {}", member.getCompany() != null);
 //        log.info("추출된 CompanyId: {}", companyId);
 
         String accessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                role
-//                companyId // ✨ 추가: 세 번째 인자로 companyId 전달
+                role,
+                member.getMemberId(),
+                member.getName(),
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(
@@ -115,7 +120,6 @@ public class AuthServiceImpl implements AuthService {
 //
 //        refreshTokenRepository.save(refreshToken);
 //    }
-
     @Override
     @Transactional
     public void logout(String email) {
@@ -149,7 +153,6 @@ public class AuthServiceImpl implements AuthService {
 //                .accessToken(newAccessToken)
 //                .build();
 //    }
-
     @Override
     @Transactional
     public LoginDto.AuthContext refreshAccessToken(String refreshToken) {
@@ -177,13 +180,12 @@ public class AuthServiceImpl implements AuthService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-
-        Long companyId = (member.getCompany() != null) ? member.getCompany().getCompanyId() : null;
-
         String newAccessToken = jwtTokenProvider.generateToken(
                 member.getEmail(),
-                member.getRole().name()
-
+                member.getRole().name(),
+                member.getMemberId(),
+                member.getName(),
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
         );
 
         return LoginDto.AuthContext.builder()
