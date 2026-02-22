@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,17 +69,17 @@ public class ChattingController {
     /**
      * 메시지 수정
      */
-    @PostMapping("/api/chat/message/{messageId}/edit") // PUT method equivalent or explicit PUT
+    @PatchMapping("/api/chat/message/{messageId}")
     public ResponseEntity<ChattingDto.ChatMessageRes> editMessage(@PathVariable("messageId") Long messageId,
-                                                                  @RequestBody ChattingDto.ChatMessageEditReq request,
-                                                                  Principal principal) {
+            @RequestBody ChattingDto.ChatMessageEditReq request,
+            Principal principal) {
         return ResponseEntity.ok(ChattingDto.ChatMessageRes.from(chatService.editMessage(messageId, request, principal.getName())));
     }
 
     /**
      * 메시지 삭제
      */
-    @PostMapping("/api/chat/message/{messageId}/delete") // Using POST for delete if needed, or DELETE
+    @DeleteMapping("/api/chat/message/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") Long messageId, Principal principal) {
         chatService.deleteMessage(messageId, principal.getName());
         return ResponseEntity.ok().build();
