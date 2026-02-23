@@ -2,7 +2,7 @@ package com.code808.calmdesk.domain.attendance.service;
 
 import com.code808.calmdesk.domain.attendance.dto.StressDto;
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
-import com.code808.calmdesk.domain.attendance.event.StressEvent;
+import com.code808.calmdesk.domain.attendance.event.DashboardEvent;
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.attendance.repository.EmotionCheckinRepository;
 import com.code808.calmdesk.domain.company.entity.Department;
@@ -68,7 +68,7 @@ public class StressSummaryServiceImpl implements StressSummaryService {
 
         Long companyId = member.getCompany().getCompanyId();
         eventPublisher.publishEvent(
-                new StressEvent(companyId, memberId, summaryDate, savedSummary.getAvgStressLevel())
+                new DashboardEvent(companyId)
         );
 
         return StressDto.SummaryResponse.builder()

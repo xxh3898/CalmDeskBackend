@@ -29,6 +29,7 @@ public class EmotionCheckin extends BaseTimeEntity {
     @Column(nullable = false, length = 500)
     private String memo;
 
+//    @Builder.Default
     @OneToMany(mappedBy = "emotionCheckin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StressFactor> checkinFactors = new ArrayList<>();
 

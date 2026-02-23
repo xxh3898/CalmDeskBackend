@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -50,6 +51,15 @@ public class DashboardController {
         Long companyId = memberRepository.findCompanyIdByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("해당 이메일을 가진 멤버의 회사 정보를 찾을 수 없습니다."));
         request.setCompanyId(companyId);
+    }
+
+    @GetMapping("/stats/yesterday")
+    public ResponseEntity<DashboardDto.DashboardResponse> getYesterdayStats(
+            @Valid @ModelAttribute DashboardDto.DashboardRequest request,
+            Principal principal) {
+        setCompanyId(request, principal);
+        request.setDate(LocalDate.now().minusDays(1));
+        return ResponseEntity.ok(dashboardService.getAllStats(request));
     }
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

@@ -9,4 +9,5 @@ public interface DashboardService {
     List<DashboardDto.HighRiskMember> getHighRiskMembers(DashboardDto.DashboardRequest request);
     DashboardDto.CompanyStats getCompanyStats(DashboardDto.DashboardRequest request);
     DashboardDto.DashboardResponse getAllStats(DashboardDto.DashboardRequest request);
+//    DashboardDto.YesterdayStats getYesterdayStats(DashboardDto.DashboardRequest request);
 }

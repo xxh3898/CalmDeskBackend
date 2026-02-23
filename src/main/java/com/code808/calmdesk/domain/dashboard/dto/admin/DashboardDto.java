@@ -9,15 +9,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
 
 public class DashboardDto {
 
-    /**
-     * 스트레스 점수를 0~100 범위의 백분율로 변환
-     * 비선형 구간별 선형 보간 적용
-     */
     public static int convertScore(double rawScore) {
         if (rawScore <= 1.0) {
             return 0;
@@ -71,30 +66,26 @@ public class DashboardDto {
     public static class CompanyStats {
         private Double avgStressLevel;
         private Double avgStressPercentage;
-        private Double stressChange;
         private Long totalMembers;
         private Double todayAttendance;
-        private Double attendanceChange;
         private Long consultationCount;
         private Long vacationCount;
         private Long highRiskCount;
 
-        public static CompanyStats of(Double todayAvg, Double yesterdayAvg,
-                                      Long totalMembers, Long highRiskCount,
-                                      Double todayAttendance, Double yesterdayAttendance,
-                                      Long consultationCount, Long vacationCount) {
+        public static CompanyStats of(Double todayAvg, Long totalMembers, Long highRiskCount,
+                                      Double todayAttendance, Long consultationCount, Long vacationCount) {
 
-            // convertScore 메서드를 사용하여 비선형 백분율 변환
-            Double todayAvgPct = (todayAvg != null) ? (double) convertScore(todayAvg) : 0.0;
-            Double yesterdayAvgPct = (yesterdayAvg != null) ? (double) convertScore(yesterdayAvg) : 0.0;
+            Double todayAvgPct = (todayAvg != null)
+                    ? Math.round(convertScore(todayAvg) * 10.0) / 10.0 : 0.0;
+
+            Double todayAtnd = (todayAttendance != null)
+                    ? Math.round(todayAttendance * 10.0) / 10.0 : 0.0;
 
             return CompanyStats.builder()
                     .avgStressLevel(todayAvg)
                     .avgStressPercentage(todayAvgPct)
-                    .stressChange(todayAvgPct - yesterdayAvgPct)
                     .totalMembers(totalMembers)
-                    .todayAttendance(todayAttendance)
-                    .attendanceChange(todayAttendance - yesterdayAttendance)
+                    .todayAttendance(todayAtnd)
                     .consultationCount(consultationCount)
                     .vacationCount(vacationCount)
                     .highRiskCount(highRiskCount)
@@ -173,4 +164,27 @@ public class DashboardDto {
                     .build();
         }
     }
+
+//    @Getter
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    @Builder
+//    public static class YesterdayStats {
+//        private LocalDate date;
+//        private Double avgStressPercentage;
+//        private Double attendanceRate;
+//
+//        public static YesterdayStats of(LocalDate date, Double yesterdayAvg, Double yesterdayAttendance) {
+//            Double avgStressPct = (yesterdayAvg != null)
+//                    ? Math.round(convertScore(yesterdayAvg) * 10.0) / 10.0 : 0.0;
+//            Double yesterdayAtnd = (yesterdayAttendance != null)
+//                    ? Math.round(yesterdayAttendance * 10.0) / 10.0 : 0.0;
+//
+//            return YesterdayStats.builder()
+//                    .date(date)
+//                    .avgStressPercentage(avgStressPct)
+//                    .attendanceRate(yesterdayAtnd)
+//                    .build();
+//        }
+//    }
 }
