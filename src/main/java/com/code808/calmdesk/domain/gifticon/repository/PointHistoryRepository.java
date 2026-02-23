@@ -11,13 +11,14 @@ import java.util.List;
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
 
-    List<PointHistory> findByMemberIdOrderByCreateDateDescIdDesc(Long memberId);
+        List<PointHistory> findByMemberIdOrderByCreateDateDescIdDesc(Long memberId);
 
-    List<PointHistory> findByMember_Company_CompanyIdAndSourceTypeOrderByCreateDateDesc(
-            Long companyId,
-            String sourceType
-    );
+        Page<PointHistory> findByMemberIdOrderByCreateDateDescIdDesc(Long memberId, Pageable pageable);
 
-    Page<PointHistory> findByMember_Company_CompanyIdAndSourceType(
-            Long companyId, String sourceType, Pageable pageable);
+        List<PointHistory> findByMember_Company_CompanyIdAndSourceTypeOrderByCreateDateDesc(
+                        Long companyId,
+                        String sourceType);
+
+        Page<PointHistory> findByMember_Company_CompanyIdAndSourceType(
+                        Long companyId, String sourceType, Pageable pageable);
 }
