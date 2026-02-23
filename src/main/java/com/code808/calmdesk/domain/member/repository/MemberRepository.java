@@ -3,6 +3,8 @@ package com.code808.calmdesk.domain.member.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,8 +12,6 @@ import org.springframework.data.repository.query.Param;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.member.entity.Member;
-
-import javax.swing.text.html.Option;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
@@ -35,6 +35,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByIdWithCompanyAndDepartmentAndRank(@Param("memberId") Long memberId);
 
     List<Member> findByDepartment(Department department);
+
+    Page<Member> findByDepartment(Department department, Pageable pageable);
 
     @Query("SELECT m FROM MEMBER m "
             + "LEFT JOIN FETCH m.department "

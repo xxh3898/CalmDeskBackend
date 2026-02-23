@@ -43,25 +43,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없습니다. (부서 ID: " + departmentId + ")"));
 
-        // MemberRepository를 사용하여 해당 부서의 멤버 조회
         List<Member> members = memberRepository.findByDepartment(department);
-
-        // 멤버들의 현재 상태 조회 (Bulk 조회)
-        List<com.code808.calmdesk.domain.attendance.entity.WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
-
-        // Map<MemberId, StatusDescription> 생성
-        Map<Long, String> statusMap = statuses.stream()
-                .collect(Collectors.toMap(
-                        ws -> ws.getMember().getMemberId(),
-                        ws -> ws.getStatus().getDescription()
-                ));
-
-        return members.stream()
-                .map(member -> {
-                    String status = statusMap.getOrDefault(member.getMemberId(), "출근 전");
-                    return DepartmentDto.MemberResponse.from(member, status);
-                })
-                .collect(Collectors.toList());
+        return convertToMemberResponse(members);
     }
 
     @Override
@@ -70,6 +53,21 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없거나 접근 권한이 없습니다. (부서 ID: " + departmentId + ")"));
 
         List<Member> members = memberRepository.findByDepartment(department);
+        return convertToMemberResponse(members);
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<DepartmentDto.MemberResponse> getDepartmentMembersByCompany(Long departmentId, Long companyId, org.springframework.data.domain.Pageable pageable) {
+        Department department = departmentRepository.findByDepartmentIdAndCompany_CompanyId(departmentId, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없거나 접근 권한이 없습니다. (부서 ID: " + departmentId + ")"));
+
+        org.springframework.data.domain.Page<Member> membersPage = memberRepository.findByDepartment(department, pageable);
+        List<DepartmentDto.MemberResponse> content = convertToMemberResponse(membersPage.getContent());
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, membersPage.getTotalElements());
+    }
+
+    private List<DepartmentDto.MemberResponse> convertToMemberResponse(List<Member> members) {
         List<com.code808.calmdesk.domain.attendance.entity.WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
         Map<Long, String> statusMap = statuses.stream()
                 .collect(Collectors.toMap(ws -> ws.getMember().getMemberId(), ws -> ws.getStatus().getDescription()));

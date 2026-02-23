@@ -1,12 +1,11 @@
 package com.code808.calmdesk.domain.company.controller;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.code808.calmdesk.domain.company.dto.DepartmentDto;
@@ -33,11 +32,14 @@ public class DepartmentController {
     }
 
     @GetMapping("/{departmentId}/members")
-    public ResponseEntity<List<DepartmentDto.MemberResponse>> getDepartmentMembers(
+    public ResponseEntity<org.springframework.data.domain.Page<DepartmentDto.MemberResponse>> getDepartmentMembers(
             @PathVariable Long departmentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
             Authentication authentication) {
         Long companyId = getCurrentUserCompanyId(authentication);
-        List<DepartmentDto.MemberResponse> members = departmentService.getDepartmentMembersByCompany(departmentId, companyId);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<DepartmentDto.MemberResponse> members = departmentService.getDepartmentMembersByCompany(departmentId, companyId, pageable);
         return ResponseEntity.ok(members);
     }
 
