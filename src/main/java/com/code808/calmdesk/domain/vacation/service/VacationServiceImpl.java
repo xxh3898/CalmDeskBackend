@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.vacation.service;
 
+import com.code808.calmdesk.domain.Notification.event.NotificationEvent;
 import com.code808.calmdesk.domain.attendance.dto.AttendanceDto;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
@@ -10,6 +11,7 @@ import com.code808.calmdesk.domain.vacation.entity.VacationRest;
 import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
 import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +26,7 @@ public class VacationServiceImpl implements VacationService {
     private final VacationRepository vacationRepository;
     private final VacationRestRepository vacationRestRepository;
     private final MemberRepository memberRepository;
-
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 프론트 휴가 신청
@@ -90,8 +92,7 @@ public class VacationServiceImpl implements VacationService {
         // 중복 체크: 같은 날짜에 대기 중이거나 승인된 휴가가 있는지 확인
         List<CommonEnums.Status> activeStatuses = List.of(CommonEnums.Status.N, CommonEnums.Status.Y);
         List<Vacation> overlappingVacations = vacationRepository.findOverlappingVacations(
-                memberId, startDateTime, endDateTime, activeStatuses
-        );
+                memberId, startDateTime, endDateTime, activeStatuses);
 
         if (!overlappingVacations.isEmpty()) {
             throw new IllegalArgumentException("해당 기간에 이미 신청되거나 승인된 휴가가 있습니다.");
@@ -136,6 +137,24 @@ public class VacationServiceImpl implements VacationService {
                 .build();
 
         Vacation saved = vacationRepository.save(vacation);
+
+        // ✅ 직원 알림: 신청 완료
+        eventPublisher.publishEvent(new NotificationEvent(
+                memberId,
+                "연차 신청 완료",
+                req.getType() + " 신청이 접수되었습니다. 관리자 승인을 기다려주세요.",
+                "USER",
+                "/app/attendance"));
+
+        // ✅ 관리자 알림: 같은 회사 ADMIN 전원에게 신청 사실 통보
+        List<Member> admins = memberRepository.findAllByCompany_CompanyIdAndRole(
+                member.getCompany().getCompanyId(), Member.Role.ADMIN);
+        admins.forEach(admin -> eventPublisher.publishEvent(new NotificationEvent(
+                admin.getMemberId(),
+                "연차 신청 접수",
+                member.getName() + "님이 " + req.getType() + " 신청을 하였습니다.",
+                "ADMIN",
+                "/app/applications")));
 
         return VacationDto.VacationRequestRes.of(saved.getVacationId(), "휴가 신청이 완료되었습니다.");
     }
@@ -223,7 +242,8 @@ public class VacationServiceImpl implements VacationService {
     }
 
     /**
-     * 관리자: 회사 소속 전체 휴가 신청 목록 (id, type, period, status, days, requestMemberName, departmentName)
+     * 관리자: 회사 소속 전체 휴가 신청 목록 (id, type, period, status, days, requestMemberName,
+     * departmentName)
      */
     @Transactional(readOnly = true)
     public List<AttendanceDto.LeaveRequestItemRes> getLeaveRequestsByCompany(Long companyId) {
