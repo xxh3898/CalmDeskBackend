@@ -5,13 +5,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.code808.calmdesk.domain.chatting.dto.ChattingDto;
 import com.code808.calmdesk.domain.chatting.service.ChattingService;
@@ -61,8 +55,8 @@ public class ChattingController {
     @GetMapping("/api/chat/history/{roomId}")
     public ResponseEntity<List<ChattingDto.ChatMessageRes>> getChatHistory(
             @PathVariable("roomId") String roomId,
-            @org.springframework.web.bind.annotation.RequestParam(value = "lastMessageId", required = false) Long lastMessageId,
-            @org.springframework.web.bind.annotation.RequestParam(value = "size", defaultValue = "50") int size) {
+            @RequestParam(value = "lastMessageId", required = false) Long lastMessageId,
+            @RequestParam(value = "size", defaultValue = "50") int size) {
         return ResponseEntity.ok(chatService.getChatHistory(roomId, lastMessageId, size));
     }
 
