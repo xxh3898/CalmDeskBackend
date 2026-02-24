@@ -3,6 +3,8 @@ package com.code808.calmdesk.domain.consultation.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class ConsultationService {
 
     private final ConsultationRepository consultationRepository;
-    private final com.code808.calmdesk.domain.member.repository.MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public Long createConsultation(ConsultationDto.ConsultationCreateRequest request, String email) {
-        com.code808.calmdesk.domain.member.entity.Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email: " + email));
 
         Consultation consultation = request.toEntity(member);
@@ -46,7 +48,7 @@ public class ConsultationService {
      * 직원: 본인 상담 신청 목록 (근태 캘린더용)
      */
     public List<ConsultationDto.ConsultationListItemRes> getMyConsultationList(String email) {
-        com.code808.calmdesk.domain.member.entity.Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         return consultationRepository.findByMember_MemberIdOrderByCreatedDateDesc(member.getMemberId()).stream()
                 .map(ConsultationDto.ConsultationListItemRes::from)

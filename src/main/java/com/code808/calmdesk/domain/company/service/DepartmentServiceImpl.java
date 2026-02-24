@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.code808.calmdesk.domain.attendance.entity.WorkStatus;
+import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +27,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final MemberRepository memberRepository;
-    private final com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository workStatusRepository;
+    private final WorkStatusRepository workStatusRepository;
 
     @Override
     public DepartmentDto.DetailResponse getDepartmentDetails(Long departmentId) {
@@ -57,18 +62,18 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public org.springframework.data.domain.Page<DepartmentDto.MemberResponse> getDepartmentMembersByCompany(Long departmentId, Long companyId, org.springframework.data.domain.Pageable pageable) {
+    public Page<DepartmentDto.MemberResponse> getDepartmentMembersByCompany(Long departmentId, Long companyId, Pageable pageable) {
         Department department = departmentRepository.findByDepartmentIdAndCompany_CompanyId(departmentId, companyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 부서를 찾을 수 없거나 접근 권한이 없습니다. (부서 ID: " + departmentId + ")"));
 
-        org.springframework.data.domain.Page<Member> membersPage = memberRepository.findByDepartment(department, pageable);
+        Page<Member> membersPage = memberRepository.findByDepartment(department, pageable);
         List<DepartmentDto.MemberResponse> content = convertToMemberResponse(membersPage.getContent());
 
-        return new org.springframework.data.domain.PageImpl<>(content, pageable, membersPage.getTotalElements());
+        return new PageImpl<>(content, pageable, membersPage.getTotalElements());
     }
 
     private List<DepartmentDto.MemberResponse> convertToMemberResponse(List<Member> members) {
-        List<com.code808.calmdesk.domain.attendance.entity.WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
+        List<WorkStatus> statuses = workStatusRepository.findByMemberIn(members);
         Map<Long, String> statusMap = statuses.stream()
                 .collect(Collectors.toMap(ws -> ws.getMember().getMemberId(), ws -> ws.getStatus().getDescription()));
 
