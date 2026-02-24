@@ -15,7 +15,9 @@ import com.code808.calmdesk.domain.gifticon.repository.GifticonRepository;
 import com.code808.calmdesk.domain.gifticon.repository.PointHistoryRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.gifticon.event.GifticonUpdateEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class ShopAdminService {
     private final MemberRepository memberRepository;
     private final CompanyGifticonRepository companyGifticonRepository;
     private final CompanyRepository companyRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long processPurchase(PurchaseRequest request) {
@@ -41,7 +44,7 @@ public class ShopAdminService {
 
         // 💡 중요: 단순 Gifticon이 아니라, 이 회사의 CompanyGifticon을 조회해야 합니다.
         CompanyGifticon cg = companyGifticonRepository.findByCompany_CompanyIdAndGifticon_Id(
-                        member.getCompany().getCompanyId(), request.getItemId())
+                member.getCompany().getCompanyId(), request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 회사에서 판매 중인 아이템이 아닙니다."));
 
         if (!cg.getIsActive()) {
@@ -72,8 +75,7 @@ public class ShopAdminService {
 
         PointHistory history = new PointHistory(
                 "SPEND", price, balanceAfter, "GIFTICON",
-                member, cg.getGifticon(), null
-        );
+                member, cg.getGifticon(), null);
         pointHistoryRepository.save(history);
 
         return savedOrder.getOrderId();
@@ -119,7 +121,8 @@ public class ShopAdminService {
         // 상태 변경
         cg.toggleActive();
 
-        // @Transactional이 걸려있으므로 메서드가 끝날 때 자동으로 DB에 반영(Flush)됩니다.
+        // ✅ 실시간 업데이트 이벤트 발행 (WebSocket 전송 유도)
+        eventPublisher.publishEvent(new GifticonUpdateEvent(cg.getCompany().getCompanyId()));
     }
 
     // 💡 일괄 처리를 마스터가 아닌 특정 회사의 데이터만 건드리도록 수정
@@ -128,6 +131,9 @@ public class ShopAdminService {
         List<CompanyGifticon> items = companyGifticonRepository.findAllByCompany_CompanyId(companyId);
         // 💡 setIsActive 대신 엔티티에 정의된 setActive 사용
         items.forEach(item -> item.setActive(true));
+
+        // ✅ 실시간 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new GifticonUpdateEvent(companyId));
     }
 
     @Transactional
@@ -135,6 +141,9 @@ public class ShopAdminService {
         List<CompanyGifticon> items = companyGifticonRepository.findAllByCompany_CompanyId(companyId);
         // 💡 setIsActive 대신 엔티티에 정의된 setActive 사용
         items.forEach(item -> item.setActive(false));
+
+        // ✅ 실시간 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new GifticonUpdateEvent(companyId));
     }
 
     @Transactional
@@ -144,5 +153,8 @@ public class ShopAdminService {
 
         // 서비스에서 if문으로 체크하는 대신 엔티티 메서드 호출
         cg.updateStock(quantity);
+
+        // ✅ 실시간 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new GifticonUpdateEvent(cg.getCompany().getCompanyId()));
     }
 }
