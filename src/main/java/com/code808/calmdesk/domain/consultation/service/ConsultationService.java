@@ -3,12 +3,16 @@ package com.code808.calmdesk.domain.consultation.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.code808.calmdesk.domain.Notification.event.NotificationEvent;
 import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.entity.Consultation;
 import com.code808.calmdesk.domain.consultation.repository.ConsultationRepository;
+import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,15 +22,36 @@ import lombok.RequiredArgsConstructor;
 public class ConsultationService {
 
     private final ConsultationRepository consultationRepository;
-    private final com.code808.calmdesk.domain.member.repository.MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long createConsultation(ConsultationDto.ConsultationCreateRequest request, String email) {
-        com.code808.calmdesk.domain.member.entity.Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. email: " + email));
 
         Consultation consultation = request.toEntity(member);
-        return consultationRepository.save(consultation).getCounselionId();
+        Long savedId = consultationRepository.save(consultation).getCounselionId();
+
+        // ✅ 직원 알림: 상담 신청 완료
+        eventPublisher.publishEvent(new NotificationEvent(
+                member.getMemberId(),
+                "상담 신청 완료",
+                "'" + consultation.getTitle() + "' 상담 신청이 접수되었습니다. 관리자 확인을 기다려주세요.",
+                "USER",
+                "/app/attendance"));
+
+        // ✅ 관리자 알림: 같은 회사 ADMIN 전원에게 신청 사실 통보
+        List<Member> admins = memberRepository.findAllByCompany_CompanyIdAndRole(
+                member.getCompany().getCompanyId(), Member.Role.ADMIN);
+        admins.forEach(admin -> eventPublisher.publishEvent(new NotificationEvent(
+                admin.getMemberId(),
+                "상담 신청 접수",
+                member.getName() + "님이 상담 신청을 하였습니다.",
+                "ADMIN",
+                "/app/applications")));
+
+        return savedId;
     }
 
     public long getWaitingCount(Long companyId) {
@@ -46,7 +71,7 @@ public class ConsultationService {
      * 직원: 본인 상담 신청 목록 (근태 캘린더용)
      */
     public List<ConsultationDto.ConsultationListItemRes> getMyConsultationList(String email) {
-        com.code808.calmdesk.domain.member.entity.Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         return consultationRepository.findByMember_MemberIdOrderByCreatedDateDesc(member.getMemberId()).stream()
                 .map(ConsultationDto.ConsultationListItemRes::from)
@@ -65,6 +90,14 @@ public class ConsultationService {
         }
         c.updateStatus(Consultation.Status.COMPLETED);
         consultationRepository.save(c);
+
+        // ✅ 직원 알림: 상담 승인(완료) 완료
+        eventPublisher.publishEvent(new NotificationEvent(
+                c.getMember().getMemberId(),
+                "상담 신청 승인",
+                "'" + c.getTitle() + "' 상담 신청이 관리자에 의해 승인되었습니다.",
+                "USER",
+                "/app/attendance"));
     }
 
     @Transactional

@@ -199,6 +199,19 @@ public class VacationServiceImpl implements VacationService {
             vacationRestRepository.save(vacationRest);
         }
 
+        // ✅ 직원 알림: 승인 완료
+        String typeLabel = switch (vacation.getType()) {
+            case ANNUAL -> "연차";
+            case HALF -> "반차";
+            case WORKCATION -> "워케이션";
+        };
+        eventPublisher.publishEvent(new NotificationEvent(
+                vacation.getRequestMember().getMemberId(),
+                "연차 승인 완료",
+                typeLabel + " 신청이 관리자에 의해 승인되었습니다.",
+                "USER",
+                "/app/attendance"));
+
         return VacationDto.VacationRequestRes.of(vacation.getVacationId(), "휴가가 승인되었습니다.");
     }
 
