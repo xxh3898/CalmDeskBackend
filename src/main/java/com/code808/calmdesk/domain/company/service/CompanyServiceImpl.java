@@ -3,6 +3,7 @@ package com.code808.calmdesk.domain.company.service;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,13 +12,16 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.dto.CompanyDto;
 import com.code808.calmdesk.domain.company.entity.Company;
 import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.company.repository.CompanyRepository;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.company.repository.RankRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.entity.Rank;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +36,8 @@ public class CompanyServiceImpl implements CompanyService {
     private final MemberRepository memberRepository;
     private final CompanyCodeGenerator codeGenerator;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public CompanyDto.CodeResponse generateCode() {
@@ -199,6 +205,66 @@ public class CompanyServiceImpl implements CompanyService {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
         memberRepository.delete(member);
+    }
+
+    @Override
+    @Transactional
+    public void createJoinRequestFromBusinessCard(String adminEmail, String name, String email, String phone,
+                                                  Long departmentId, Long rankId) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("입사 신청으로 등록하려면 이메일이 필요합니다.");
+        }
+        Member admin = memberRepository.findEmailWithDetails(adminEmail)
+                .orElseThrow(() -> new IllegalArgumentException("승인자를 찾을 수 없습니다."));
+        if (admin.getCompany() == null) {
+            throw new IllegalArgumentException("관리자는 회사에 소속되어 있어야 합니다.");
+        }
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 부서입니다."));
+        if (!department.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
+            throw new IllegalArgumentException("해당 회사의 부서가 아닙니다.");
+        }
+        Rank rank = rankId != null
+                ? rankRepository.findById(rankId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 직급입니다."))
+                : rankRepository.findAll().stream().findFirst().orElseThrow(() -> new IllegalArgumentException("등록된 직급이 없습니다."));
+
+        String phoneForMember = (phone != null && !phone.isBlank()) ? phone : ("card-" + email.replaceAll("[^a-zA-Z0-9]", "").substring(0, Math.min(20, email.length())));
+
+        Optional<Member> existingOpt = memberRepository.findByEmail(email);
+        if (existingOpt.isPresent()) {
+            Member member = existingOpt.get();
+            if (member.getCompany() != null && !member.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
+                throw new IllegalArgumentException("해당 이메일은 이미 다른 회사에 소속되어 있습니다.");
+            }
+            member.updateCompanyInfo(admin.getCompany(), department, rank, Member.Role.EMPLOYEE, LocalDate.now(), CommonEnums.Status.N);
+            if (phone != null && !phone.isBlank()) {
+                member.setPhone(phone);
+            }
+            memberRepository.save(member);
+            return;
+        }
+
+        String tempPassword = "TempJoin1!";
+        Member newMember = Member.builder()
+                .name(name != null && !name.isBlank() ? name : "명함등록")
+                .email(email)
+                .phone(phoneForMember)
+                .password(passwordEncoder.encode(tempPassword))
+                .company(admin.getCompany())
+                .department(department)
+                .rank(rank)
+                .role(Member.Role.EMPLOYEE)
+                .registerDate(LocalDate.now())
+                .status(CommonEnums.Status.N)
+                .build();
+        Member saved = memberRepository.save(newMember);
+        Account account = Account.builder()
+                .member(saved)
+                .accountLeave(0)
+                .totalEarnedPoint(0)
+                .totalSpentPoint(0)
+                .build();
+        accountRepository.save(account);
     }
 
 }

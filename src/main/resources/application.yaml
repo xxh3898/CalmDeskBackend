@@ -24,6 +24,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-businesscard.sql
+
   servlet:
     multipart:
       max-file-size: 20MB
@@ -31,6 +36,21 @@ spring:
 
 server:
   port: 8080
+
+app:
+  business-card:
+    ai:
+      provider: openai
+  # 통화 기록: 녹음 저장 폴더, STT는 Google Cloud Speech-to-Text 사용
+  call-record:
+    recording-dir: ./recordings
+    stt:
+      provider: google-cloud  # Google Cloud Speech-to-Text (WebM 지원)
+    google-cloud:
+      # project-id는 application-secret.yaml에서 설정하세요
+      location: global  # global | us-central1 등
+    profanity:
+      provider: local  # DB 기반 로컬 필터링
 
 logging:
   level:

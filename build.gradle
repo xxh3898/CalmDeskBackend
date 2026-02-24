@@ -18,6 +18,17 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+    // 모든 gRPC 의존성을 1.62.2로 강제 통일
+    all {
+        resolutionStrategy {
+            force 'io.grpc:grpc-core:1.62.2'
+            force 'io.grpc:grpc-stub:1.62.2'
+            force 'io.grpc:grpc-api:1.62.2'
+            force 'io.grpc:grpc-netty-shaded:1.62.2'
+            force 'io.grpc:grpc-protobuf:1.62.2'
+            force 'io.grpc:grpc-services:1.62.2'
+        }
+    }
 }
 
 repositories {
@@ -27,6 +38,8 @@ repositories {
 dependencies {
     // Spring AI 버전 관리 (BOM 없으면 의존성 해결 안 됨)
     implementation platform('org.springframework.ai:spring-ai-bom:1.1.0')
+
+    implementation platform('com.google.cloud:libraries-bom:26.38.0')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -42,6 +55,18 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Google Cloud Speech-to-Text API (BOM에서 버전 관리)
+    implementation 'com.google.cloud:google-cloud-speech'
+
+    // gRPC 의존성 명시적 버전 지정 (버전 일관성 보장)
+    // BOM만으로는 버전 충돌이 해결되지 않아 명시적 버전 지정 필요
+    implementation 'io.grpc:grpc-core:1.62.2'
+    implementation 'io.grpc:grpc-stub:1.62.2'
+    implementation 'io.grpc:grpc-api:1.62.2'
+    implementation 'io.grpc:grpc-netty-shaded:1.62.2'
+    implementation 'io.grpc:grpc-protobuf:1.62.2'
+    implementation 'io.grpc:grpc-services:1.62.2'
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

@@ -22,6 +22,11 @@ public interface TeamService {
     /** 회사 소속 부서명 목록 (추가된 부서만) */
     List<String> getDepartmentNamesByCompanyId(Long companyId);
 
+    /** 회사 소속 부서 목록 (departmentId, departmentName) - 명함 등록 팀 선택용 */
+    List<DepartmentItem> getDepartmentsByCompanyId(Long companyId);
+
+    record DepartmentItem(Long departmentId, String departmentName) {}
+
     /** 회사에 부서 추가 (중복 시 예외) */
     void createDepartment(Long companyId, String departmentName);
 }

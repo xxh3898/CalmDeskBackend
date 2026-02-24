@@ -3,12 +3,14 @@ package com.code808.calmdesk.domain.company.controller;
 import com.code808.calmdesk.domain.company.dto.CompanyDto;
 import com.code808.calmdesk.domain.company.service.CompanyService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.company.repository.RankRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 관리자용 입사 신청 조회 및 처리 API
@@ -21,6 +23,7 @@ public class AdminJoinController {
 
     private final MemberRepository memberRepository;
     private final CompanyService companyService;
+    private final RankRepository rankRepository;
 
     /**
      * GET /api/admin/joins
@@ -55,5 +58,21 @@ public class AdminJoinController {
     public ResponseEntity<Void> rejectJoin(@PathVariable Long memberId, Principal principal) {
         companyService.rejectJoin(memberId, principal.getName());
         return ResponseEntity.ok().build();
+    }
+
+    /** 명함 입사 신청 시 직급 선택용 */
+    @GetMapping("/ranks")
+    public ResponseEntity<List<RankItem>> getRanks() {
+        List<RankItem> list = rankRepository.findAll().stream()
+                .map(r -> new RankItem(r.getRankId(), r.getRankName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
+
+    @lombok.Getter
+    @lombok.AllArgsConstructor
+    public static class RankItem {
+        private Long rankId;
+        private String rankName;
     }
 }
