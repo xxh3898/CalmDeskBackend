@@ -248,4 +248,7 @@ gradle-app.setting
 
 bin/
 
+/src/main/resources/*.json
+*.webm
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,windows,macos,visualstudiocode,java,react,gradle

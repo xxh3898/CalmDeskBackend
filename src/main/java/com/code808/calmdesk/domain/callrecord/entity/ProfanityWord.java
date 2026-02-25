@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "PROFANITY_WORD")
+@Table(name = "profanity_word")
 public class ProfanityWord extends BaseTimeEntity {
 
     @Id
