@@ -1,20 +1,29 @@
 package com.code808.calmdesk.domain.callrecord.port.impl;
 
-import com.code808.calmdesk.domain.callrecord.port.SpeechToTextPort;
-import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.speech.v1.*;
-import com.google.protobuf.ByteString;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import com.code808.calmdesk.domain.callrecord.port.SpeechToTextPort;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.speech.v1.RecognitionAudio;
+import com.google.cloud.speech.v1.RecognitionConfig;
+import com.google.cloud.speech.v1.RecognizeRequest;
+import com.google.cloud.speech.v1.RecognizeResponse;
+import com.google.cloud.speech.v1.SpeechClient;
+import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
+import com.google.cloud.speech.v1.SpeechRecognitionResult;
+import com.google.cloud.speech.v1.SpeechSettings;
+import com.google.protobuf.ByteString;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Google Cloud Speech-to-Text API로 음성 → 텍스트 변환.
@@ -43,12 +52,12 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
     private SpeechClient getSpeechClient() throws IOException {
         if (speechClient == null) {
             String jsonPath = null;
-            
+
             // 1순위: application-secret.yaml의 credentials-path
             if (credentialsPath != null && !credentialsPath.isBlank()) {
                 jsonPath = credentialsPath;
                 log.info("Google Cloud 인증: application-secret.yaml의 credentials-path 사용 - {}", jsonPath);
-            } 
+            }
             // 2순위: 환경 변수 GOOGLE_APPLICATION_CREDENTIALS
             else {
                 String envCredentials = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
@@ -59,23 +68,23 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
                     log.info("Google Cloud 인증: 기본 인증 방식 사용 (gcloud CLI 또는 GCP 환경)");
                 }
             }
-            
+
             // JSON 파일 경로가 있으면 직접 credentials 로드
             if (jsonPath != null) {
                 File jsonFile = new File(jsonPath);
                 if (!jsonFile.exists()) {
                     throw new IOException("Google Cloud 인증 JSON 파일을 찾을 수 없습니다: " + jsonPath);
                 }
-                
+
                 log.info("Google Cloud 인증: JSON 파일에서 credentials 로드 중 - {}", jsonFile.getAbsolutePath());
                 try (FileInputStream serviceAccountStream = new FileInputStream(jsonFile)) {
                     GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccountStream);
-                    
+
                     // SpeechSettings를 사용하여 credentials 설정
                     SpeechSettings speechSettings = SpeechSettings.newBuilder()
                             .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
                             .build();
-                    
+
                     speechClient = SpeechClient.create(speechSettings);
                     log.info("Google Cloud 인증: SpeechClient 생성 완료");
                 }
@@ -106,7 +115,7 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
 
             // MIME 타입을 RecognitionConfig의 AudioEncoding으로 변환
             RecognitionConfig.AudioEncoding encoding = getAudioEncoding(contentType);
-            
+
             log.info("Google Cloud STT 시작: encoding={}, 파일 크기={} bytes", encoding, audioBytes.length);
 
             // RecognitionConfig 설정 (한국어 인식 정확도 최대화)
@@ -114,16 +123,25 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
                     .setEncoding(encoding)
                     .setLanguageCode("ko-KR") // 한국어
                     .setEnableAutomaticPunctuation(true) // 자동 구두점
-                    .setModel("latest_long") // 최신 장문 모델
-                    .setUseEnhanced(true) // 향상된 모델 사용 (정확도 향상)
-                    .setEnableWordTimeOffsets(false) // 단어 시간 오프셋 비활성화 (속도 향상)
-                    .setEnableWordConfidence(true); // 단어별 신뢰도 활성화 (정확도 확인용)
+                    .setEnableWordConfidence(true); // 단어별 신뢰도 활성화
 
-            // 일부 인코딩은 샘플레이트가 필요하지 않음 (WEBM_OPUS, MP3 등)
-            // LINEAR16, FLAC 등은 샘플레이트 필요
-            if (encoding == RecognitionConfig.AudioEncoding.LINEAR16 || 
-                encoding == RecognitionConfig.AudioEncoding.FLAC) {
-                configBuilder.setSampleRateHertz(16000); // 기본 샘플레이트
+            // 최신 모델 및 향상된 모델 사용
+            // NOTE: latest_long 모델은 인코딩에 따라 일부 제약이 있을 수 있음
+            configBuilder.setModel("latest_long");
+            configBuilder.setUseEnhanced(true);
+
+            // 오디오 채널 설정 (기본 1)
+            // 브라우저 녹음 환경에 따라 스테레오일 수 있으므로 명시적으로 설정하거나 다중 채널 인식을 활성화할 수 있음
+            configBuilder.setAudioChannelCount(1);
+            configBuilder.setEnableSeparateRecognitionPerChannel(false);
+
+            // 중요: WEBM_OPUS, MP3 등 컨테이너 포맷은 샘플 레이트를 명시하지 않는 것이 좋음
+            if (encoding == RecognitionConfig.AudioEncoding.LINEAR16
+                    || encoding == RecognitionConfig.AudioEncoding.FLAC) {
+                configBuilder.setSampleRateHertz(16000);
+                log.info("STT 설정: SampleRateHertz=16000 설정 (인코딩: {})", encoding);
+            } else {
+                log.info("STT 설정: SampleRateHertz 설정을 생략합니다 (인코딩: {})", encoding);
             }
 
             RecognitionConfig config = configBuilder.build();
@@ -145,7 +163,7 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
             List<SpeechRecognitionResult> results = response.getResultsList();
 
             log.info("Google Cloud STT 응답: 결과 개수={}", results.size());
-            
+
             if (results.isEmpty()) {
                 log.warn("STT: 인식 결과가 없습니다. 가능한 원인:");
                 log.warn("  1. 오디오 파일에 음성이 없을 수 있습니다");
@@ -160,11 +178,11 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
             StringBuilder transcript = new StringBuilder();
             double totalConfidence = 0;
             int resultCount = 0;
-            
+
             for (SpeechRecognitionResult result : results) {
                 SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);
                 transcript.append(alternative.getTranscript()).append(" ");
-                
+
                 // 신뢰도 로깅 (getConfidence()는 항상 값을 반환하므로 try-catch로 처리)
                 try {
                     double confidence = alternative.getConfidence();
@@ -178,23 +196,23 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
             }
 
             String text = transcript.toString().trim();
-            
+
             if (resultCount > 0) {
                 double avgConfidence = totalConfidence / resultCount;
-                log.info("Google Cloud STT 성공: 텍스트 길이={}, 평균 신뢰도={} ({})", 
-                    text.length(), 
-                    avgConfidence,
-                    avgConfidence >= 0.9 ? "우수" : avgConfidence >= 0.7 ? "양호" : avgConfidence >= 0.5 ? "보통" : "낮음");
+                log.info("Google Cloud STT 성공: 텍스트 길이={}, 평균 신뢰도={} ({})",
+                        text.length(),
+                        avgConfidence,
+                        avgConfidence >= 0.9 ? "우수" : avgConfidence >= 0.7 ? "양호" : avgConfidence >= 0.5 ? "보통" : "낮음");
             } else {
                 log.info("Google Cloud STT 성공: 텍스트 길이={}", text.length());
             }
-            
+
             // 전사 결과 미리보기 로깅
             if (text.length() > 0) {
                 String preview = text.length() > 200 ? text.substring(0, 200) + "..." : text;
                 log.info("Google Cloud STT 전사 결과 미리보기: {}", preview);
             }
-            
+
             return text;
 
         } catch (IOException e) {
@@ -215,7 +233,7 @@ public class GoogleCloudSpeechToText implements SpeechToTextPort {
         }
 
         String lowerContentType = contentType.toLowerCase();
-        
+
         if (lowerContentType.contains("webm") || lowerContentType.contains("opus")) {
             return RecognitionConfig.AudioEncoding.WEBM_OPUS;
         } else if (lowerContentType.contains("wav") || lowerContentType.contains("pcm")) {

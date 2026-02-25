@@ -91,9 +91,9 @@ public class ChattingServiceImpl implements ChattingService {
 
             int unreadCount;
             if (myRoomMember.getLastReadMessageId() != null) {
-                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), myRoomMember.getLastReadMessageId());
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(room.getId(), myRoomMember.getLastReadMessageId());
             } else {
-                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), 0L);
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(room.getId(), 0L);
             }
 
             return ChattingDto.ChatRoomRes.from(room, myRoomMember.getRoomNameAlias(), lastMsg,
@@ -129,7 +129,7 @@ public class ChattingServiceImpl implements ChattingService {
 
         int unreadCount = members.size() - 1;
 
-        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(savedMessage, unreadCount);
+        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(savedMessage, unreadCount, ChattingDto.ChatMessageRes.MessageType.TALK);
 
         messagingTemplate.convertAndSend("/sub/chat/room/" + room.getRoomId(), response);
 
@@ -153,8 +153,14 @@ public class ChattingServiceImpl implements ChattingService {
         message.updateContent(request.getContent());
 
         // 소켓 전송 (수정 이벤트)
-        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0); // 수정 시 읽음 카운트는 갱신 안 함
+        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0, ChattingDto.ChatMessageRes.MessageType.EDIT); // 수정 시 읽음 카운트는 갱신 안 함
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
+
+        // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        for (ChatRoomMember member : members) {
+            messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
+        }
 
         return message;
     }
@@ -171,9 +177,15 @@ public class ChattingServiceImpl implements ChattingService {
 
         message.delete();
 
-        // 소켓 전송 (삭제 이벤트 - 수정과 동일하게 처리하되 isDeleted가 true임)
-        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0);
+        // 소켓 전송 (삭제 이벤트)
+        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0, ChattingDto.ChatMessageRes.MessageType.DELETE);
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
+
+        // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        for (ChatRoomMember member : members) {
+            messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
+        }
     }
 
     @Override
@@ -238,13 +250,15 @@ public class ChattingServiceImpl implements ChattingService {
         return messages.stream()
                 .map(msg -> {
                     int unreadCount = 0;
-                    for (ChatRoomMember member : members) {
-                        Long lastReadId = member.getLastReadMessageId();
-                        if (lastReadId == null || lastReadId < msg.getId()) {
-                            unreadCount++;
+                    if (!msg.isDeleted()) {
+                        for (ChatRoomMember member : members) {
+                            Long lastReadId = member.getLastReadMessageId();
+                            if (lastReadId == null || lastReadId < msg.getId()) {
+                                unreadCount++;
+                            }
                         }
                     }
-                    return ChattingDto.ChatMessageRes.from(msg, unreadCount);
+                    return ChattingDto.ChatMessageRes.from(msg, unreadCount, ChattingDto.ChatMessageRes.MessageType.TALK);
                 })
                 .collect(Collectors.toList());
     }
