@@ -156,6 +156,12 @@ public class ChattingServiceImpl implements ChattingService {
         ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0); // 수정 시 읽음 카운트는 갱신 안 함
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
 
+        // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        for (ChatRoomMember member : members) {
+            messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
+        }
+
         return message;
     }
 
@@ -171,9 +177,15 @@ public class ChattingServiceImpl implements ChattingService {
 
         message.delete();
 
-        // 소켓 전송 (삭제 이벤트 - 수정과 동일하게 처리하되 isDeleted가 true임)
+        // 소켓 전송 (삭제 이벤트)
         ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0);
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
+
+        // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        for (ChatRoomMember member : members) {
+            messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
+        }
     }
 
     @Override
