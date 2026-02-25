@@ -8,6 +8,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.code808.calmdesk.domain.Notification.entitiy.Notification;
+import com.code808.calmdesk.domain.Notification.repository.NotificationRepository;
+import com.code808.calmdesk.domain.Notification.service.NotificationService;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.dto.CompanyDto;
 import com.code808.calmdesk.domain.company.entity.Company;
@@ -24,6 +27,12 @@ import com.code808.calmdesk.global.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +47,8 @@ public class CompanyServiceImpl implements CompanyService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
     @Override
     public CompanyDto.CodeResponse generateCode() {
@@ -47,17 +58,15 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     @Transactional
-    public CompanyDto.RegisterResponse register(
-            CompanyDto.RegisterRequest request,
-            String email) {
-
+    public CompanyDto.RegisterResponse register(CompanyDto.RegisterRequest request, String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다. "));
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
 
         if (member.getCompany() != null) {
             throw new RuntimeException("이미 회사에 속해있습니다.");
         }
 
+        // 회사 생성 및 저장
         Company company = Company.builder()
                 .companyName(request.getCompanyName())
                 .companyCode(request.getCompanyCode())
@@ -65,19 +74,20 @@ public class CompanyServiceImpl implements CompanyService {
                 .minValue(request.getMinValue())
                 .maxValue(request.getMaxValue())
                 .build();
-
         Company savedCompany = companyRepository.save(company);
 
+        // 기본 부서(부서관리팀) 생성 및 저장
         Department defaultDept = Department.builder()
                 .departmentName("부서관리팀")
                 .company(savedCompany)
                 .build();
-
         Department savedDept = departmentRepository.save(defaultDept);
 
+        // 기본 직급(대표) 조회
         Rank defaultRank = rankRepository.findByRankName("대표")
-                .orElseThrow(() -> new RuntimeException("기본 직급을 찾을 수 없습니다"));
+                .orElseThrow(() -> new RuntimeException("기본 직급(대표)을 찾을 수 없습니다."));
 
+        // 회원 정보 업데이트 (관리자 권한 부여)
         member.updateCompanyInfo(
                 savedCompany,
                 savedDept,
@@ -87,7 +97,7 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.Y
         );
 
-        // ✨ 수정: savedCompany에서 ID를 가져와 세 번째 인자로 전달
+        // 토큰 재발급
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
                 "ADMIN",
@@ -100,8 +110,8 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CompanyDto.CheckResponse getByCode(String CompanyCode) {
-        Company company = companyRepository.findByCompanyCode(CompanyCode)
+    public CompanyDto.CheckResponse getByCode(String companyCode) {
+        Company company = companyRepository.findByCompanyCode(companyCode)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회사 코드입니다."));
 
         List<Department> departments = departmentRepository.findByCompany(company);
@@ -112,29 +122,29 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     @Transactional
-    public CompanyDto.JoinResponse join(
-            CompanyDto.JoinRequest request,
-            String email) {
+    public CompanyDto.JoinResponse join(CompanyDto.JoinRequest request, String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
 
         if (member.getCompany() != null) {
-            throw new RuntimeException("이미 회사에 속해있습니다");
+            throw new RuntimeException("이미 회사에 속해있습니다.");
         }
 
         Company company = companyRepository.findByCompanyCode(request.getCompanyCode())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 회사 코드입니다"));
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 회사 코드입니다."));
 
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 부서입니다"));
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 부서입니다."));
 
         Rank rank = rankRepository.findById(request.getRankId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 직급입니다"));
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 직급입니다."));
 
+        // 부서가 해당 회사 소속인지 검증
         if (!department.getCompany().getCompanyId().equals(company.getCompanyId())) {
-            throw new RuntimeException("해당 회사의 부서가 아닙니다");
+            throw new RuntimeException("해당 회사의 부서가 아닙니다.");
         }
 
+        // 회원 정보 업데이트 (승인 대기 상태 Status.N)
         member.updateCompanyInfo(
                 company,
                 department,
@@ -144,7 +154,6 @@ public class CompanyServiceImpl implements CompanyService {
                 CommonEnums.Status.N
         );
 
-        // ✨ 수정: 조회한 company에서 ID를 가져와 세 번째 인자로 전달
         String token = jwtTokenProvider.generateToken(
                 member.getEmail(),
                 "EMPLOYEE",
@@ -153,6 +162,23 @@ public class CompanyServiceImpl implements CompanyService {
                 department.getDepartmentName()
         );
 
+        // 관리자에게 입사 신청 알림 전송
+        List<Member> admins = memberRepository.findAllByCompany_CompanyIdAndRole(company.getCompanyId(), Member.Role.ADMIN);
+
+        for (Member admin : admins) {
+            Notification notification = Notification.builder()
+                    .title("입사 신청 알림")
+                    .content(member.getName() + "님이 입사를 신청했습니다.")
+                    .redirectUrl("/app/applications")
+                    .memberId(admin.getMemberId())
+                    .targetRole("ADMIN")
+                    .status("N")
+                    .build();
+
+            notificationRepository.save(notification);
+            notificationService.send(admin.getMemberId(), notification);
+        }
+
         return CompanyDto.JoinResponse.of(company, member.getStatus(), token);
     }
 
@@ -160,10 +186,11 @@ public class CompanyServiceImpl implements CompanyService {
     public List<CompanyDto.JoinListItemRes> listAllJoins(Long companyId) {
         companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다."));
+
         return memberRepository.findByCompany_CompanyIdAndStatusInWithDetails(
-                companyId,
-                Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R)
-        ).stream()
+                        companyId,
+                        Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R))
+                .stream()
                 .map(CompanyDto.JoinListItemRes::of)
                 .toList();
     }
@@ -173,19 +200,38 @@ public class CompanyServiceImpl implements CompanyService {
     public void approveJoin(Long memberId, String adminEmail) {
         Member admin = memberRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new RuntimeException("승인자를 찾을 수 없습니다."));
+
         if (admin.getCompany() == null) {
             throw new RuntimeException("관리자는 회사에 소속되어 있어야 합니다.");
         }
+
         Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
                 .orElseThrow(() -> new RuntimeException("대상을 찾을 수 없습니다."));
+
         if (member.getCompany() == null || !member.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
             throw new RuntimeException("해당 회사의 입사 신청자가 아닙니다.");
         }
+
         if (member.getStatus() != CommonEnums.Status.N) {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
-        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(), member.getRole(), LocalDate.now(), CommonEnums.Status.Y);
-        memberRepository.save(member);
+
+        // 상태 승인(Y)으로 변경
+        member.updateCompanyInfo(member.getCompany(), member.getDepartment(), member.getRank(),
+                member.getRole(), LocalDate.now(), CommonEnums.Status.Y);
+
+        // 알림 생성 및 SSE 전송
+        Notification notification = Notification.builder()
+                .title("입사 승인 알림")
+                .content(member.getName() + "님의 입사가 승인되었습니다. 환영합니다!")
+                .redirectUrl("/app/dashboard")
+                .memberId(memberId)
+                .targetRole("USER")
+                .status("N")
+                .build();
+
+        notificationRepository.save(notification);
+        notificationService.send(memberId, notification);
     }
 
     @Override
@@ -193,17 +239,23 @@ public class CompanyServiceImpl implements CompanyService {
     public void rejectJoin(Long memberId, String adminEmail) {
         Member admin = memberRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new RuntimeException("승인자를 찾을 수 없습니다."));
+
         if (admin.getCompany() == null) {
             throw new RuntimeException("관리자는 회사에 소속되어 있어야 합니다.");
         }
+
         Member member = memberRepository.findByIdWithCompanyAndDepartmentAndRank(memberId)
                 .orElseThrow(() -> new RuntimeException("대상을 찾을 수 없습니다."));
+
         if (member.getCompany() == null || !member.getCompany().getCompanyId().equals(admin.getCompany().getCompanyId())) {
             throw new RuntimeException("해당 회사의 입사 신청자가 아닙니다.");
         }
+
         if (member.getStatus() != CommonEnums.Status.N) {
             throw new RuntimeException("대기 상태가 아닙니다.");
         }
+
+        // 거절 시 데이터 처리 (요구사항에 따라 delete 혹은 Status.R 변경)
         memberRepository.delete(member);
     }
 

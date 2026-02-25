@@ -19,17 +19,29 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
-    // 1. SSE 구독 (기존 로직 유지 + 서비스 위임)
     @GetMapping(value = "/subscribe/{memberId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@PathVariable Long memberId) {
+        // 1. 타임아웃 설정 (1시간)
         SseEmitter emitter = new SseEmitter(60L * 1000 * 60);
+
+        // 2. 서비스에 등록 (이 메서드 내부에서 @Transactional이 없는지 꼭 확인하세요!)
         notificationService.addEmitter(memberId, emitter);
 
+        // 3. 연결 종료/타임아웃 콜백 설정 (메모리 누수 방지 핵심)
+        emitter.onCompletion(() -> notificationService.removeEmitter(memberId));
+        emitter.onTimeout(() -> notificationService.removeEmitter(memberId));
+        emitter.onError((e) -> notificationService.removeEmitter(memberId));
+
+        // 4. 더미 데이터 전송 (503 에러 및 연결 유지 방지)
         try {
-            emitter.send(SseEmitter.event().name("connect").data("connected!"));
+            emitter.send(SseEmitter.event()
+                    .id("") // Last-Event-ID 대응을 위해 빈 값이라도 넣어주는 것이 좋습니다.
+                    .name("connect")
+                    .data("connected!"));
         } catch (IOException e) {
-            // 예외 처리
+            notificationService.removeEmitter(memberId);
         }
+
         return emitter;
     }
 
@@ -50,4 +62,14 @@ public class NotificationController {
     public void readNotification(@PathVariable Long id) {
         notificationService.markAsRead(id);
     }
+
+
+    @PatchMapping("/api/notifications/read-all/{memberId}")
+    public void readAllNotifications(@PathVariable Long memberId) {
+
+        notificationService.markAllAsRead(memberId);
+
+    }
+
+
 }

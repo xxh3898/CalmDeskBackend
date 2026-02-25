@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
@@ -17,18 +17,18 @@ import org.springframework.util.MimeTypeUtils;
 import java.util.List;
 
 /**
- * 명함 이미지 → 구조화 추출 (Gemini Vision).
- * app.business-card.ai.provider=gemini (기본값) 일 때 사용.
+ * 명함 이미지 → 구조화 추출 (OpenAI GPT-4o Vision).
+ * app.business-card.ai.provider=openai 일 때 사용.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.business-card.ai.provider", havingValue = "gemini", matchIfMissing = true)
-public class GeminiBusinessCardExtraction implements BusinessCardExtractionPort {
+@ConditionalOnProperty(name = "app.business-card.ai.provider", havingValue = "openai")
+public class OpenAIBusinessCardExtraction implements BusinessCardExtractionPort {
 
     private static final String EXTRACT_PROMPT = BusinessCardExtractionPrompt.EXTRACT_PROMPT;
 
-    private final GoogleGenAiChatModel chatModel;
+    private final OpenAiChatModel chatModel;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -48,7 +48,7 @@ public class GeminiBusinessCardExtraction implements BusinessCardExtractionPort 
             String response = chatModel.call(new Prompt(List.of(userMessage))).getResult().getOutput().getText();
             return parseToDto(response);
         } catch (Exception e) {
-            log.warn("명함 추출 실패 (Gemini)", e);
+            log.warn("명함 추출 실패 (OpenAI)", e);
             return BusinessCardExtractedDto.builder()
                     .extractionError("명함 인식 중 오류가 발생했습니다: " + (e.getMessage() != null ? e.getMessage() : "알 수 없음"))
                     .build();

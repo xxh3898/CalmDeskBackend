@@ -19,6 +19,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    open-in-view: false  # <--- 이 줄을 여기에 추가하세요!
     defer-datasource-initialization: true
     properties:
       hibernate:
@@ -27,7 +28,6 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema-businesscard.sql
 
   servlet:
     multipart:

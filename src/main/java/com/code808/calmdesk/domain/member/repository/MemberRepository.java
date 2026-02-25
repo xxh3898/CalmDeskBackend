@@ -20,9 +20,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         Optional<Member> findByEmail(String email);
 
         @Query("SELECT m FROM MEMBER m "
-                        + "LEFT JOIN FETCH m.company "
-                        + "LEFT JOIN FETCH m.department "
-                        + "WHERE m.email = :email")
+                + "LEFT JOIN FETCH m.company "
+                + "LEFT JOIN FETCH m.department "
+                + "LEFT JOIN FETCH m.rank "  // <-- Rank 정보도 한 번에 가져오도록 추가
+                + "WHERE m.email = :email")
         Optional<Member> findEmailWithDetails(@Param("email") String email);
 
         boolean existsByEmail(String email);
@@ -74,5 +75,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
         // MemberRepository.java
         List<Member> findAllByCompany_CompanyIdAndRole(Long companyId, Member.Role role);
+
 
 }

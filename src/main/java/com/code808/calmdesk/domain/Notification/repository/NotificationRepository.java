@@ -2,6 +2,10 @@ package com.code808.calmdesk.domain.Notification.repository;
 
 import com.code808.calmdesk.domain.Notification.entitiy.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
@@ -15,4 +19,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // 특정 회원의 모든 알림 삭제 (선택 사항)
     void deleteAllByMemberId(Long memberId);
 
+
+    // 전체 읽음 처리
+    @Modifying
+    @Query("UPDATE Notification n SET n.status = 'Y' WHERE n.memberId = :memberId AND n.status = 'N'")
+    void markAllAsRead(@Param("memberId") Long memberId);
 }
