@@ -12,4 +12,6 @@ public interface CompanyService {
     List<CompanyDto.JoinListItemRes> listAllJoins(Long companyId);
     void approveJoin(Long memberId, String adminEmail);
     void rejectJoin(Long memberId, String adminEmail);
+    void createJoinRequestFromBusinessCard(String adminEmail, String name, String email, String phone,
+                                           Long departmentId, Long rankId);
 }
