@@ -4,6 +4,10 @@ import com.code808.calmdesk.domain.company.dto.CompanyDto;
 import com.code808.calmdesk.domain.company.service.CompanyService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.company.repository.RankRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +17,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 관리자용 입사 신청 조회 및 처리 API
- * GET 목록, PUT 승인/반려
+ * 관리자용 입사 신청 조회 및 처리 API GET 목록, PUT 승인/반려
  */
+@Tag(name = "Company Join", description = "관리자용 입사 신청 관리 API (목록 조회, 승인/반려)")
 @RestController
 @RequestMapping("/api/admin/joins")
 @RequiredArgsConstructor
@@ -26,9 +30,9 @@ public class AdminJoinController {
     private final RankRepository rankRepository;
 
     /**
-     * GET /api/admin/joins
-     * 현재 로그인한 관리자 회사의 입사 신청 전체 목록 (대기/승인/반려 모두, 휴가 탭처럼 유지)
+     * GET /api/admin/joins 현재 로그인한 관리자 회사의 입사 신청 전체 목록 (대기/승인/반려 모두, 휴가 탭처럼 유지)
      */
+    @Operation(summary = "입사 신청 목록 조회", description = "현재 로그인한 관리자 회사의 모든 입사 신청 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<List<CompanyDto.JoinListItemRes>> getJoins(Principal principal) {
         var member = memberRepository.findEmailWithDetails(principal.getName())
@@ -41,26 +45,33 @@ public class AdminJoinController {
     }
 
     /**
-     * PUT /api/admin/joins/{memberId}/approve
-     * 입사 신청 승인
+     * PUT /api/admin/joins/{memberId}/approve 입사 신청 승인
      */
+    @Operation(summary = "입사 신청 승인", description = "특정 사용자의 입사 신청을 승인합니다.")
     @PutMapping("/{memberId}/approve")
-    public ResponseEntity<Void> approveJoin(@PathVariable Long memberId, Principal principal) {
+    public ResponseEntity<Void> approveJoin(
+            @Parameter(description = "대상 사용자 ID", example = "5") @PathVariable Long memberId,
+            Principal principal) {
         companyService.approveJoin(memberId, principal.getName());
         return ResponseEntity.ok().build();
     }
 
     /**
-     * PUT /api/admin/joins/{memberId}/reject
-     * 입사 신청 반려
+     * PUT /api/admin/joins/{memberId}/reject 입사 신청 반려
      */
+    @Operation(summary = "입사 신청 반려", description = "특정 사용자의 입사 신청을 반려합니다.")
     @PutMapping("/{memberId}/reject")
-    public ResponseEntity<Void> rejectJoin(@PathVariable Long memberId, Principal principal) {
+    public ResponseEntity<Void> rejectJoin(
+            @Parameter(description = "대상 사용자 ID", example = "5") @PathVariable Long memberId,
+            Principal principal) {
         companyService.rejectJoin(memberId, principal.getName());
         return ResponseEntity.ok().build();
     }
 
-    /** 명함 입사 신청 시 직급 선택용 */
+    /**
+     * 명함 입사 신청 시 직급 선택용
+     */
+    @Operation(summary = "직급 목록 조회", description = "입사 신청 시 선택 가능한 직급 목록을 조회합니다.")
     @GetMapping("/ranks")
     public ResponseEntity<List<RankItem>> getRanks() {
         List<RankItem> list = rankRepository.findAll().stream()
@@ -71,8 +82,12 @@ public class AdminJoinController {
 
     @lombok.Getter
     @lombok.AllArgsConstructor
+    @Schema(description = "직급 정보")
     public static class RankItem {
+
+        @Schema(description = "직급 ID", example = "1")
         private Long rankId;
+        @Schema(description = "직급 명칭", example = "대리")
         private String rankName;
     }
 }
