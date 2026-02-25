@@ -3,11 +3,10 @@ package com.code808.calmdesk.domain.dashboard.controller.employee;
 import java.security.Principal;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.code808.calmdesk.domain.dashboard.dto.employee.DashboardStatusUpdateReq;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
@@ -18,6 +17,7 @@ import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Dashboard Employee", description = "직원용 대시보드 API (상태 조회 및 변경)")
 @RestController
 @RequestMapping("/api/employee/dashboard")
 @RequiredArgsConstructor
@@ -27,6 +27,7 @@ public class EmployeeDashboardController {
     private final MemberRepository memberRepository;
     private final ShopEmployeeService shopEmployeeService;
 
+    @Operation(summary = "대시보드 데이터 조회", description = "로그인한 직원의 출결 상태, 오늘 기록, 미션 현황 등을 조회합니다.")
     @GetMapping
     public ResponseEntity<EmployeeDashboardResponseDto> getDashboard(Principal principal) {
         Long memberId = getMemberId(principal);
@@ -34,6 +35,7 @@ public class EmployeeDashboardController {
         return ResponseEntity.ok(data);
     }
 
+    @Operation(summary = "출근 처리", description = "출근 체크 및 현재 기분 상태를 기록합니다.")
     @PostMapping("/status/clock-in")
     public ResponseEntity<Void> clockIn(Principal principal, @RequestBody EmotionCheckInRequest req) {
         Long memberId = getMemberId(principal);
@@ -48,6 +50,7 @@ public class EmployeeDashboardController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "퇴근 처리", description = "퇴근 체크 및 현재 기분 상태를 기록합니다.")
     @PostMapping("/status/clock-out")
     public ResponseEntity<Void> clockOut(Principal principal, @RequestBody EmotionCheckInRequest req) {
         Long memberId = getMemberId(principal);
@@ -55,6 +58,7 @@ public class EmployeeDashboardController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "상태 변경", description = "직원의 현재 근무 상태(근무 중, 회의 중, 휴식 중 등)를 변경합니다.")
     @PostMapping("/status")
     public ResponseEntity<Void> updateStatus(Principal principal, @RequestBody DashboardStatusUpdateReq req) {
         Long memberId = getMemberId(principal);

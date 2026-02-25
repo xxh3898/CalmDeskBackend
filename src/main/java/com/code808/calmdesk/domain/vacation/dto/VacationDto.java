@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.vacation.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,10 +21,16 @@ public class VacationDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class VacationRequestReq {
+
+        @Schema(description = "휴가 종류 (연차, 반차, 워케이션)", example = "연차")
         private String type;         // "연차", "반차", "워케이션"
+        @Schema(description = "시작 날짜", example = "2026-03-01")
         private LocalDate startDate;
+        @Schema(description = "종료 날짜", example = "2026-03-05")
         private LocalDate endDate;
+        @Schema(description = "신청 사유", example = "가족 여행")
         private String reason;
+        @Schema(description = "반차 종류 (오전, 오후)", example = "오전")
         private String halfDayType;  // 반차일 경우 "오전" 또는 "오후"
     }
 
@@ -35,7 +42,10 @@ public class VacationDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class VacationRequestRes {
+
+        @Schema(description = "휴가 ID", example = "50")
         private Long id;
+        @Schema(description = "처리 결과 메시지", example = "휴가 신청이 완료되었습니다.")
         private String message;
 
         public static VacationRequestRes of(Long id, String message) {

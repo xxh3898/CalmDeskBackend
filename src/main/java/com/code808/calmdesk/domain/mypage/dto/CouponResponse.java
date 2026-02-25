@@ -2,6 +2,7 @@ package com.code808.calmdesk.domain.mypage.dto;
 
 import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
 import com.code808.calmdesk.domain.gifticon.entity.Order;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,13 +16,22 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CouponResponse {
+
+    @Schema(description = "주문 ID", example = "100")
     private Long orderId;
+    @Schema(description = "기프티콘 ID", example = "50")
     private Long gifticonId;
+    @Schema(description = "기프티콘 상품명", example = "아이스 아메리카노")
     private String gifticonName;
+    @Schema(description = "판매처/브랜드", example = "스타벅스")
     private String shop;
+    @Schema(description = "상품 이미지 URL", example = "http://example.com/image.jpg")
     private String image;
+    @Schema(description = "구매 가격", example = "4500")
     private Integer price;
+    @Schema(description = "유효 기간 (yyyy.MM.dd)", example = "2024.12.31")
     private String expiryDate;
+    @Schema(description = "상태 (AVAILABLE: 사용 가능, USED: 사용 완료/만료)", example = "AVAILABLE")
     private String status; // AVAILABLE, USED
 
     public static CouponResponse from(Order order, Gifticon gifticon) {

@@ -1,6 +1,7 @@
 package com.code808.calmdesk.domain.mypage.dto;
 
 import com.code808.calmdesk.domain.gifticon.entity.PointHistory;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,11 +14,18 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PointHistoryResponse {
+
+    @Schema(description = "내역 ID", example = "200")
     private Long historyId;
+    @Schema(description = "유형 (EARN: 적립, SPEND: 사용)", example = "EARN")
     private String type; // EARN, SPEND
+    @Schema(description = "내역 명칭", example = "출석 체크 적립")
     private String title;
+    @Schema(description = "변동 금액 (기호 포함)", example = "100")
     private Integer amount;
+    @Schema(description = "변동 후 잔액", example = "5100")
     private Integer balanceAfter;
+    @Schema(description = "일시 (yyyy.MM.dd HH:mm)", example = "2024.02.25 15:30")
     private String date;
 
     public static PointHistoryResponse from(PointHistory pointHistory) {

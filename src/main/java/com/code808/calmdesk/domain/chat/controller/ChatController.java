@@ -15,9 +15,12 @@ import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.dto.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "AI Chat", description = "AI 챗봇과의 대화 API")
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class ChatController {
     private final ChatService chatService;
     private final MemberRepository memberRepository;
 
+    @Operation(summary = "AI 메시지 전송", description = "AI 챗봇에게 메시지를 보내고 응답을 받습니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<ChatResponse>> chatPost(
             @Valid @RequestBody ChatRequest request,
