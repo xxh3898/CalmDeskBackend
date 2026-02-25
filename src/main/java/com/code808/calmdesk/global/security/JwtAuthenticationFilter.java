@@ -1,11 +1,9 @@
 package com.code808.calmdesk.global.security;
 
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,9 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -51,11 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String email = jwtTokenProvider.getEmailFromToken(token);
                     String role = jwtTokenProvider.getRoleFromToken(token);
 
-                    SimpleGrantedAuthority authority =
-                            new SimpleGrantedAuthority("ROLE_" + role);
+                    SimpleGrantedAuthority authority
+                            = new SimpleGrantedAuthority("ROLE_" + role);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
+                    UsernamePasswordAuthenticationToken authentication
+                            = new UsernamePasswordAuthenticationToken(
                                     email,
                                     null,
                                     Collections.singletonList(authority)
@@ -85,11 +86,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        // SSE 구독 요청은 토큰 검증 필터를 거치지 않음
-        return path.startsWith("/subscribe");
+        // SSE 구독 요청 및 Swagger 관련 요청은 필터를 거치지 않음
+        return path.startsWith("/subscribe")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars");
     }
 }

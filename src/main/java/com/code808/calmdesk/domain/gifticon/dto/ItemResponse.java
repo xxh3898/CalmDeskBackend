@@ -2,17 +2,25 @@ package com.code808.calmdesk.domain.gifticon.dto;
 
 import com.code808.calmdesk.domain.gifticon.entity.CompanyGifticon;
 import com.code808.calmdesk.domain.gifticon.entity.Gifticon;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
 public class ItemResponse {
+
+    @Schema(description = "아이템 ID", example = "10")
     private Long id;
+    @Schema(description = "아이템 명칭", example = "아메리카노")
     private String name;
+    @Schema(description = "이미지 URL", example = "http://example.com/item.png")
     private String img;
+    @Schema(description = "가격 (포인트)", example = "3500")
     private int price;
+    @Schema(description = "재고 수량", example = "100")
     private int quantity; // 👈 이제 이 값은 CompanyGifticon의 재고가 됩니다.
+    @Schema(description = "활성화 여부", example = "true")
     private boolean isActive;
 
     // 1. 기존 생성자 (전체 공통 조회용)

@@ -2,6 +2,7 @@ package com.code808.calmdesk.domain.mypage.dto;
 
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,13 +16,23 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 public class StressResponse {
 
-    /** 해당 period 기준 평균 스트레스 (0~100). 마이페이지는 주간(이번 주) 기준 */
+    @Schema(description = "평균 스트레스 지수 (0~100)", example = "45.5")
+    /**
+     * 해당 period 기준 평균 스트레스 (0~100). 마이페이지는 주간(이번 주) 기준
+     */
     private Double avgStress;
+    @Schema(description = "스트레스 레벨 (LOW, NORMAL, HIGH, CRITICAL)", example = "NORMAL")
     private String level;            // LOW, NORMAL, HIGH, CRITICAL
+    @Schema(description = "스트레스 레벨 한글 명칭", example = "보통")
     private String levelText;        // 한글 레벨명
+    @Schema(description = "상태 메시지", example = "스트레스 수준이 보통입니다.")
     private String message;          // 상태 메시지
+    @Schema(description = "상세 설명 및 권장 사항", example = "적당한 휴식을 권장합니다.")
     private String description;      // 상세 설명
-    /** 기간 표시. 예: "이번 주 (2026.02.03 ~ 2026.02.09)" → avgStress는 이 구간 평균 */
+    @Schema(description = "조회 기간 정보", example = "이번 주 (2026.02.03 ~ 2026.02.09)")
+    /**
+     * 기간 표시. 예: "이번 주 (2026.02.03 ~ 2026.02.09)" → avgStress는 이 구간 평균
+     */
     private String period;
 
     /**
@@ -81,8 +92,8 @@ public class StressResponse {
      * 주간 스트레스 집계 기준 응답 생성 (이번 주 평균)
      *
      * @param avgStressLevelRaw 주간 평균 원시 스트레스(1~5)
-     * @param periodStr         기간 표시 문자열 (예: "이번 주 (2026.02.03 ~ 2026.02.09)")
-     * @param checkinCount      주간 총 체크인 횟수
+     * @param periodStr 기간 표시 문자열 (예: "이번 주 (2026.02.03 ~ 2026.02.09)")
+     * @param checkinCount 주간 총 체크인 횟수
      */
     public static StressResponse fromWeekly(double avgStressLevelRaw, String periodStr, int checkinCount) {
         double raw = avgStressLevelRaw;

@@ -4,6 +4,9 @@ import com.code808.calmdesk.domain.Notification.dto.NotificationResponseDto;
 import com.code808.calmdesk.domain.Notification.entitiy.Notification;
 import com.code808.calmdesk.domain.Notification.service.NotificationService;
 import com.code808.calmdesk.domain.Notification.repository.NotificationRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.List;
 
+@Tag(name = "Notification", description = "실시간 알림(SSE) 및 알림 내역 관리 API")
 @RestController
 @RequiredArgsConstructor // 리액트 포트 허용
 public class NotificationController {
@@ -19,8 +23,9 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
+    @Operation(summary = "알림 구독 (SSE)", description = "Server-Sent Events(SSE)를 통해 실시간 알림을 구독합니다.")
     @GetMapping(value = "/subscribe/{memberId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@PathVariable Long memberId) {
+    public SseEmitter subscribe(@Parameter(description = "사용자 ID") @PathVariable Long memberId) {
         // 1. 타임아웃 설정 (1시간)
         SseEmitter emitter = new SseEmitter(60L * 1000 * 60);
 
@@ -46,8 +51,9 @@ public class NotificationController {
     }
 
     // 2. 초기 알림 내역 조회 (프론트 fetchNotifications 대응)
+    @Operation(summary = "알림 내역 조회", description = "사용자의 최근 알림 내역을 조회합니다.")
     @GetMapping("/api/notifications/{memberId}")
-    public List<NotificationResponseDto> getNotifications(@PathVariable Long memberId) {
+    public List<NotificationResponseDto> getNotifications(@Parameter(description = "사용자 ID") @PathVariable Long memberId) {
         // 1. 리포지토리에서 엔티티 리스트를 가져옵니다.
         List<Notification> notifications = notificationRepository.findAllByMemberIdOrderByCreateDateDesc(memberId);
 
@@ -58,18 +64,18 @@ public class NotificationController {
     }
 
     // 3. 알림 읽음 처리 (프론트 markAsRead 대응)
+    @Operation(summary = "알림 읽음 처리", description = "특정 알림을 읽음 상태로 변경합니다.")
     @PatchMapping("/api/notifications/{id}/read")
-    public void readNotification(@PathVariable Long id) {
+    public void readNotification(@Parameter(description = "알림 ID") @PathVariable Long id) {
         notificationService.markAsRead(id);
     }
 
-
+    @Operation(summary = "모든 알림 읽음 처리", description = "사용자의 모든 알림을 읽음 상태로 변경합니다.")
     @PatchMapping("/api/notifications/read-all/{memberId}")
-    public void readAllNotifications(@PathVariable Long memberId) {
+    public void readAllNotifications(@Parameter(description = "사용자 ID") @PathVariable Long memberId) {
 
         notificationService.markAllAsRead(memberId);
 
     }
-
 
 }
