@@ -1,5 +1,7 @@
 package com.code808.calmdesk.domain.monitoring.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -7,6 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,7 +93,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         LocalDateTime endDateTime = endOfPeriod.atTime(LocalTime.MAX);
 
         // 1. 통계
-        MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter, companyId);
+        MonitoringDto.Stats stats = calculateStats(startOfPeriod, endOfPeriod, startDateTime, endDateTime, isQuarter,
+                companyId);
 
         // 2. 추세
         List<MonitoringDto.Trend> trends = calculateTrends(now, startOfPeriod, isQuarter, companyId);
@@ -90,7 +103,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         List<MonitoringDto.Distribution> distributions = calculateDistribution(startOfPeriod, endOfPeriod, companyId);
 
         // 4. 부서별 비교
-        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfPeriod, endOfPeriod, companyId);
+        List<MonitoringDto.DeptComparison> deptComparisons = calculateDeptComparison(startOfPeriod, endOfPeriod,
+                companyId);
 
         // 5. 주요 요인
         List<MonitoringDto.Factor> factors = calculateFactors(startOfPeriod, endOfPeriod, companyId);
@@ -104,7 +118,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT, LocalDateTime endDT, boolean isQuarter, Long companyId) {
+    private MonitoringDto.Stats calculateStats(LocalDate start, LocalDate end, LocalDateTime startDT,
+            LocalDateTime endDT, boolean isQuarter, Long companyId) {
         long totalMembers = memberRepository.countByCompany_CompanyId(companyId);
 
         // 평균 스트레스
@@ -117,7 +132,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         LocalDate prevStart = start.minusMonths(minusMonths);
         LocalDate prevEnd = end.minusMonths(minusMonths);
 
-        Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRangeAndCompany(prevStart, prevEnd, companyId);
+        Double prevAvrStressVal = stressSummaryRepository.findAvgStressByDateRangeAndCompany(prevStart, prevEnd,
+                companyId);
         double prevStress = prevAvrStressVal != null ? MonitoringDto.convertScore(prevAvrStressVal) : 0.0;
         double stressDiff = currentStress - prevStress;
 
@@ -127,19 +143,24 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         long riskDiff = highRiskCount - prevHighRiskCount;
 
         // 쿨다운 횟수
-        long cooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT, endDT, companyId);
+        long cooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT, endDT,
+                companyId);
         double avgCooldown = totalMembers > 0 ? (double) cooldownCount / totalMembers : 0;
-        long prevCooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
+        long prevCooldownCount = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
         double prevAvgCooldown = totalMembers > 0 ? (double) prevCooldownCount / totalMembers : 0;
         double cooldownDiff = avgCooldown - prevAvgCooldown;
         // 상담 신청 건수
-        long consultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT, endDT, companyId);
-        long prevConsultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
+        long consultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(startDT,
+                endDT, companyId);
+        long prevConsultationCount = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                prevStart.atStartOfDay(), prevEnd.atTime(LocalTime.MAX), companyId);
         long consultDiff = consultationCount - prevConsultationCount;
 
         // 직원 수 변동 추이 (전월 말 대비 실시간 증감)
         LocalDate startOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
-        long membersAtStartOfCurrentMonth = memberRepository.countByCompany_CompanyIdAndJoinDateBefore(companyId, startOfCurrentMonth);
+        long membersAtStartOfCurrentMonth = memberRepository.countByCompany_CompanyIdAndJoinDateBefore(companyId,
+                startOfCurrentMonth);
         long employeeDiff = totalMembers - membersAtStartOfCurrentMonth;
 
         return MonitoringDto.Stats.builder()
@@ -156,7 +177,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 .build();
     }
 
-    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, boolean isQuarter, Long companyId) {
+    private List<MonitoringDto.Trend> calculateTrends(LocalDate now, LocalDate startOfPeriod, boolean isQuarter,
+            Long companyId) {
         List<MonitoringDto.Trend> list = new ArrayList<>();
 
         if (isQuarter) {
@@ -166,15 +188,16 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
                 Double stress = stressSummaryRepository.findAvgStressByDateRangeAndCompany(start, end, companyId);
-                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
-                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                        start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                        start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
 
                 list.add(MonitoringDto.Trend.of(
                         start.getMonthValue() + "월",
                         stress,
                         (int) consult,
-                        (int) cooldown
-                ));
+                        (int) cooldown));
             }
 
         } else {
@@ -185,15 +208,16 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
                 LocalDate end = date.withDayOfMonth(date.lengthOfMonth());
 
                 Double stress = stressSummaryRepository.findAvgStressByDateRangeAndCompany(start, end, companyId);
-                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
-                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long consult = consultationRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                        start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+                long cooldown = coolDownRepository.countByCreatedDateBetweenAndMember_Company_CompanyId(
+                        start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
 
                 list.add(MonitoringDto.Trend.of(
                         date.getMonthValue() + "월",
                         stress,
                         (int) consult,
-                        (int) cooldown
-                ));
+                        (int) cooldown));
             }
         }
         return list;
@@ -209,16 +233,14 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             return List.of(
                     new MonitoringDto.Distribution("위험 (70%+)", 0, "#fb7185"),
                     new MonitoringDto.Distribution("주의 (30-70%)", 0, "#fca5a5"),
-                    new MonitoringDto.Distribution("정상 (0-30%)", 0, "#818cf8")
-            );
+                    new MonitoringDto.Distribution("정상 (0-30%)", 0, "#818cf8"));
         }
 
         // 파이 차트용 데이터 반환
         return List.of(
                 new MonitoringDto.Distribution("위험 (70%+)", (int) risk, "#fb7185"),
                 new MonitoringDto.Distribution("주의 (30-70%)", (int) caution, "#fca5a5"),
-                new MonitoringDto.Distribution("정상 (0-30%)", (int) normal, "#818cf8")
-        );
+                new MonitoringDto.Distribution("정상 (0-30%)", (int) normal, "#818cf8"));
     }
 
     private List<MonitoringDto.DeptComparison> calculateDeptComparison(LocalDate start, LocalDate end, Long companyId) {
@@ -243,8 +265,7 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             list.add(MonitoringDto.DeptComparison.of(
                     dept.getDepartmentName(),
                     avg,
-                    highRisk
-            ));
+                    highRisk));
         }
 
         return list;
@@ -252,7 +273,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
 
     private List<MonitoringDto.Factor> calculateFactors(LocalDate start, LocalDate end, Long companyId) {
         // StressFactorRepository는 LocalDateTime을 사용하므로 변환 필요
-        List<Object[]> results = stressFactorRepository.findTopStressFactorsByCompany(start.atStartOfDay(), end.atTime(LocalTime.MAX), companyId);
+        List<Object[]> results = stressFactorRepository.findTopStressFactorsByCompany(start.atStartOfDay(),
+                end.atTime(LocalTime.MAX), companyId);
 
         // 상위 4개 요인 추출
         return results.stream().limit(4).map(obj -> {
@@ -263,5 +285,218 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             int percent = total > 0 ? (int) ((count * 100) / total) : 0;
             return new MonitoringDto.Factor(factor, percent);
         }).collect(Collectors.toList());
+    }
+
+    // ────────────────────────────────────────────────────────────────────────────
+    // 엑셀 보고서 생성
+    // ────────────────────────────────────────────────────────────────────────────
+
+    @Override
+    public byte[] generateExcelReport(String period, Integer year, Long companyId) {
+        MonitoringDto data = getMonitoringData(period, year, companyId);
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle dataStyle = createDataStyle(workbook);
+
+            // 섹션별 제목 색상 (파랑 / 초록 / 빨강 / 보라 / 주황)
+            CellStyle statsTitle = createTitleStyle(workbook, IndexedColors.DARK_BLUE);
+            CellStyle trendTitle = createTitleStyle(workbook, IndexedColors.DARK_GREEN);
+            CellStyle distTitle = createTitleStyle(workbook, IndexedColors.DARK_RED);
+            CellStyle deptTitle = createTitleStyle(workbook, IndexedColors.VIOLET);
+            CellStyle factorTitle = createTitleStyle(workbook, IndexedColors.ORANGE);
+
+            Sheet sheet = workbook.createSheet("모니터링 보고서");
+            int currentRow = 0;
+
+            currentRow = writeStatsSection(sheet, data.getStats(), statsTitle, headerStyle, dataStyle, currentRow);
+            currentRow++;
+            currentRow = writeTrendSection(sheet, data.getTrend(), trendTitle, headerStyle, dataStyle, currentRow);
+            currentRow++;
+            currentRow = writeDistributionSection(sheet, data.getDistribution(), distTitle, headerStyle, dataStyle,
+                    currentRow);
+            currentRow++;
+            currentRow = writeDeptComparisonSection(sheet, data.getDeptComparison(), deptTitle, headerStyle, dataStyle,
+                    currentRow);
+            currentRow++;
+            writeFactorsSection(sheet, data.getFactors(), factorTitle, headerStyle, dataStyle, currentRow);
+
+            autoSizeColumns(sheet, 4); // 가장 넓은 섹션(월별 추세) 기준 4열
+
+            workbook.write(out);
+            return out.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("엑셀 파일 생성 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    // ── 섹션 작성 메서드 (단일 시트에 startRow부터 이어 씀, 다음 행 번호 반환) ─────
+
+    private int writeStatsSection(Sheet sheet, MonitoringDto.Stats stats,
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 요약 통계", titleStyle, startRow);
+
+        String[] headers = { "항목", "값", "추세" };
+        startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
+
+        Object[][] rows = {
+                { "총 직원 수", stats.getTotalEmployees(), stats.getEmployeeTrend() },
+                { "평균 스트레스", stats.getAvgStress(), stats.getStressTrend() },
+                { "고위험군 수", stats.getHighRiskCount(), stats.getRiskTrend() },
+                { "평균 쿨다운", stats.getAvgCooldown(), stats.getCooldownTrend() },
+                { "상담 신청 건수", stats.getConsultationCount(), stats.getConsultationTrend() },
+        };
+        for (Object[] r : rows) {
+            Row row = sheet.createRow(startRow++);
+            for (int i = 0; i < r.length; i++) {
+                Cell cell = row.createCell(i);
+                cell.setCellValue(r[i] != null ? r[i].toString() : "-");
+                cell.setCellStyle(dataStyle);
+            }
+        }
+        return startRow;
+    }
+
+    private int writeTrendSection(Sheet sheet, List<MonitoringDto.Trend> trends,
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 월별 추세", titleStyle, startRow);
+
+        String[] headers = { "월", "스트레스(%)", "상담 건수", "쿨다운 횟수" };
+        startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
+
+        for (MonitoringDto.Trend t : trends) {
+            Row row = sheet.createRow(startRow++);
+            row.createCell(0).setCellValue(t.getMonth());
+            row.createCell(1).setCellValue(t.getStress());
+            row.createCell(2).setCellValue(t.getConsultation());
+            row.createCell(3).setCellValue(t.getCooldown());
+            for (int i = 0; i < headers.length; i++)
+                row.getCell(i).setCellStyle(dataStyle);
+        }
+        return startRow;
+    }
+
+    private int writeDistributionSection(Sheet sheet, List<MonitoringDto.Distribution> distributions,
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 스트레스 분포", titleStyle, startRow);
+
+        String[] headers = { "구분", "인원 수(명)" };
+        startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
+
+        for (MonitoringDto.Distribution d : distributions) {
+            Row row = sheet.createRow(startRow++);
+            row.createCell(0).setCellValue(d.getName());
+            row.createCell(1).setCellValue(d.getValue());
+            for (int i = 0; i < headers.length; i++)
+                row.getCell(i).setCellStyle(dataStyle);
+        }
+        return startRow;
+    }
+
+    private int writeDeptComparisonSection(Sheet sheet, List<MonitoringDto.DeptComparison> deptComparisons,
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 부서별 비교", titleStyle, startRow);
+
+        String[] headers = { "부서명", "평균 스트레스(%)", "고위험군 수(명)" };
+        startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
+
+        for (MonitoringDto.DeptComparison d : deptComparisons) {
+            Row row = sheet.createRow(startRow++);
+            row.createCell(0).setCellValue(d.getDept());
+            row.createCell(1).setCellValue(d.getAvg());
+            row.createCell(2).setCellValue(d.getHighRisk());
+            for (int i = 0; i < headers.length; i++)
+                row.getCell(i).setCellStyle(dataStyle);
+        }
+        return startRow;
+    }
+
+    private int writeFactorsSection(Sheet sheet, List<MonitoringDto.Factor> factors,
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 주요 스트레스 요인", titleStyle, startRow);
+
+        String[] headers = { "요인", "비율(%)" };
+        startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
+
+        for (MonitoringDto.Factor f : factors) {
+            Row row = sheet.createRow(startRow++);
+            row.createCell(0).setCellValue(f.getFactor());
+            row.createCell(1).setCellValue(f.getValue());
+            for (int i = 0; i < headers.length; i++)
+                row.getCell(i).setCellStyle(dataStyle);
+        }
+        return startRow;
+    }
+
+    // ── 스타일 / 유틸 ─────────────────────────────────────────────────────────
+
+    /** 섹션 제목 행을 작성하고 다음 행 번호를 반환 */
+    private int writeSectionTitle(Sheet sheet, String title, CellStyle headerStyle, int rowNum) {
+        Row row = sheet.createRow(rowNum);
+        Cell cell = row.createCell(0);
+        cell.setCellValue(title);
+        cell.setCellStyle(headerStyle);
+        return rowNum + 1;
+    }
+
+    /** 컬럼 헤더 행을 작성하고 다음 행 번호를 반환 */
+    private int writeSectionHeader(Sheet sheet, String[] headers, CellStyle style, int rowNum) {
+        Row row = sheet.createRow(rowNum);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = row.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(style);
+        }
+        return rowNum + 1;
+    }
+
+    private CellStyle createHeaderStyle(XSSFWorkbook wb) {
+        CellStyle style = wb.createCellStyle();
+        Font font = wb.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.CORNFLOWER_BLUE.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        setBorders(style);
+        return style;
+    }
+
+    /** 섹션 제목용 색상 스타일 (IndexedColors로 색 지정) */
+    private CellStyle createTitleStyle(XSSFWorkbook wb, IndexedColors color) {
+        CellStyle style = wb.createCellStyle();
+        Font font = wb.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        style.setFont(font);
+        style.setFillForegroundColor(color.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.LEFT);
+        setBorders(style);
+        return style;
+    }
+
+    private CellStyle createDataStyle(XSSFWorkbook wb) {
+        CellStyle style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        setBorders(style);
+        return style;
+    }
+
+    private void setBorders(CellStyle style) {
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+    }
+
+    private void autoSizeColumns(Sheet sheet, int columnCount) {
+        for (int i = 0; i < columnCount; i++) {
+            sheet.autoSizeColumn(i);
+        }
     }
 }
