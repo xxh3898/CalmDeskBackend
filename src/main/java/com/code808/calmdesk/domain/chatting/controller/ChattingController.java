@@ -67,7 +67,7 @@ public class ChattingController {
     public ResponseEntity<ChattingDto.ChatMessageRes> editMessage(@PathVariable("messageId") Long messageId,
             @RequestBody ChattingDto.ChatMessageEditReq request,
             Principal principal) {
-        return ResponseEntity.ok(ChattingDto.ChatMessageRes.from(chatService.editMessage(messageId, request, principal.getName())));
+        return ResponseEntity.ok(ChattingDto.ChatMessageRes.from(chatService.editMessage(messageId, request, principal.getName()), ChattingDto.ChatMessageRes.MessageType.EDIT));
     }
 
     /**

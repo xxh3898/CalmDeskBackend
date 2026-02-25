@@ -17,5 +17,5 @@ public interface ChattingMessageRepository extends JpaRepository<ChatMessage, Lo
     // 페이지네이션: 가장 최신 메시지를 가져옴
     List<ChatMessage> findByChatRoomIdOrderByCreatedDateDesc(Long chatRoomId, Pageable pageable);
 
-    int countByChatRoomIdAndIdGreaterThan(Long chatRoomId, Long id);
+    int countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(Long chatRoomId, Long id);
 }
