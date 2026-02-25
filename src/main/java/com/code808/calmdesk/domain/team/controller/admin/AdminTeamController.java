@@ -80,6 +80,17 @@ public class AdminTeamController {
         return ResponseEntity.ok(names);
     }
 
+    /** 명함 등록 시 팀(부서) 선택용 - departmentId, departmentName 반환 */
+    @GetMapping("/departments-list")
+    public ResponseEntity<List<TeamService.DepartmentItem>> getDepartmentsList(Principal principal) {
+        Member admin = memberRepository.findEmailWithDetails(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        if (admin.getCompany() == null || admin.getCompany().getCompanyId() == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(teamService.getDepartmentsByCompanyId(admin.getCompany().getCompanyId()));
+    }
+
     @PostMapping("/departments")
     public ResponseEntity<Void> createDepartment(Principal principal, @RequestBody CreateDepartmentRequest request) {
         Member admin = memberRepository.findEmailWithDetails(principal.getName())
