@@ -66,6 +66,13 @@ public class EmployeeDashboardController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/cooldown")
+    private ResponseEntity<Void> startCoolDown(Principal principal, @RequestBody EmotionCheckInRequest req){
+        Long memberId = getMemberId(principal);
+        dashboardService.startCoolDown(memberId, req);
+        return ResponseEntity.ok().build();
+    }
+
     private Long getMemberId(Principal principal) {
         return memberRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))

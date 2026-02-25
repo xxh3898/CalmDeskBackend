@@ -12,4 +12,6 @@ public interface EmployeeDashboardService {
     void clockOut(Long memberId, EmotionCheckInRequest request);
 
     void updateStatus(Long memberId, String status);
+
+    void startCoolDown(Long memberId, EmotionCheckInRequest request);
 }

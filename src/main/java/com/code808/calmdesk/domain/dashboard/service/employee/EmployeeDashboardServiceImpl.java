@@ -19,6 +19,7 @@ import com.code808.calmdesk.domain.attendance.repository.EmotionCheckinRepositor
 import com.code808.calmdesk.domain.dashboard.dto.admin.DashboardDto;
 import com.code808.calmdesk.domain.dashboard.service.admin.DashboardService;
 import com.code808.calmdesk.domain.dashboard.sse.SseEmitterRegistry;
+import org.springframework.cglib.core.Local;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+//@Transactional(readOnly = true)
 public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     private final MemberRepository memberRepository;
@@ -328,6 +329,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
         if (workStatus.getWorkStatusId() != null) {
             workStatus.updateStatus(status, LocalDateTime.now());
+            workStatusRepository.save(workStatus);
         } else {
             workStatusRepository.save(workStatus);
         }
@@ -363,4 +365,36 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         }
         return result;
     }
+
+    @Override
+    @Transactional
+    public void startCoolDown(Long memberId, EmotionCheckInRequest request){
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        LocalDate today = LocalDate.now();
+
+        Attendance attendance = dashboardRepository.findTodayAttendance(member, today)
+                .orElseThrow(()-> new IllegalArgumentException("출근 기록이 없습니다."));
+
+        saveEmotionCheckIn(attendance, request);
+
+        boolean alreadyCoolDown = workStatusRepository.findByMember(member)
+                .map(ws -> ws.getStatus() == WorkStatusType.COOLDOWN)
+                .orElse(false);
+
+        if (!alreadyCoolDown) {
+            updateWorkStatus(member, WorkStatusType.COOLDOWN);
+        } else {
+            eventPublisher.publishEvent(new DashboardEvent(member.getCompany().getCompanyId()));
+        }
+
+        StressDto.SummaryRequest summaryRequest = StressDto.SummaryRequest.builder()
+                .memberId(memberId)
+                .summaryDate(today)
+                .build();
+        stressSummaryService.createDailySummary(summaryRequest);
+    }
+
+
 }
