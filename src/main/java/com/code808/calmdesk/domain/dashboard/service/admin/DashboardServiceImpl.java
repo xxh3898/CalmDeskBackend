@@ -31,6 +31,10 @@ public class DashboardServiceImpl implements DashboardService {
         private final DashboardRepository dashboardRepository;
         private final AttendanceRepository attendanceRepository;
 
+        private static final List<Attendance.AttendanceStatus> attendanceStatuses = Arrays.asList(
+                Attendance.AttendanceStatus.ATTEND,
+                Attendance.AttendanceStatus.LATE);
+
         private LocalDate getBaseDate(DashboardDto.DashboardRequest request) {
                 return Optional.ofNullable(request.getDate())
                                 .or(() -> attendanceRepository.findLatestWorkDate(request.getCompanyId()))
@@ -69,40 +73,49 @@ public class DashboardServiceImpl implements DashboardService {
         public DashboardDto.CompanyStats getCompanyStats(DashboardDto.DashboardRequest request) {
                 LocalDate baseDate = getBaseDate(request);
 
-                CompanyStatsProjection todayCompanyStats = dashboardRepository.findCompanyStats(
+                CompanyStatsProjection todayStats = dashboardRepository.findCompanyStats(
                                 request.getCompanyId(), baseDate, request.getThreshold());
-
-                Double yesterdayAvg = dashboardRepository.findCompanyAvgStress(
-                                request.getCompanyId(), baseDate.minusDays(1));
-
-                List<Attendance.AttendanceStatus> attendanceStatuses = Arrays.asList(
-                                Attendance.AttendanceStatus.ATTEND,
-                                Attendance.AttendanceStatus.LATE);
 
                 AttendanceRateProjection todayAttendance = dashboardRepository.findAttendanceRate(
                                 request.getCompanyId(), baseDate, attendanceStatuses);
-
-                AttendanceRateProjection yesterdayAttendance = dashboardRepository.findAttendanceRate(
-                                request.getCompanyId(), baseDate.minusDays(1), attendanceStatuses);
 
                 Long consultationCount = dashboardRepository.countWaitingConsultations(request.getCompanyId());
                 Long vacationCount = dashboardRepository.countPendingVacations(request.getCompanyId());
 
                 return DashboardDto.CompanyStats.of(
-                                todayCompanyStats.getAvgStressLevel(),
-                                yesterdayAvg,
-                                todayCompanyStats.getTotalMembers(),
-                                todayCompanyStats.getHighRiskCount(),
+                                todayStats.getAvgStressLevel(),
+                                todayStats.getTotalMembers(),
+                                todayStats.getHighRiskCount(),
                                 (todayAttendance != null) ? todayAttendance.getAttendanceRate() : 0.0,
-                                (yesterdayAttendance != null) ? yesterdayAttendance.getAttendanceRate() : 0.0,
                                 consultationCount,
                                 vacationCount);
         }
+
+//    public DashboardDto.YesterdayStats getYesterdayStats(DashboardDto.DashboardRequest request) {
+//        LocalDate yesterday = LocalDate.now().minusDays(1);
+//
+//        Double yesterdayAvg = dashboardRepository.findCompanyAvgStress(
+//                request.getCompanyId(), yesterday);
+//
+//        AttendanceRateProjection yesterdayAttendance = dashboardRepository.findAttendanceRate(
+//                request.getCompanyId(), yesterday, attendanceStatuses);
+//
+//        return DashboardDto.YesterdayStats.of(
+//                yesterday,
+//                yesterdayAvg,
+//                (yesterdayAttendance != null) ? yesterdayAttendance.getAttendanceRate() : 0.0);
+//    }
 
         public DashboardDto.DashboardResponse getAllStats(DashboardDto.DashboardRequest request) {
                 DashboardDto.CompanyStats companyStats = getCompanyStats(request);
                 List<DashboardDto.DepartmentStats> departmentStats = getDepartmentStats(request);
                 List<DashboardDto.HighRiskMember> highRiskMembers = getHighRiskMembers(request);
+
+            log.info("==== [대시보드 조회 시작] ====");
+            log.info("1. 요청된 날짜(Request Date): {}", request.getDate());
+            log.info("3. 회사 ID: {}", request.getCompanyId());
+            log.info("4. 위험군 임계치(Threshold): {}", request.getThreshold());
+            log.info("=============================");
 
                 return DashboardDto.DashboardResponse.of(
                                 request.getDate(),

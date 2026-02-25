@@ -10,6 +10,8 @@ import com.code808.calmdesk.domain.member.repository.AccountRepository;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.mypage.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -122,14 +125,13 @@ public class MyPageServiceImpl implements MyPageService {
     }
 
     @Override
-    public List<PointHistoryResponse> getPointHistory(Long memberId) {
-        Member member = memberRepository.findById(memberId)
+    public Page<PointHistoryResponse> getPointHistory(Long memberId, Pageable pageable) {
+        memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        List<PointHistory> histories = pointHistoryRepository.findByMemberIdOrderByCreateDateDescIdDesc(member.getId());
-        return histories.stream()
-                .map(PointHistoryResponse::from)
-                .collect(Collectors.toList());
+        return pointHistoryRepository
+                .findByMemberIdOrderByCreateDateDescIdDesc(memberId, pageable)
+                .map(PointHistoryResponse::from);
     }
 
     @Override

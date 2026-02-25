@@ -20,6 +20,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT m FROM MEMBER m "
             + "LEFT JOIN FETCH m.company "
             + "LEFT JOIN FETCH m.department "
+            + "LEFT JOIN FETCH m.rank " // <-- Rank 정보도 한 번에 가져오도록 추가
             + "WHERE m.email = :email")
     Optional<Member> findEmailWithDetails(@Param("email") String email);
 
@@ -44,6 +45,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             + "WHERE m.company.companyId = :companyId")
     List<Member> findAllByCompanyIdWithDepartmentAndRank(@Param("companyId") Long companyId);
 
+    @Query(value = "SELECT m FROM MEMBER m "
+            + "LEFT JOIN FETCH m.department "
+            + "LEFT JOIN FETCH m.rank "
+            + "WHERE m.company.companyId = :companyId", countQuery = "SELECT COUNT(m) FROM MEMBER m WHERE m.company.companyId = :companyId")
+    Page<Member> findAllByCompanyIdWithDepartmentAndRankPaged(@Param("companyId") Long companyId,
+            Pageable pageable);
+
     long countByRegisterDateBefore(java.time.LocalDate date);
 
     long countByJoinDateBefore(java.time.LocalDate date);
@@ -51,10 +59,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     long countByJoinDateBetween(java.time.LocalDate start, java.time.LocalDate end);
 
     @Query("SELECT m FROM MEMBER m LEFT JOIN FETCH m.department LEFT JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.status = :status")
-    List<Member> findByCompany_CompanyIdAndStatusWithDetails(@Param("companyId") Long companyId, @Param("status") CommonEnums.Status status);
+    List<Member> findByCompany_CompanyIdAndStatusWithDetails(@Param("companyId") Long companyId,
+            @Param("status") CommonEnums.Status status);
 
     @Query("SELECT m FROM MEMBER m LEFT JOIN FETCH m.department LEFT JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.status IN :statuses ORDER BY m.createdDate DESC")
-    List<Member> findByCompany_CompanyIdAndStatusInWithDetails(@Param("companyId") Long companyId, @Param("statuses") List<CommonEnums.Status> statuses);
+    List<Member> findByCompany_CompanyIdAndStatusInWithDetails(@Param("companyId") Long companyId,
+            @Param("statuses") List<CommonEnums.Status> statuses);
 
     @Query("SELECT m.company.companyId FROM MEMBER m WHERE m.email = :email")
     Optional<Long> findCompanyIdByEmail(@Param("email") String email);

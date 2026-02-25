@@ -2,6 +2,7 @@ package com.code808.calmdesk.domain.attendance.service;
 
 import com.code808.calmdesk.domain.attendance.dto.StressDto;
 import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.attendance.event.DashboardEvent;
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.attendance.repository.EmotionCheckinRepository;
 import com.code808.calmdesk.domain.company.entity.Department;
@@ -9,6 +10,7 @@ import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class StressSummaryServiceImpl implements StressSummaryService {
     private final StressSummaryRepository stressSummaryRepository;
     private final MemberRepository memberRepository;
     private final EmotionCheckinRepository emotionCheckinRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public StressDto.SummaryResponse createDailySummary(StressDto.SummaryRequest request) {
@@ -62,6 +65,11 @@ public class StressSummaryServiceImpl implements StressSummaryService {
                     .build();
             savedSummary = stressSummaryRepository.save(newSummary);
         }
+
+        Long companyId = member.getCompany().getCompanyId();
+        eventPublisher.publishEvent(
+                new DashboardEvent(companyId)
+        );
 
         return StressDto.SummaryResponse.builder()
                 .memberId(memberId)
