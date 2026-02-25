@@ -301,19 +301,27 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle dataStyle = createDataStyle(workbook);
 
+            // 섹션별 제목 색상 (파랑 / 초록 / 빨강 / 보라 / 주황)
+            CellStyle statsTitle = createTitleStyle(workbook, IndexedColors.DARK_BLUE);
+            CellStyle trendTitle = createTitleStyle(workbook, IndexedColors.DARK_GREEN);
+            CellStyle distTitle = createTitleStyle(workbook, IndexedColors.DARK_RED);
+            CellStyle deptTitle = createTitleStyle(workbook, IndexedColors.VIOLET);
+            CellStyle factorTitle = createTitleStyle(workbook, IndexedColors.ORANGE);
+
             Sheet sheet = workbook.createSheet("모니터링 보고서");
             int currentRow = 0;
 
-            currentRow = writeStatsSection(sheet, data.getStats(), headerStyle, dataStyle, currentRow);
+            currentRow = writeStatsSection(sheet, data.getStats(), statsTitle, headerStyle, dataStyle, currentRow);
             currentRow++;
-            currentRow = writeTrendSection(sheet, data.getTrend(), headerStyle, dataStyle, currentRow);
+            currentRow = writeTrendSection(sheet, data.getTrend(), trendTitle, headerStyle, dataStyle, currentRow);
             currentRow++;
-            currentRow = writeDistributionSection(sheet, data.getDistribution(), headerStyle, dataStyle, currentRow);
-            currentRow++;
-            currentRow = writeDeptComparisonSection(sheet, data.getDeptComparison(), headerStyle, dataStyle,
+            currentRow = writeDistributionSection(sheet, data.getDistribution(), distTitle, headerStyle, dataStyle,
                     currentRow);
             currentRow++;
-            writeFactorsSection(sheet, data.getFactors(), headerStyle, dataStyle, currentRow);
+            currentRow = writeDeptComparisonSection(sheet, data.getDeptComparison(), deptTitle, headerStyle, dataStyle,
+                    currentRow);
+            currentRow++;
+            writeFactorsSection(sheet, data.getFactors(), factorTitle, headerStyle, dataStyle, currentRow);
 
             autoSizeColumns(sheet, 4); // 가장 넓은 섹션(월별 추세) 기준 4열
 
@@ -328,9 +336,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     // ── 섹션 작성 메서드 (단일 시트에 startRow부터 이어 씀, 다음 행 번호 반환) ─────
 
     private int writeStatsSection(Sheet sheet, MonitoringDto.Stats stats,
-            CellStyle headerStyle, CellStyle dataStyle, int startRow) {
-        // 섹션 제목
-        startRow = writeSectionTitle(sheet, "▶ 요약 통계", headerStyle, startRow);
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 요약 통계", titleStyle, startRow);
 
         String[] headers = { "항목", "값", "추세" };
         startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
@@ -354,8 +361,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private int writeTrendSection(Sheet sheet, List<MonitoringDto.Trend> trends,
-            CellStyle headerStyle, CellStyle dataStyle, int startRow) {
-        startRow = writeSectionTitle(sheet, "▶ 월별 추세", headerStyle, startRow);
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 월별 추세", titleStyle, startRow);
 
         String[] headers = { "월", "스트레스(%)", "상담 건수", "쿨다운 횟수" };
         startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
@@ -373,8 +380,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private int writeDistributionSection(Sheet sheet, List<MonitoringDto.Distribution> distributions,
-            CellStyle headerStyle, CellStyle dataStyle, int startRow) {
-        startRow = writeSectionTitle(sheet, "▶ 스트레스 분포", headerStyle, startRow);
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 스트레스 분포", titleStyle, startRow);
 
         String[] headers = { "구분", "인원 수(명)" };
         startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
@@ -390,8 +397,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private int writeDeptComparisonSection(Sheet sheet, List<MonitoringDto.DeptComparison> deptComparisons,
-            CellStyle headerStyle, CellStyle dataStyle, int startRow) {
-        startRow = writeSectionTitle(sheet, "▶ 부서별 비교", headerStyle, startRow);
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 부서별 비교", titleStyle, startRow);
 
         String[] headers = { "부서명", "평균 스트레스(%)", "고위험군 수(명)" };
         startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
@@ -408,8 +415,8 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
     }
 
     private int writeFactorsSection(Sheet sheet, List<MonitoringDto.Factor> factors,
-            CellStyle headerStyle, CellStyle dataStyle, int startRow) {
-        startRow = writeSectionTitle(sheet, "▶ 주요 스트레스 요인", headerStyle, startRow);
+            CellStyle titleStyle, CellStyle headerStyle, CellStyle dataStyle, int startRow) {
+        startRow = writeSectionTitle(sheet, "▶ 주요 스트레스 요인", titleStyle, startRow);
 
         String[] headers = { "요인", "비율(%)" };
         startRow = writeSectionHeader(sheet, headers, headerStyle, startRow);
@@ -455,6 +462,20 @@ public class AdminMonitoringServiceImpl implements AdminMonitoringService {
         style.setFillForegroundColor(IndexedColors.CORNFLOWER_BLUE.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setAlignment(HorizontalAlignment.CENTER);
+        setBorders(style);
+        return style;
+    }
+
+    /** 섹션 제목용 색상 스타일 (IndexedColors로 색 지정) */
+    private CellStyle createTitleStyle(XSSFWorkbook wb, IndexedColors color) {
+        CellStyle style = wb.createCellStyle();
+        Font font = wb.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        style.setFont(font);
+        style.setFillForegroundColor(color.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.LEFT);
         setBorders(style);
         return style;
     }
