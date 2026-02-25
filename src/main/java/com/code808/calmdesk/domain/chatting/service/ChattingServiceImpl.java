@@ -91,9 +91,9 @@ public class ChattingServiceImpl implements ChattingService {
 
             int unreadCount;
             if (myRoomMember.getLastReadMessageId() != null) {
-                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(room.getId(), myRoomMember.getLastReadMessageId());
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), myRoomMember.getLastReadMessageId());
             } else {
-                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(room.getId(), 0L);
+                unreadCount = chatMessageRepository.countByChatRoomIdAndIdGreaterThan(room.getId(), 0L);
             }
 
             return ChattingDto.ChatRoomRes.from(room, myRoomMember.getRoomNameAlias(), lastMsg,
@@ -142,7 +142,7 @@ public class ChattingServiceImpl implements ChattingService {
 
     @Override
     @Transactional
-    public ChatMessage editMessage(Long messageId, ChattingDto.ChatMessageEditReq request, String email) {
+    public ChattingDto.ChatMessageRes editMessage(Long messageId, ChattingDto.ChatMessageEditReq request, String email) {
         ChatMessage message = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
 
@@ -153,16 +153,23 @@ public class ChattingServiceImpl implements ChattingService {
         message.updateContent(request.getContent());
 
         // 소켓 전송 (수정 이벤트)
-        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0, ChattingDto.ChatMessageRes.MessageType.EDIT); // 수정 시 읽음 카운트는 갱신 안 함
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        int unreadCount = 0;
+        for (ChatRoomMember member : members) {
+            if (member.getLastReadMessageId() == null || member.getLastReadMessageId() < message.getId()) {
+                unreadCount++;
+            }
+        }
+
+        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, unreadCount, ChattingDto.ChatMessageRes.MessageType.EDIT);
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
 
         // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
-        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
         for (ChatRoomMember member : members) {
             messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
         }
 
-        return message;
+        return response;
     }
 
     @Override
@@ -178,11 +185,18 @@ public class ChattingServiceImpl implements ChattingService {
         message.delete();
 
         // 소켓 전송 (삭제 이벤트)
-        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, 0, ChattingDto.ChatMessageRes.MessageType.DELETE);
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
+        int unreadCount = 0;
+        for (ChatRoomMember member : members) {
+            if (member.getLastReadMessageId() == null || member.getLastReadMessageId() < message.getId()) {
+                unreadCount++;
+            }
+        }
+
+        ChattingDto.ChatMessageRes response = ChattingDto.ChatMessageRes.from(message, unreadCount, ChattingDto.ChatMessageRes.MessageType.DELETE);
         messagingTemplate.convertAndSend("/sub/chat/room/" + message.getChatRoom().getRoomId(), response);
 
         // 모든 참여자에게 개인 토픽으로도 전송 (목록 업데이트용)
-        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(message.getChatRoom().getId());
         for (ChatRoomMember member : members) {
             messagingTemplate.convertAndSend("/sub/chat/user/" + member.getMember().getEmail(), response);
         }
@@ -250,12 +264,10 @@ public class ChattingServiceImpl implements ChattingService {
         return messages.stream()
                 .map(msg -> {
                     int unreadCount = 0;
-                    if (!msg.isDeleted()) {
-                        for (ChatRoomMember member : members) {
-                            Long lastReadId = member.getLastReadMessageId();
-                            if (lastReadId == null || lastReadId < msg.getId()) {
-                                unreadCount++;
-                            }
+                    for (ChatRoomMember member : members) {
+                        Long lastReadId = member.getLastReadMessageId();
+                        if (lastReadId == null || lastReadId < msg.getId()) {
+                            unreadCount++;
                         }
                     }
                     return ChattingDto.ChatMessageRes.from(msg, unreadCount, ChattingDto.ChatMessageRes.MessageType.TALK);
