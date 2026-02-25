@@ -147,6 +147,15 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
+    public List<TeamService.DepartmentItem> getDepartmentsByCompanyId(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("회사를 찾을 수 없습니다."));
+        return departmentRepository.findByCompany(company).stream()
+                .map(d -> new TeamService.DepartmentItem(d.getDepartmentId(), d.getDepartmentName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void createDepartment(Long companyId, String departmentName) {
         if (departmentName == null || departmentName.isBlank()) {
