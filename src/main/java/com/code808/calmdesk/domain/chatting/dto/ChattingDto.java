@@ -93,6 +93,7 @@ public class ChattingDto {
     public static class ChatMessageRes {
 
         private Long id;
+        private String roomId;
         private String senderName;
         private Long senderId;
         private String content;
@@ -103,6 +104,7 @@ public class ChattingDto {
         public static ChatMessageRes from(ChatMessage message) {
             return ChatMessageRes.builder()
                     .id(message.getId())
+                    .roomId(message.getChatRoom().getRoomId())
                     .senderName(message.getSender().getName())
                     .senderId(message.getSender().getMemberId())
                     .content(message.isDeleted() ? "삭제된 메시지입니다." : message.getContent())
@@ -115,6 +117,7 @@ public class ChattingDto {
         public static ChatMessageRes from(ChatMessage message, int unreadCount) {
             return ChatMessageRes.builder()
                     .id(message.getId())
+                    .roomId(message.getChatRoom().getRoomId())
                     .senderName(message.getSender().getName())
                     .senderId(message.getSender().getMemberId())
                     .content(message.isDeleted() ? "삭제된 메시지입니다." : message.getContent())

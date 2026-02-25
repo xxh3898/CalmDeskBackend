@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class ConsultationController {
         return ResponseEntity.created(URI.create("/api/consultations/" + consultationId)).build();
     }
 
-    private final com.code808.calmdesk.domain.member.repository.MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getWaitingCount(java.security.Principal principal) {

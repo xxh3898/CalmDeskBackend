@@ -5,11 +5,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.code808.calmdesk.domain.chatting.dto.ChattingDto;
 import com.code808.calmdesk.domain.chatting.service.ChattingService;
@@ -59,25 +55,25 @@ public class ChattingController {
     @GetMapping("/api/chat/history/{roomId}")
     public ResponseEntity<List<ChattingDto.ChatMessageRes>> getChatHistory(
             @PathVariable("roomId") String roomId,
-            @org.springframework.web.bind.annotation.RequestParam(value = "lastMessageId", required = false) Long lastMessageId,
-            @org.springframework.web.bind.annotation.RequestParam(value = "size", defaultValue = "50") int size) {
+            @RequestParam(value = "lastMessageId", required = false) Long lastMessageId,
+            @RequestParam(value = "size", defaultValue = "50") int size) {
         return ResponseEntity.ok(chatService.getChatHistory(roomId, lastMessageId, size));
     }
 
     /**
      * 메시지 수정
      */
-    @PostMapping("/api/chat/message/{messageId}/edit") // PUT method equivalent or explicit PUT
+    @PatchMapping("/api/chat/message/{messageId}")
     public ResponseEntity<ChattingDto.ChatMessageRes> editMessage(@PathVariable("messageId") Long messageId,
-                                                                  @RequestBody ChattingDto.ChatMessageEditReq request,
-                                                                  Principal principal) {
+            @RequestBody ChattingDto.ChatMessageEditReq request,
+            Principal principal) {
         return ResponseEntity.ok(ChattingDto.ChatMessageRes.from(chatService.editMessage(messageId, request, principal.getName())));
     }
 
     /**
      * 메시지 삭제
      */
-    @PostMapping("/api/chat/message/{messageId}/delete") // Using POST for delete if needed, or DELETE
+    @DeleteMapping("/api/chat/message/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") Long messageId, Principal principal) {
         chatService.deleteMessage(messageId, principal.getName());
         return ResponseEntity.ok().build();
