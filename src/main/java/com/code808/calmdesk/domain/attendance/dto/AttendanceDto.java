@@ -8,7 +8,7 @@ import java.util.Locale;
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.vacation.entity.Vacation;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,13 +33,21 @@ public class AttendanceDto {
     @AllArgsConstructor
     public static class AttendanceHistoryItemRes {
 
+        @Schema(description = "ID", example = "101")
         private Long id;
+        @Schema(description = "일(Day)", example = "24")
         private int day;
+        @Schema(description = "날짜 (요일 포함)", example = "2026.02.24 (화)")
         private String date;
+        @Schema(description = "출근 시간", example = "08:52")
         private String clockIn;
+        @Schema(description = "퇴근 시간", example = "18:05")
         private String clockOut;
-        private String status;   // 정상, 지각
-        private String duration; // 9h 13m
+        @Schema(description = "출결 상태 (정상, 지각, 결근)", example = "정상")
+        private String status;
+        @Schema(description = "총 근무 시간", example = "9h 13m")
+        private String duration;
+        @Schema(description = "비고/특이사항", example = "특이사항 없음")
         private String note;
 
         public static AttendanceHistoryItemRes of(Attendance a) {
@@ -76,10 +84,15 @@ public class AttendanceDto {
     @AllArgsConstructor
     public static class AttendanceSummaryRes {
 
+        @Schema(description = "이번 달 실제 출근 일수", example = "14")
         private int monthWorkDays;
+        @Schema(description = "이번 달 영업일 총수", example = "21")
         private int monthTotalDays;
+        @Schema(description = "지각/결근 횟수", example = "1")
         private int lateOrAbsenceCount;
+        @Schema(description = "잔여 연차 일수", example = "12.5")
         private double remainingVacation;
+        @Schema(description = "이번 주 총 근무 시간", example = "28.5")
         private double weekWorkHours;
 
         public static AttendanceSummaryRes of(int monthWorkDays, int monthTotalDays, int lateOrAbsenceCount,
@@ -104,14 +117,23 @@ public class AttendanceDto {
     @AllArgsConstructor
     public static class LeaveRequestItemRes {
 
+        @Schema(description = "ID", example = "50")
         private Long id;
-        private String type;   // 연차, 반차, 워케이션
+        @Schema(description = "휴가 종류 (연차, 반차, 워케이션)", example = "연차")
+        private String type;
+        @Schema(description = "휴가 기간", example = "2026.03.01 - 03.02")
         private String period;
-        private String status; // 승인대기, 승인완료
-        private String days;   // 2일, 0.5일, 0.0일
+        @Schema(description = "승인 상태 (승인대기, 승인완료, 반려)", example = "승인대기")
+        private String status;
+        @Schema(description = "사용 일수", example = "2일")
+        private String days;
+        @Schema(description = "신청자 이름", example = "홍길동")
         private String requestMemberName;
+        @Schema(description = "부서명", example = "개발팀")
         private String departmentName;
+        @Schema(description = "신청 사유", example = "개인 사유")
         private String reason;
+        @Schema(description = "시작일", example = "2026-03-01")
         private LocalDate startDate;
 
         /**
@@ -170,9 +192,12 @@ public class AttendanceDto {
 
     private static String mapLeaveStatus(CommonEnums.Status s) {
         return switch (s) {
-            case Y -> "승인완료";
-            case R -> "반려";
-            default -> "승인대기";
+            case Y ->
+                "승인완료";
+            case R ->
+                "반려";
+            default ->
+                "승인대기";
         };
     }
 
