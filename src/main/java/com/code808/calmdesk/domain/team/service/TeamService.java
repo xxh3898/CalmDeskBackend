@@ -1,6 +1,8 @@
 package com.code808.calmdesk.domain.team.service;
 
 import com.code808.calmdesk.domain.team.dto.TeamMemberResponse;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -24,4 +26,15 @@ public interface TeamService {
 
     /** 회사에 부서 추가 (중복 시 예외) */
     void createDepartment(Long companyId, String departmentName);
+
+    /** 전체 기준 팀 요약 통계 (전체 인원, 위험군 수, 주의 필요 수) */
+    TeamStats getTeamStats(Long companyId);
+
+    @Getter
+    @AllArgsConstructor
+    class TeamStats {
+        private long total; // 전체 직원 수
+        private long danger; // 위험군 (stress >= 80)
+        private long caution; // 주의 필요 (70 <= stress < 80)
+    }
 }

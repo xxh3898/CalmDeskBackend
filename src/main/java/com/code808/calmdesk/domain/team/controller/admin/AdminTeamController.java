@@ -43,6 +43,16 @@ public class AdminTeamController {
         return ResponseEntity.ok(members);
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<TeamService.TeamStats> getTeamStats(Principal principal) {
+        Member admin = memberRepository.findEmailWithDetails(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        if (admin.getCompany() == null || admin.getCompany().getCompanyId() == null) {
+            return ResponseEntity.ok(new TeamService.TeamStats(0L, 0L, 0L));
+        }
+        return ResponseEntity.ok(teamService.getTeamStats(admin.getCompany().getCompanyId()));
+    }
+
     @GetMapping("/members/{memberId}/attendance")
     public ResponseEntity<Map<String, String>> getMemberAttendance(
             Principal principal,
