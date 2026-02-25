@@ -9,6 +9,7 @@ import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
 import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
 import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
+import com.code808.calmdesk.domain.attendance.entity.StressSummary;
 import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
@@ -29,6 +30,7 @@ import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -147,6 +149,15 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
+    public List<TeamService.DepartmentItem> getDepartmentsByCompanyId(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("회사를 찾을 수 없습니다."));
+        return departmentRepository.findByCompany(company).stream()
+                .map(d -> new TeamService.DepartmentItem(d.getDepartmentId(), d.getDepartmentName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void createDepartment(Long companyId, String departmentName) {
         if (departmentName == null || departmentName.isBlank()) {
@@ -161,5 +172,30 @@ public class TeamServiceImpl implements TeamService {
                 .departmentName(departmentName.trim())
                 .company(company)
                 .build());
+    }
+
+    @Override
+    public TeamStats getTeamStats(Long companyId) {
+        // 전체 직원 수
+        long total = memberRepository.countByCompany_CompanyId(companyId);
+
+        // 전체 직원의 최신 StressSummary 기반으로 위험군/주의 산정
+        List<Member> allMembers = memberRepository.findAllByCompanyIdWithDepartmentAndRank(companyId);
+
+        long danger = 0;
+        long caution = 0;
+        for (Member m : allMembers) {
+            Optional<StressSummary> ss = stressSummaryRepository
+                    .findTopByMember_MemberIdOrderBySummaryDateDesc(m.getMemberId());
+            if (ss.isPresent()) {
+                double raw = ss.get().getAvgStressLevel() != null ? ss.get().getAvgStressLevel() : 0.0;
+                int score = MonitoringDto.convertScore(raw);
+                if (score >= 80)
+                    danger++;
+                else if (score >= 70)
+                    caution++;
+            }
+        }
+        return new TeamStats(total, danger, caution);
     }
 }
