@@ -18,4 +18,6 @@ public interface ChattingMessageRepository extends JpaRepository<ChatMessage, Lo
     List<ChatMessage> findByChatRoomIdOrderByCreatedDateDesc(Long chatRoomId, Pageable pageable);
 
     int countByChatRoomIdAndIdGreaterThanAndIsDeletedFalse(Long chatRoomId, Long id);
+
+    int countByChatRoomIdAndIdGreaterThan(Long chatRoomId, Long id);
 }
