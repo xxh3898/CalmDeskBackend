@@ -3,7 +3,6 @@ package com.code808.calmdesk.domain.chatting.service;
 import java.util.List;
 
 import com.code808.calmdesk.domain.chatting.dto.ChattingDto;
-import com.code808.calmdesk.domain.chatting.entity.ChatMessage;
 
 public interface ChattingService {
 
@@ -16,7 +15,7 @@ public interface ChattingService {
     // 채팅 기록 조회 (페이지네이션)
     List<ChattingDto.ChatMessageRes> getChatHistory(String roomId, Long lastMessageId, int size);
 
-    ChatMessage editMessage(Long messageId, ChattingDto.ChatMessageEditReq request, String email);
+    ChattingDto.ChatMessageRes editMessage(Long messageId, ChattingDto.ChatMessageEditReq request, String email);
 
     void deleteMessage(Long messageId, String email);
 

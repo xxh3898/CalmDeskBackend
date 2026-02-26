@@ -1,5 +1,6 @@
 package com.code808.calmdesk.domain.businesscard.controller;
 
+import com.code808.calmdesk.domain.businesscard.dto.BusinessCardContactResponse;
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardExtractedDto;
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardRegisterRequest;
 import com.code808.calmdesk.domain.businesscard.entity.BusinessCardContact;
@@ -8,7 +9,6 @@ import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class BusinessCardController {
             @Valid @RequestBody BusinessCardRegisterRequest request,
             Principal principal) {
         BusinessCardContact contact = businessCardService.register(principal.getName(), request);
-        return ResponseEntity.ok(ApiResponse.success(toResponse(contact)));
+        return ResponseEntity.ok(ApiResponse.success(BusinessCardContactResponse.from(contact)));
     }
 
     @Operation(summary = "명함 목록 조회", description = "우리 회사에 등록된 모든 명함 연락처를 조회합니다.")
@@ -73,52 +73,6 @@ public class BusinessCardController {
             return ResponseEntity.ok(ApiResponse.success(List.of()));
         }
         List<BusinessCardContact> list = businessCardService.listByCompany(member.getCompany().getCompanyId());
-        return ResponseEntity.ok(ApiResponse.success(list.stream().map(this::toResponse).collect(Collectors.toList())));
-    }
-
-    private BusinessCardContactResponse toResponse(BusinessCardContact c) {
-        return BusinessCardContactResponse.builder()
-                .id(c.getId())
-                .contactType(c.getContactType().name())
-                .name(c.getName())
-                .companyName(c.getCompanyName())
-                .title(c.getTitle())
-                .phone(c.getPhone())
-                .mobile(c.getMobile())
-                .email(c.getEmail())
-                .address(c.getAddress())
-                .departmentId(c.getDepartment() != null ? c.getDepartment().getDepartmentId() : null)
-                .departmentName(c.getDepartment() != null ? c.getDepartment().getDepartmentName() : null)
-                .build();
-    }
-
-    @lombok.Getter
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class BusinessCardContactResponse {
-
-        @Schema(description = "ID", example = "1")
-        private Long id;
-        @Schema(description = "연락처 타입 (EMPLOYEE, EXTERNAL, PARTNER 등)", example = "EXTERNAL")
-        private String contactType;
-        @Schema(description = "이름", example = "홍길동")
-        private String name;
-        @Schema(description = "회사명", example = "코드808")
-        private String companyName;
-        @Schema(description = "직전", example = "팀장")
-        private String title;
-        @Schema(description = "전화번호", example = "02-123-4567")
-        private String phone;
-        @Schema(description = "휴대폰 번호", example = "010-1234-5678")
-        private String mobile;
-        @Schema(description = "이메일", example = "hong@example.com")
-        private String email;
-        @Schema(description = "주소", example = "서울시 강남구...")
-        private String address;
-        @Schema(description = "부서 ID", example = "5")
-        private Long departmentId;
-        @Schema(description = "부서명", example = "개발팀")
-        private String departmentName;
+        return ResponseEntity.ok(ApiResponse.success(list.stream().map(BusinessCardContactResponse::from).collect(Collectors.toList())));
     }
 }
