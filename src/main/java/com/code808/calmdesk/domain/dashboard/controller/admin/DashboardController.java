@@ -46,7 +46,7 @@ public class DashboardController {
     @Operation(summary = "대시보드 통계 조회", description = "회사 전체의 실시간 근태 및 위험군 통계를 조회합니다.")
     @GetMapping("/stats")
     public ResponseEntity<DashboardDto.DashboardResponse> getDashboardStats(
-            @Valid @ModelAttribute DashboardDto.DashboardRequest request,
+            @Valid @RequestBody @ModelAttribute DashboardDto.DashboardRequest request,
             Principal principal) {
         setCompanyId(request, principal);
         return ResponseEntity.ok(dashboardService.getAllStats(request));
