@@ -44,7 +44,7 @@ jobs:
             # 2. 전송된 JAR 파일 이름 깔끔하게 정리
             mv /home/ubuntu/*-SNAPSHOT.jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar
             
-            # 3. 메모리 제한 옵션과 외부 시크릿 설정 파일을 포함하여 실행
-            nohup java -Xmx512M -jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar \
+            # 3. 메모리 제한 옵션, 시간대 설정, 외부 시크릿 설정 파일을 포함하여 실행
+            nohup java -Duser.timezone=Asia/Seoul -Xmx512M -jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar \
             --spring.config.additional-location=file:/home/ubuntu/application-secret.yaml \
             > /home/ubuntu/log.txt 2>&1 &
