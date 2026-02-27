@@ -3,6 +3,7 @@ package com.code808.calmdesk.domain.dashboard.service.employee;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjusters;
@@ -13,36 +14,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.code808.calmdesk.domain.attendance.dto.StressDto;
-import com.code808.calmdesk.domain.attendance.event.DashboardEvent;
-import com.code808.calmdesk.domain.attendance.repository.EmotionCheckinRepository;
-import com.code808.calmdesk.domain.dashboard.dto.admin.DashboardDto;
-import com.code808.calmdesk.domain.dashboard.service.admin.DashboardService;
-import com.code808.calmdesk.domain.dashboard.sse.SseEmitterRegistry;
-import org.springframework.cglib.core.Local;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import com.code808.calmdesk.domain.attendance.dto.StressDto;
 import com.code808.calmdesk.domain.attendance.entity.Attendance;
 import com.code808.calmdesk.domain.attendance.entity.CoolDown;
 import com.code808.calmdesk.domain.attendance.entity.EmotionCheckin;
 import com.code808.calmdesk.domain.attendance.entity.StressFactor;
 import com.code808.calmdesk.domain.attendance.entity.WorkStatusType;
+import com.code808.calmdesk.domain.attendance.event.DashboardEvent;
 import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
 import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
+import com.code808.calmdesk.domain.attendance.repository.EmotionCheckinRepository;
+import com.code808.calmdesk.domain.attendance.service.StressSummaryService;
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmotionCheckInRequest;
-import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
-
 import com.code808.calmdesk.domain.dashboard.dto.employee.EmployeeDashboardResponseDto;
 import com.code808.calmdesk.domain.dashboard.repository.employee.EmployeeDashboardRepository;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
 import com.code808.calmdesk.domain.vacation.entity.VacationRest;
-import com.code808.calmdesk.domain.vacation.repository.VacationRestRepository;
-import com.code808.calmdesk.domain.attendance.service.StressSummaryService;
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -182,11 +176,15 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             throw new IllegalArgumentException("이미 출근하셨습니다. 하루에 한 번만 출근할 수 있습니다.");
         }
 
+        Attendance.AttendanceStatus status = now.toLocalTime().isAfter(LocalTime.of(9, 0))
+                ? Attendance.AttendanceStatus.LATE
+                : Attendance.AttendanceStatus.ATTEND;
+
         Attendance newAttendance = Attendance.builder()
                 .member(member)
                 .workDate(today)
                 .checkIn(now)
-                .attendanceStatus(Attendance.AttendanceStatus.ATTEND)
+                .attendanceStatus(status)
                 .emotionCheckins(new ArrayList<>())
                 .build();
 
