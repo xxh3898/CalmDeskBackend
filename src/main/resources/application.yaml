@@ -2,35 +2,21 @@ spring:
   application:
     name: calmDesk
 
+  profiles:
+    active: local
+
   jackson:
     time-zone: Asia/Seoul
-
-  ai:
-    model:
-      chat: openai   # 운영: OpenAI gpt-4o-mini | 테스트: dev 프로필로 Ollama 사용
-    openai:
-
-      chat:
-        options:
-          model: gpt-4o-mini
-          temperature: 0.7
-
-  config:
-    import: optional:classpath:application-secret.yaml
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    open-in-view: false  # <--- 이 줄을 여기에 추가하세요!
+    open-in-view: false
     defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-
-  sql:
-    init:
-      mode: always
 
   servlet:
     multipart:
@@ -44,16 +30,13 @@ app:
   business-card:
     ai:
       provider: openai
-  # 통화 기록: 녹음 저장 폴더, STT는 Google Cloud Speech-to-Text 사용
   call-record:
-    recording-dir: ./recordings
     stt:
-      provider: google-cloud  # Google Cloud Speech-to-Text (WebM 지원)
+      provider: google-cloud
     google-cloud:
-      # project-id는 application-secret.yaml에서 설정하세요
-      location: global  # global | us-central1 등
+      location: global
     profanity:
-      provider: local  # DB 기반 로컬 필터링
+      provider: local
 
 logging:
   level:
