@@ -252,6 +252,7 @@ gradle-app.setting
 
 bin/
 
+calmdesk-488501-2e9b4aed1736.json
 /src/main/resources/*.json
 *.webm
 
