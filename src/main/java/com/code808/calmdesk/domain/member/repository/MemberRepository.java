@@ -35,9 +35,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             + "WHERE m.memberId = :memberId")
     Optional<Member> findByIdWithCompanyAndDepartmentAndRank(@Param("memberId") Long memberId);
 
-    List<Member> findByDepartment(Department department);
+    @Query("SELECT m FROM MEMBER m JOIN FETCH m.company JOIN FETCH m.department JOIN FETCH m.rank WHERE m.department = :department")
+    List<Member> findByDepartment(@Param("department") Department department);
 
-    Page<Member> findByDepartment(Department department, Pageable pageable);
+    @Query(value = "SELECT m FROM MEMBER m JOIN FETCH m.company JOIN FETCH m.department JOIN FETCH m.rank WHERE m.department = :department",
+            countQuery = "SELECT COUNT(m) FROM MEMBER m WHERE m.department = :department")
+    Page<Member> findByDepartment(@Param("department") Department department, Pageable pageable);
 
     @Query("SELECT m FROM MEMBER m "
             + "LEFT JOIN FETCH m.department "
@@ -73,7 +76,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     long countByCompany_CompanyIdAndJoinDateBefore(Long companyId, java.time.LocalDate date);
 
-    // MemberRepository.java
-    List<Member> findAllByCompany_CompanyIdAndRole(Long companyId, Member.Role role);
+    @Query("SELECT m FROM MEMBER m JOIN FETCH m.company JOIN FETCH m.department JOIN FETCH m.rank WHERE m.company.companyId = :companyId AND m.role = :role")
+    List<Member> findAllByCompany_CompanyIdAndRole(@Param("companyId") Long companyId, @Param("role") Member.Role role);
 
 }
