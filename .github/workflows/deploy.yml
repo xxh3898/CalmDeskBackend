@@ -38,12 +38,9 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            # 1. 기존 서버 종료 (8080 포트 비우기)
             sudo fuser -k 8080/tcp || true
-            
-            # 2. 메모리 제한, 시간대, 프로필, AI 충돌 방지 옵션을 포함하여 백그라운드 실행
-            # (Github Actions 무한 대기 방지를 위해 < /dev/null 추가)
             nohup java -Duser.timezone=Asia/Seoul -Xmx512M -jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar \
             --spring.profiles.active=prod \
+            --spring.config.additional-location=file:/home/ubuntu/application-prod.yaml \
             --spring.autoconfigure.exclude=org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration,org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration \
             > /home/ubuntu/log.txt 2>&1 < /dev/null &
