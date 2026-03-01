@@ -1,15 +1,16 @@
 package com.code808.calmdesk.domain.gifticon.service;
 
-import com.code808.calmdesk.domain.common.enums.CommonEnums;
-import com.code808.calmdesk.domain.gifticon.entity.MemberMission;
-import com.code808.calmdesk.domain.gifticon.repository.MemberMissionRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.code808.calmdesk.domain.gifticon.entity.MemberMission;
+import com.code808.calmdesk.domain.gifticon.repository.MemberMissionRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -24,7 +25,7 @@ public class MissionScheduler {
      * cron = "초 분 시 일 월 요일"
      */
     @Transactional
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 0 * * *") // 매일 00:00:00에 실행
     public void resetDailyMissions() {
         log.info("일일 미션 초기화 시작...");
 
@@ -40,10 +41,9 @@ public class MissionScheduler {
         log.info("총 {}건의 일일 미션이 초기화되었습니다.", dailyMissions.size());
     }
 
-
     // --------- 매월 초기화 되는 미션을 위한 로직
     @Transactional
-    @Scheduled(cron = "0 * * * * *") // 매월 1일 자정
+    @Scheduled(cron = "0 0 0 1 * *") // 매월 1일 00:00:00에 실행
     public void resetMonthlyMissions() {
         log.info("월간 누적 미션 초기화 시작...");
 
