@@ -27,7 +27,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/*-SNAPSHOT.jar"
+          source: "build/libs/calmdesk-0.0.1-SNAPSHOT.jar"
           target: "/home/ubuntu/"
           strip_components: 2
 
@@ -41,11 +41,9 @@ jobs:
             # 1. 기존 서버 종료 (8080 포트 비우기)
             sudo fuser -k 8080/tcp || true
             
-            # 2. 전송된 JAR 파일 이름 깔끔하게 정리
-            mv /home/ubuntu/*-SNAPSHOT.jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar
-            
-            # 3. 메모리 제한 옵션, 시간대 설정, 외부 시크릿 설정 파일을 포함하여 실행
+            # 2. 메모리 제한, 시간대, 프로필, AI 충돌 방지 옵션을 포함하여 백그라운드 실행
+            # (Github Actions 무한 대기 방지를 위해 < /dev/null 추가)
             nohup java -Duser.timezone=Asia/Seoul -Xmx512M -jar /home/ubuntu/calmdesk-0.0.1-SNAPSHOT.jar \
             --spring.profiles.active=prod \
-            --spring.config.additional-location=file:/home/ubuntu/application-prod.yaml \
-            > /home/ubuntu/log.txt 2>&1 &
+            --spring.autoconfigure.exclude=org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration,org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration \
+            > /home/ubuntu/log.txt 2>&1 < /dev/null &
