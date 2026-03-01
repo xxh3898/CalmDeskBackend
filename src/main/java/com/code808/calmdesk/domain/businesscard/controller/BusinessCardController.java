@@ -1,5 +1,19 @@
 package com.code808.calmdesk.domain.businesscard.controller;
 
+import java.security.Principal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardContactResponse;
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardExtractedDto;
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardRegisterRequest;
@@ -7,19 +21,12 @@ import com.code808.calmdesk.domain.businesscard.entity.BusinessCardContact;
 import com.code808.calmdesk.domain.businesscard.service.BusinessCardService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.dto.ApiResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.security.Principal;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 명함 이미지 인식 → 자동 등록 (직원/외부인/협력사). - POST /api/business-card/extract: 이미지 업로드 →
@@ -66,13 +73,17 @@ public class BusinessCardController {
 
     @Operation(summary = "명함 목록 조회", description = "우리 회사에 등록된 모든 명함 연락처를 조회합니다.")
     @GetMapping("/contacts")
-    public ResponseEntity<ApiResponse<List<BusinessCardContactResponse>>> listContacts(Principal principal) {
+    public ResponseEntity<ApiResponse<Page<BusinessCardContactResponse>>> listContacts(
+            Principal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         var member = memberRepository.findEmailWithDetails(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("로그인 사용자를 찾을 수 없습니다."));
         if (member.getCompany() == null) {
-            return ResponseEntity.ok(ApiResponse.success(List.of()));
+            return ResponseEntity.ok(ApiResponse.success(Page.empty()));
         }
-        List<BusinessCardContact> list = businessCardService.listByCompany(member.getCompany().getCompanyId());
-        return ResponseEntity.ok(ApiResponse.success(list.stream().map(BusinessCardContactResponse::from).collect(Collectors.toList())));
+        Page<BusinessCardContact> list = businessCardService.listByCompany(
+                member.getCompany().getCompanyId(), PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.success(list.map(BusinessCardContactResponse::from)));
     }
 }

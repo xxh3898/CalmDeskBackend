@@ -1,17 +1,25 @@
 package com.code808.calmdesk.domain.consultation.controller.admin;
 
+import java.security.Principal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.service.ConsultationService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import java.security.Principal;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 관리자용 상담 신청 조회 및 처리 API (휴가/입사 신청과 동일한 흐름) GET 목록(회사별), PUT 완료/취소
@@ -31,13 +39,17 @@ public class AdminConsultationController {
      */
     @Operation(summary = "상담 신청 목록 조회", description = "관리자 소속 회사의 모든 상담 신청 목록을 조회합니다.")
     @GetMapping
-    public ResponseEntity<List<ConsultationDto.ConsultationListItemRes>> getConsultations(Principal principal) {
+    public ResponseEntity<Page<ConsultationDto.ConsultationListItemRes>> getConsultations(
+            Principal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         var member = memberRepository.findEmailWithDetails(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
         if (member.getCompany() == null) {
-            return ResponseEntity.ok(List.of());
+            return ResponseEntity.ok(Page.empty());
         }
-        List<ConsultationDto.ConsultationListItemRes> list = consultationService.getConsultationListByCompany(member.getCompany().getCompanyId());
+        Page<ConsultationDto.ConsultationListItemRes> list = consultationService.getConsultationListByCompany(
+                member.getCompany().getCompanyId(), PageRequest.of(page, size));
         return ResponseEntity.ok(list);
     }
 

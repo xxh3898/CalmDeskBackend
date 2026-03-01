@@ -1,9 +1,10 @@
 package com.code808.calmdesk.domain.consultation.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,21 +62,19 @@ public class ConsultationService {
     /**
      * 관리자: 회사별 상담 목록 (전체 상태 유지, 휴가/입사 탭과 동일)
      */
-    public List<ConsultationDto.ConsultationListItemRes> getConsultationListByCompany(Long companyId) {
-        return consultationRepository.findByMember_Company_CompanyIdOrderByCreatedDateDesc(companyId).stream()
-                .map(ConsultationDto.ConsultationListItemRes::from)
-                .collect(Collectors.toList());
+    public Page<ConsultationDto.ConsultationListItemRes> getConsultationListByCompany(Long companyId, Pageable pageable) {
+        return consultationRepository.findByMember_Company_CompanyIdOrderByCreatedDateDesc(companyId, pageable)
+                .map(ConsultationDto.ConsultationListItemRes::from);
     }
 
     /**
      * 직원: 본인 상담 신청 목록 (근태 캘린더용)
      */
-    public List<ConsultationDto.ConsultationListItemRes> getMyConsultationList(String email) {
+    public Page<ConsultationDto.ConsultationListItemRes> getMyConsultationList(String email, Pageable pageable) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
-        return consultationRepository.findByMember_MemberIdOrderByCreatedDateDesc(member.getMemberId()).stream()
-                .map(ConsultationDto.ConsultationListItemRes::from)
-                .collect(Collectors.toList());
+        return consultationRepository.findByMember_MemberIdOrderByCreatedDateDesc(member.getMemberId(), pageable)
+                .map(ConsultationDto.ConsultationListItemRes::from);
     }
 
     @Transactional

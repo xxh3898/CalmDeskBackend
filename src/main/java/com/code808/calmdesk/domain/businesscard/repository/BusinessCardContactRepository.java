@@ -1,14 +1,16 @@
 package com.code808.calmdesk.domain.businesscard.repository;
 
-import com.code808.calmdesk.domain.businesscard.entity.BusinessCardContact;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.Optional;
+import com.code808.calmdesk.domain.businesscard.entity.BusinessCardContact;
 
 public interface BusinessCardContactRepository extends JpaRepository<BusinessCardContact, Long> {
 
-    List<BusinessCardContact> findByCompany_CompanyIdOrderByCreatedDateDesc(Long companyId);
+    Page<BusinessCardContact> findByCompany_CompanyIdOrderByCreatedDateDesc(Long companyId, Pageable pageable);
 
     Optional<BusinessCardContact> findByCompany_CompanyIdAndPhone(Long companyId, String phone);
 

@@ -1,5 +1,10 @@
 package com.code808.calmdesk.domain.businesscard.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardExtractedDto;
 import com.code808.calmdesk.domain.businesscard.dto.BusinessCardRegisterRequest;
 import com.code808.calmdesk.domain.businesscard.entity.BusinessCardContact;
@@ -10,11 +15,8 @@ import com.code808.calmdesk.domain.company.entity.Department;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.company.service.CompanyService;
 import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -106,12 +108,14 @@ public class BusinessCardServiceImpl implements BusinessCardService {
     }
 
     @Override
-    public List<BusinessCardContact> listByCompany(Long companyId) {
-        return contactRepository.findByCompany_CompanyIdOrderByCreatedDateDesc(companyId);
+    public Page<BusinessCardContact> listByCompany(Long companyId, Pageable pageable) {
+        return contactRepository.findByCompany_CompanyIdOrderByCreatedDateDesc(companyId, pageable);
     }
 
     private static String normalize(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank()) {
+            return null;
+        }
         return s.trim();
     }
 }

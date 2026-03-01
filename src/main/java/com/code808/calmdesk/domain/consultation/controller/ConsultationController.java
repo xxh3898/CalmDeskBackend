@@ -1,21 +1,23 @@
 package com.code808.calmdesk.domain.consultation.controller;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.code808.calmdesk.domain.consultation.dto.ConsultationDto;
 import com.code808.calmdesk.domain.consultation.service.ConsultationService;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,11 +55,15 @@ public class ConsultationController {
      */
     @Operation(summary = "본인 상담 신청 목록 조회", description = "현재 로그인한 사용자가 신청한 상담 목록을 조회합니다.")
     @GetMapping("/me")
-    public ResponseEntity<List<ConsultationDto.ConsultationListItemRes>> getMyConsultations(java.security.Principal principal) {
+    public ResponseEntity<Page<ConsultationDto.ConsultationListItemRes>> getMyConsultations(
+            java.security.Principal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         if (principal == null) {
-            return ResponseEntity.ok(List.of());
+            return ResponseEntity.ok(Page.empty());
         }
-        List<ConsultationDto.ConsultationListItemRes> list = consultationService.getMyConsultationList(principal.getName());
+        Page<ConsultationDto.ConsultationListItemRes> list = consultationService.getMyConsultationList(
+                principal.getName(), PageRequest.of(page, size));
         return ResponseEntity.ok(list);
     }
 }

@@ -27,30 +27,14 @@ public class EmployeeDashboardRepository {
         return result.stream().findFirst();
     }
 
-    public long countMonthlyWorkDays(Long memberId, LocalDate start, LocalDate end) {
+    public Object[] countMonthlyAttendanceStats(Long memberId, LocalDate start, LocalDate end) {
         return em.createQuery(
-                "SELECT COUNT(a) FROM Attendance a WHERE a.member.memberId = :memberId "
-                + "AND a.workDate BETWEEN :start AND :end AND a.attendanceStatus IN ('ATTEND', 'LATE')", Long.class)
-                .setParameter("memberId", memberId)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .getSingleResult();
-    }
-
-    public long countMonthlyLateness(Long memberId, LocalDate start, LocalDate end) {
-        return em.createQuery(
-                "SELECT COUNT(a) FROM Attendance a WHERE a.member.memberId = :memberId "
-                + "AND a.workDate BETWEEN :start AND :end AND a.attendanceStatus = 'LATE'", Long.class)
-                .setParameter("memberId", memberId)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .getSingleResult();
-    }
-
-    public long countMonthlyAbsence(Long memberId, LocalDate start, LocalDate end) {
-        return em.createQuery(
-                "SELECT COUNT(a) FROM Attendance a WHERE a.member.memberId = :memberId "
-                + "AND a.workDate BETWEEN :start AND :end AND a.attendanceStatus = 'ABSENCE'", Long.class)
+                "SELECT "
+                + "COUNT(CASE WHEN a.attendanceStatus IN ('ATTEND', 'LATE') THEN 1 END), "
+                + "COUNT(CASE WHEN a.attendanceStatus = 'LATE' THEN 1 END), "
+                + "COUNT(CASE WHEN a.attendanceStatus = 'ABSENCE' THEN 1 END) "
+                + "FROM Attendance a WHERE a.member.memberId = :memberId "
+                + "AND a.workDate BETWEEN :start AND :end", Object[].class)
                 .setParameter("memberId", memberId)
                 .setParameter("start", start)
                 .setParameter("end", end)

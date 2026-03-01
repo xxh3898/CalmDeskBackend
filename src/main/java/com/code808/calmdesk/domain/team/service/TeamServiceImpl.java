@@ -1,37 +1,38 @@
 package com.code808.calmdesk.domain.team.service;
 
-import com.code808.calmdesk.domain.attendance.entity.Attendance;
-import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
-import com.code808.calmdesk.domain.company.entity.Company;
-import com.code808.calmdesk.domain.company.entity.Department;
-import com.code808.calmdesk.domain.company.repository.CompanyRepository;
-import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
-import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
-import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
-import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
-import com.code808.calmdesk.domain.attendance.entity.StressSummary;
-import com.code808.calmdesk.domain.common.enums.CommonEnums;
-import com.code808.calmdesk.domain.member.entity.Member;
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
-import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
-import com.code808.calmdesk.domain.team.dto.TeamMemberResponse;
-import com.code808.calmdesk.domain.vacation.entity.Vacation;
-import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.code808.calmdesk.domain.attendance.entity.Attendance;
+import com.code808.calmdesk.domain.attendance.entity.StressSummary;
+import com.code808.calmdesk.domain.attendance.repository.AttendanceRepository;
+import com.code808.calmdesk.domain.attendance.repository.CoolDownRepository;
+import com.code808.calmdesk.domain.attendance.repository.StressSummaryRepository;
+import com.code808.calmdesk.domain.attendance.repository.WorkStatusRepository;
+import com.code808.calmdesk.domain.common.enums.CommonEnums;
+import com.code808.calmdesk.domain.company.entity.Company;
+import com.code808.calmdesk.domain.company.entity.Department;
+import com.code808.calmdesk.domain.company.repository.CompanyRepository;
+import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
+import com.code808.calmdesk.domain.member.entity.Member;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
+import com.code808.calmdesk.domain.monitoring.dto.MonitoringDto;
+import com.code808.calmdesk.domain.team.dto.TeamMemberResponse;
+import com.code808.calmdesk.domain.vacation.entity.Vacation;
+import com.code808.calmdesk.domain.vacation.repository.VacationRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -72,7 +73,11 @@ public class TeamServiceImpl implements TeamService {
         Map<Long, Integer> remainingByMemberId = vacationRepository.findByMember_MemberIdIn(memberIds).stream()
                 .collect(Collectors.toMap(
                         vr -> vr.getMember().getMemberId(),
-                        vr -> (int) (vr.getTotalCount() - vr.getSpentCount() / 2.0),
+                        vr -> {
+                            int total = vr.getTotalCount() != null ? vr.getTotalCount() : 0;
+                            int spent = vr.getSpentCount() != null ? vr.getSpentCount() : 0;
+                            return (int) (total - spent / 2.0);
+                        },
                         (existing, replacement) -> existing
                 ));
 
@@ -80,7 +85,10 @@ public class TeamServiceImpl implements TeamService {
         Map<Long, Integer> stressByMemberId = stressSummaryRepository.findLatestByMemberIds(memberIds).stream()
                 .collect(Collectors.toMap(
                         ss -> ss.getMember().getMemberId(),
-                        ss -> MonitoringDto.convertScore(ss.getAvgStressLevel() != null ? ss.getAvgStressLevel() : 0.0),
+                        ss -> {
+                            Double avg = ss.getAvgStressLevel();
+                            return MonitoringDto.convertScore(avg != null ? avg : 0.0);
+                        },
                         (existing, replacement) -> existing
                 ));
 
@@ -196,27 +204,33 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public TeamStats getTeamStats(Long companyId) {
-        // 전체 직원 수
+        // 1. 전체 직원 수 (한 번에 쿼리)
         long total = memberRepository.countByCompany_CompanyId(companyId);
+        if (total == 0) {
+            return new TeamStats(0L, 0L, 0L);
+        }
 
-        // 전체 직원의 최신 StressSummary 기반으로 위험군/주의 산정
-        List<Member> allMembers = memberRepository.findAllByCompanyIdWithDepartmentAndRank(companyId);
+        // 2. 전체 직원의 ID 추출
+        List<Long> memberIds = memberRepository.findAllByCompanyIdWithDepartmentAndRank(companyId)
+                .stream().map(Member::getMemberId).collect(Collectors.toList());
+
+        // 3. 모든 직원의 최신 스트레스 정보를 한 번에 가져오기 (IN 쿼리 최적화)
+        List<StressSummary> latestSummaries = stressSummaryRepository.findLatestByMemberIds(memberIds);
 
         long danger = 0;
         long caution = 0;
-        for (Member m : allMembers) {
-            Optional<StressSummary> ss = stressSummaryRepository
-                    .findTopByMember_MemberIdOrderBySummaryDateDesc(m.getMemberId());
-            if (ss.isPresent()) {
-                double raw = ss.get().getAvgStressLevel() != null ? ss.get().getAvgStressLevel() : 0.0;
-                int score = MonitoringDto.convertScore(raw);
-                if (score >= 80) {
-                    danger++; 
-                }else if (score >= 70) {
-                    caution++;
-                }
+
+        for (StressSummary ss : latestSummaries) {
+            Double avg = ss.getAvgStressLevel();
+            double raw = avg != null ? avg : 0.0;
+            int score = MonitoringDto.convertScore(raw);
+            if (score >= 80) {
+                danger++;
+            } else if (score >= 70) {
+                caution++;
             }
         }
+
         return new TeamStats(total, danger, caution);
     }
 }

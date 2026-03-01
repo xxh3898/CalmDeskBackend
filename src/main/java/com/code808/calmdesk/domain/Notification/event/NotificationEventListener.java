@@ -1,18 +1,19 @@
 package com.code808.calmdesk.domain.Notification.event;
 
+import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
 import com.code808.calmdesk.domain.Notification.dto.NotificationResponseDto;
 import com.code808.calmdesk.domain.Notification.entitiy.Notification;
 import com.code808.calmdesk.domain.Notification.repository.NotificationRepository;
 import com.code808.calmdesk.domain.Notification.service.NotificationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

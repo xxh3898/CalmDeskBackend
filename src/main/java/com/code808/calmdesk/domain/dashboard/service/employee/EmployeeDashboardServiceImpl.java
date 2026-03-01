@@ -69,9 +69,10 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
         LocalDate startOfMonth = currentMonth.atDay(1);
         LocalDate endOfMonth = currentMonth.atEndOfMonth();
 
-        long attendCount = dashboardRepository.countMonthlyWorkDays(memberId, startOfMonth, endOfMonth);
-        long latenessCount = dashboardRepository.countMonthlyLateness(memberId, startOfMonth, endOfMonth);
-        long absenceCount = dashboardRepository.countMonthlyAbsence(memberId, startOfMonth, endOfMonth);
+        Object[] stats = dashboardRepository.countMonthlyAttendanceStats(memberId, startOfMonth, endOfMonth);
+        long attendCount = (stats[0] != null) ? (long) stats[0] : 0L;
+        long latenessCount = (stats[1] != null) ? (long) stats[1] : 0L;
+        long absenceCount = (stats[2] != null) ? (long) stats[2] : 0L;
 
         int totalRecordedDays = (int) (attendCount + absenceCount);
         int attendanceRate = totalRecordedDays == 0 ? 0 : (int) ((double) attendCount / totalRecordedDays * 100);
@@ -81,8 +82,12 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             statusMessage = "지각/결근 없음";
         } else {
             List<String> messages = new ArrayList<>();
-            if (latenessCount > 0) messages.add("지각 " + latenessCount + "회");
-            if (absenceCount > 0) messages.add("결근 " + absenceCount + "회");
+            if (latenessCount > 0) {
+                messages.add("지각 " + latenessCount + "회");
+            }
+            if (absenceCount > 0) {
+                messages.add("결근 " + absenceCount + "회");
+            }
             statusMessage = String.join(", ", messages);
         }
 
@@ -126,20 +131,22 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
         if (currentStressAvg != null) {
             stressScore = MonitoringDto.convertScore(currentStressAvg);
-            if (stressScore <= 10) stressStatus = "매우 양호";
-            else if (stressScore < 30) stressStatus = "양호";
-            else if (stressScore < 70) stressStatus = "주의";
-            else stressStatus = "위험";
+            if (stressScore <= 10) {
+                stressStatus = "매우 양호";
+            } else if (stressScore < 30) {
+                stressStatus = "양호";
+            } else if (stressScore < 70) {
+                stressStatus = "주의";
+            } else {
+                stressStatus = "위험";
+            }
         }
 
         LocalDate now = LocalDate.now();
         LocalDate thisWeekMonday = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate thisWeekSunday = thisWeekMonday.plusDays(6);
         LocalDate lastWeekMonday = thisWeekMonday.minusWeeks(1);
-        LocalDate lastWeekSunday = lastWeekMonday.plusDays(6);
 
-        List<Object[]> thisWeekStress = dashboardRepository.findDailyStressStats(member, thisWeekMonday, thisWeekSunday);
-        List<Object[]> lastWeekStress = dashboardRepository.findDailyStressStats(member, lastWeekMonday, lastWeekSunday);
+        List<Object[]> combinedStress = dashboardRepository.findDailyStressStats(member, lastWeekMonday, now);
 
         return EmployeeDashboardResponseDto.builder()
                 .userProfile(EmployeeDashboardResponseDto.UserProfile.builder().name(member.getName()).build())
@@ -157,8 +164,8 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .pointStats(EmployeeDashboardResponseDto.PointStats.builder().amount(points).build())
                 .stressStats(EmployeeDashboardResponseDto.StressStats.builder().score(stressScore).status(stressStatus).build())
                 .weeklyStressChart(EmployeeDashboardResponseDto.WeeklyStressChart.builder()
-                        .thisWeek(mapToDailyStress(thisWeekStress, thisWeekMonday))
-                        .lastWeek(mapToDailyStress(lastWeekStress, lastWeekMonday))
+                        .thisWeek(mapToDailyStress(combinedStress, thisWeekMonday))
+                        .lastWeek(mapToDailyStress(combinedStress, lastWeekMonday))
                         .build())
                 .build();
     }
@@ -242,9 +249,10 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 //            log.error("대시보드 push 실패 - companyId: {}", companyId, e);
 //        }
 //    }
-
     private void saveEmotionCheckIn(Attendance attendance, EmotionCheckInRequest request) {
-        if (request == null) return;
+        if (request == null) {
+            return;
+        }
 
 //        if (!attendance.getEmotionCheckins().isEmpty()) {
 //            // 이미 존재한다면 첫 번째 기록을 가져와서 업데이트
@@ -265,7 +273,6 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 //            }
 //            return;
 //        }
-
         EmotionCheckin emotionCheckin = EmotionCheckin.builder()
                 .attendance(attendance)
                 .stressLevel(request.getStressLevel())
@@ -287,12 +294,13 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 //                emotionCheckin.getCheckinFactors().add(factor);
 //            }
 //        }
-
         //attendanceRepository.save(attendance);
     }
 
     private void addFactors(EmotionCheckin checkin, EmotionCheckInRequest request) {
-        if (request.getStressFactors() == null) return;
+        if (request.getStressFactors() == null) {
+            return;
+        }
         for (String factorCategory : request.getStressFactors()) {
             checkin.getCheckinFactors().add(StressFactor.builder()
                     .emotionCheckin(checkin)
@@ -354,7 +362,9 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
             Double score = statsMap.getOrDefault(date, 0.0);
 
             int normalizedScore = 0;
-            if (score > 0) normalizedScore = MonitoringDto.convertScore(score);
+            if (score > 0) {
+                normalizedScore = MonitoringDto.convertScore(score);
+            }
 
             result.add(EmployeeDashboardResponseDto.WeeklyStressChart.DailyStress.builder()
                     .day(dayName)
@@ -366,14 +376,14 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 
     @Override
     @Transactional
-    public void startCoolDown(Long memberId, EmotionCheckInRequest request){
+    public void startCoolDown(Long memberId, EmotionCheckInRequest request) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         LocalDate today = LocalDate.now();
 
         Attendance attendance = dashboardRepository.findTodayAttendance(member, today)
-                .orElseThrow(()-> new IllegalArgumentException("출근 기록이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("출근 기록이 없습니다."));
 
         saveEmotionCheckIn(attendance, request);
 
@@ -393,6 +403,5 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
                 .build();
         stressSummaryService.createDailySummary(summaryRequest);
     }
-
 
 }

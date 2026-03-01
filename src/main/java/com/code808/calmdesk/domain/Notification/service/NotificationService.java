@@ -1,20 +1,24 @@
 package com.code808.calmdesk.domain.Notification.service;
 
-import com.code808.calmdesk.domain.Notification.entitiy.Notification;
-import com.code808.calmdesk.domain.Notification.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.code808.calmdesk.domain.Notification.entitiy.Notification;
+import com.code808.calmdesk.domain.Notification.repository.NotificationRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
+
     private final NotificationRepository notificationRepository;
     // SSE 연결 객체를 저장하는 저장소
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
@@ -57,5 +61,9 @@ public class NotificationService {
     @Transactional
     public void markAllAsRead(Long memberId) {
         notificationRepository.markAllAsRead(memberId);
+    }
+
+    public Page<Notification> getNotificationHistory(Long memberId, Pageable pageable) {
+        return notificationRepository.findAllByMemberIdOrderByCreateDateDesc(memberId, pageable);
     }
 }
