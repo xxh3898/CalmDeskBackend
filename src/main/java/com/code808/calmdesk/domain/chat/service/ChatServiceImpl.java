@@ -14,11 +14,11 @@ import org.springframework.stereotype.Service;
 import com.code808.calmdesk.domain.chat.dto.ChatResponse;
 import com.code808.calmdesk.domain.member.entity.Member;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ChatServiceImpl implements ChatService {
 
@@ -57,6 +57,12 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatModel chatModel;
     private final ChatContextService chatContextService;
+
+    public ChatServiceImpl(@Qualifier("openAiChatModel") ChatModel chatModel,
+            ChatContextService chatContextService) {
+        this.chatModel = chatModel;
+        this.chatContextService = chatContextService;
+    }
 
     @Override
     public ChatResponse chat(String userMessage, Long memberId, Member.Role role) {
@@ -111,8 +117,9 @@ public class ChatServiceImpl implements ChatService {
         StringBuilder sb = new StringBuilder();
         for (Throwable x = t; x != null; x = x.getCause()) {
             if (x.getMessage() != null) {
-                if (sb.length() > 0)
+                if (sb.length() > 0) {
                     sb.append(" / ");
+                }
                 sb.append(x.getMessage());
             }
         }
