@@ -43,7 +43,7 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
 
     @Query("""
                         SELECT COUNT(m)
-                        FROM Member m
+                        FROM MEMBER m
                         WHERE m.company.companyId = :companyId
                           AND (SELECT AVG(s.avgStressLevel)
                                FROM StressSummary s
@@ -55,7 +55,7 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
 
     @Query("""
                         SELECT COUNT(m)
-                        FROM Member m
+                        FROM MEMBER m
                         WHERE m.company.companyId = :companyId
                           AND (SELECT AVG(s.avgStressLevel)
                                FROM StressSummary s
@@ -71,7 +71,7 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
 
     @Query("""
                         SELECT COUNT(m)
-                        FROM Member m
+                        FROM MEMBER m
                         WHERE m.company.companyId = :companyId
                           AND (SELECT AVG(s.avgStressLevel)
                                FROM StressSummary s
