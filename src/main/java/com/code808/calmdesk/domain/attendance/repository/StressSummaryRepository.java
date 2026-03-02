@@ -42,35 +42,42 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
             @Param("endDate") LocalDate endDate, @Param("companyId") Long companyId);
 
     @Query("""
-                        SELECT COUNT(DISTINCT s.member.memberId)
-                        FROM StressSummary s
-                        JOIN s.member m
+                        SELECT COUNT(m)
+                        FROM Member m
                         WHERE m.company.companyId = :companyId
-                          AND s.summaryDate BETWEEN :startDate AND :endDate
-                        AND (SELECT AVG(s2.avgStressLevel) FROM StressSummary s2 WHERE s2.member = s.member AND s2.summaryDate BETWEEN :startDate AND :endDate) >= 4.0
+                          AND (SELECT AVG(s.avgStressLevel)
+                               FROM StressSummary s
+                               WHERE s.member = m
+                                 AND s.summaryDate BETWEEN :startDate AND :endDate) >= 4.0
                         """)
     long countHighRiskByCompany(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate, @Param("companyId") Long companyId);
 
     @Query("""
-                        SELECT COUNT(DISTINCT s.member.memberId)
-                        FROM StressSummary s
-                        JOIN s.member m
+                        SELECT COUNT(m)
+                        FROM Member m
                         WHERE m.company.companyId = :companyId
-                          AND s.summaryDate BETWEEN :startDate AND :endDate
-                        AND (SELECT AVG(s2.avgStressLevel) FROM StressSummary s2 WHERE s2.member = s.member AND s2.summaryDate BETWEEN :startDate AND :endDate) >= 3.0
-                        AND (SELECT AVG(s2.avgStressLevel) FROM StressSummary s2 WHERE s2.member = s.member AND s2.summaryDate BETWEEN :startDate AND :endDate) < 4.0
+                          AND (SELECT AVG(s.avgStressLevel)
+                               FROM StressSummary s
+                               WHERE s.member = m
+                                 AND s.summaryDate BETWEEN :startDate AND :endDate) >= 3.0
+                          AND (SELECT AVG(s.avgStressLevel)
+                               FROM StressSummary s
+                               WHERE s.member = m
+                                 AND s.summaryDate BETWEEN :startDate AND :endDate) < 4.0
                         """)
     long countCautionByCompany(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate, @Param("companyId") Long companyId);
 
     @Query("""
-                        SELECT COUNT(DISTINCT s.member.memberId)
-                        FROM StressSummary s
-                        JOIN s.member m
+                        SELECT COUNT(m)
+                        FROM Member m
                         WHERE m.company.companyId = :companyId
-                          AND s.summaryDate BETWEEN :startDate AND :endDate
-                        AND (SELECT AVG(s2.avgStressLevel) FROM StressSummary s2 WHERE s2.member = s.member AND s2.summaryDate BETWEEN :startDate AND :endDate) < 3.0
+                          AND (SELECT AVG(s.avgStressLevel)
+                               FROM StressSummary s
+                               WHERE s.member = m
+                                 AND s.summaryDate BETWEEN :startDate AND :endDate) < 3.0
+                          AND EXISTS (SELECT 1 FROM StressSummary s2 WHERE s2.member = m AND s2.summaryDate BETWEEN :startDate AND :endDate)
                         """)
     long countNormalByCompany(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate, @Param("companyId") Long companyId);
