@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,24 +16,17 @@ import com.code808.calmdesk.domain.common.enums.CommonEnums;
 import com.code808.calmdesk.domain.company.dto.CompanyDto;
 import com.code808.calmdesk.domain.company.entity.Company;
 import com.code808.calmdesk.domain.company.entity.Department;
-import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.company.repository.CompanyRepository;
 import com.code808.calmdesk.domain.company.repository.DepartmentRepository;
 import com.code808.calmdesk.domain.company.repository.RankRepository;
+import com.code808.calmdesk.domain.member.entity.Account;
 import com.code808.calmdesk.domain.member.entity.Member;
 import com.code808.calmdesk.domain.member.entity.Rank;
-import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.domain.member.repository.AccountRepository;
+import com.code808.calmdesk.domain.member.repository.MemberRepository;
 import com.code808.calmdesk.global.security.JwtTokenProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -103,7 +97,8 @@ public class CompanyServiceImpl implements CompanyService {
                 "ADMIN",
                 member.getMemberId(),
                 member.getName(),
-                savedDept.getDepartmentName()
+                savedDept.getDepartmentName(),
+                savedCompany.getCompanyId()
         );
 
         return CompanyDto.RegisterResponse.of(savedCompany, member, token);
@@ -159,7 +154,8 @@ public class CompanyServiceImpl implements CompanyService {
                 "EMPLOYEE",
                 member.getMemberId(),
                 member.getName(),
-                department.getDepartmentName()
+                department.getDepartmentName(),
+                company.getCompanyId()
         );
 
         // 관리자에게 입사 신청 알림 전송
@@ -188,8 +184,8 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new RuntimeException("회사를 찾을 수 없습니다."));
 
         return memberRepository.findByCompany_CompanyIdAndStatusInWithDetails(
-                        companyId,
-                        Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R))
+                companyId,
+                Arrays.asList(CommonEnums.Status.N, CommonEnums.Status.Y, CommonEnums.Status.R))
                 .stream()
                 .map(CompanyDto.JoinListItemRes::of)
                 .toList();
@@ -262,7 +258,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public void createJoinRequestFromBusinessCard(String adminEmail, String name, String email, String phone,
-                                                  Long departmentId, Long rankId) {
+            Long departmentId, Long rankId) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("입사 신청으로 등록하려면 이메일이 필요합니다.");
         }

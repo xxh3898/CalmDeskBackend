@@ -62,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
                 "TEMP",
                 savedMember.getMemberId(),
                 savedMember.getName(),
+                null,
                 null
         );
         return SignupDto.SignupResponse.of(savedMember, token);
@@ -96,7 +97,8 @@ public class AuthServiceImpl implements AuthService {
                 role,
                 member.getMemberId(),
                 member.getName(),
-                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null,
+                member.getCompany() != null ? member.getCompany().getCompanyId() : null
         );
 
         String refreshToken = jwtTokenProvider.generateRefreshToken(
@@ -185,7 +187,8 @@ public class AuthServiceImpl implements AuthService {
                 member.getRole().name(),
                 member.getMemberId(),
                 member.getName(),
-                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null
+                member.getDepartment() != null ? member.getDepartment().getDepartmentName() : null,
+                member.getCompany() != null ? member.getCompany().getCompanyId() : null
         );
 
         return LoginDto.AuthContext.builder()

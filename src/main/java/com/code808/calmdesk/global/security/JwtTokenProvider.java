@@ -33,7 +33,7 @@ public class JwtTokenProvider {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    public String generateToken(String email, String role, Long memberId, String name, String departmentName) {
+    public String generateToken(String email, String role, Long memberId, String name, String departmentName, Long companyId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
@@ -43,6 +43,7 @@ public class JwtTokenProvider {
                 .claim("memberId", memberId)
                 .claim("name", name)
                 .claim("departmentName", departmentName)
+                .claim("companyId", companyId)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
