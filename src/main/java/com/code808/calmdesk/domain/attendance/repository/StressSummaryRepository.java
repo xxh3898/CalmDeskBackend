@@ -87,7 +87,7 @@ public interface StressSummaryRepository extends JpaRepository<StressSummary, Lo
             LocalDate startDate,
             LocalDate endDate);
 
-    @Query("SELECT s FROM StressSummary s WHERE s.summaryId IN "
+    @Query("SELECT s FROM StressSummary s JOIN FETCH s.member m WHERE s.summaryId IN "
             + "(SELECT MAX(s2.summaryId) FROM StressSummary s2 WHERE s2.member.memberId IN :memberIds GROUP BY s2.member.memberId)")
     List<StressSummary> findLatestByMemberIds(@Param("memberIds") List<Long> memberIds);
 

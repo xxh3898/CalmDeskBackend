@@ -81,14 +81,13 @@ public class TeamServiceImpl implements TeamService {
                         (existing, replacement) -> existing
                 ));
 
-        // 3. 스트레스 정보 한 번에 가져오기 (IN 쿼리)
-        Map<Long, Integer> stressByMemberId = stressSummaryRepository.findLatestByMemberIds(memberIds).stream()
+        // 3. 최신 스트레스 정보 한 번에 가져오기 (JOIN FETCH + IN 쿼리 → N+1 완전 해소)
+        Map<Long, Integer> stressByMemberId = stressSummaryRepository
+                .findLatestByMemberIds(memberIds).stream()
                 .collect(Collectors.toMap(
                         ss -> ss.getMember().getMemberId(),
-                        ss -> {
-                            Double avg = ss.getAvgStressLevel();
-                            return MonitoringDto.convertScore(avg != null ? avg : 0.0);
-                        },
+                        ss -> MonitoringDto.convertScore(ss.getAvgStressLevel() != null
+                                ? ss.getAvgStressLevel() : 0.0),
                         (existing, replacement) -> existing
                 ));
 
