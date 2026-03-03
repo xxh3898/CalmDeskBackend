@@ -81,16 +81,15 @@ public class TeamServiceImpl implements TeamService {
                         (existing, replacement) -> existing
                 ));
 
-        // 3. 스트레스 정보 한 번에 가져오기 (IN 쿼리)
-        Map<Long, Integer> stressByMemberId = stressSummaryRepository.findLatestByMemberIds(memberIds).stream()
-                .collect(Collectors.toMap(
-                        ss -> ss.getMember().getMemberId(),
-                        ss -> {
-                            Double avg = ss.getAvgStressLevel();
-                            return MonitoringDto.convertScore(avg != null ? avg : 0.0);
-                        },
-                        (existing, replacement) -> existing
-                ));
+        // 3. 스트레스 정보 가져오기 (각 개별로 가장 최근 데이터 1ms 이내 조회)
+        Map<Long, Integer> stressByMemberId = new HashMap<>();
+        for (Long memberId : memberIds) {
+            stressSummaryRepository.findTopByMember_MemberIdOrderBySummaryDateDesc(memberId)
+                    .ifPresent(ss -> {
+                        Double avg = ss.getAvgStressLevel();
+                        stressByMemberId.put(memberId, MonitoringDto.convertScore(avg != null ? avg : 0.0));
+                    });
+        }
 
         // 4. 쿨다운 횟수 한 번에 가져오기 (IN 쿼리)
         Map<Long, Integer> cooldownCountByMemberId = new HashMap<>();
