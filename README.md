@@ -30,7 +30,7 @@
 
 ### Backend
 - **Language**: Java 17
-- **Framework**: Spring Boot 4.0.1
+- **Framework**: Spring Boot 3.4.5
 - **Database**: 
   - **MySQL**: 메인 관계형 데이터베이스
   - **Redis**: 실시간 데이터 처리 및 캐싱 (출퇴근 상태, 세션 등)
